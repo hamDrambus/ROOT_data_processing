@@ -22,7 +22,7 @@ protected:
 	std::vector<std::vector<peak>> mppc_peaks; //only for mppc channels
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
-	SingleRunData *of_what;
+	//SingleRunData *of_what;
 	bool is_valid;
 public:
 	SingleRunResults(SingleRunData *of_what);

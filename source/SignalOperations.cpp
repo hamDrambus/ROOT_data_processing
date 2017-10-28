@@ -346,31 +346,78 @@ namespace SignalOperations {
 		x_start = xs.end(); //not found
 	}
 
-	void find_GEM_start_time(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust)
+	//void find_GEM_start_time(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust)
+	//{
+	//	DVECTOR xs_before_S1 = xs, ys_before_S1 = ys;
+	//	apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_time);
+	//	DITERATOR x_befS1_max;
+	//	double noize_amp;
+	//	get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
+	//	noize_amp *= 1.1;
+	//	DITERATOR x_S1_left = xs.begin();
+	//	DITERATOR x_S1_right = xs.begin();
+	//	find_next_peak(xs, ys, x_S1_left, x_S1_right, noize_amp, N_trust);
+	//	find_next_extremum(xs, ys, (++x_S1_right), N_trust);
+	//	find_next_extremum(xs, ys, (++x_S1_right), N_trust);
+	//	find_next_extremum(xs, ys, (++x_S1_right), N_trust);
+	//	if (x_S1_right == xs.end()){
+	//		x_start = xs.end();
+	//		return;
+	//	}
+	//	if (*(ys.begin() + (x_S1_right - xs.begin())) > 0){
+	//		x_start = x_S1_right;
+	//		return;
+	//	}
+	//	x_S1_left = x_S1_right;
+	//	find_next_peak(xs, ys, x_S1_left, x_S1_right, 0, N_trust); //effectively finds intersection with 0
+	//	x_start = x_S1_left;
+	//}
+
+	void spread_peaks(double x_left, double x_right, std::vector<peak> &peaks)
 	{
-		DVECTOR xs_before_S1 = xs, ys_before_S1 = ys;
-		apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_time);
-		DITERATOR x_befS1_max;
-		double noize_amp;
-		get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
-		noize_amp *= 1.1;
-		DITERATOR x_S1_left = xs.begin();
-		DITERATOR x_S1_right = xs.begin();
-		find_next_peak(xs, ys, x_S1_left, x_S1_right, noize_amp, N_trust);
-		find_next_extremum(xs, ys, (++x_S1_right), N_trust);
-		find_next_extremum(xs, ys, (++x_S1_right), N_trust);
-		find_next_extremum(xs, ys, (++x_S1_right), N_trust);
-		if (x_S1_right == xs.end()){
-			x_start = xs.end();
-			return;
+
+	}
+
+	void spread_peaks(DVECTOR &xs_in, DVECTOR &ys_in,DVECTOR &xs_out, DVECTOR& ys_out)
+	{
+		xs_out.clear();
+		ys_out.clear();
+		xs_out.reserve(xs_in.size());
+		ys_out.reserve(ys_in.size());
+		bool first= true; //eliminating the same xs
+		double x_prev;
+		double y_val;
+		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != xs_in.end()) && (j != ys_in.end()); ++i, ++j) {
+			if (first){
+				x_prev = *i;
+				y_val = *j;
+				first= false;
+			} else {
+				if (x_prev == *i)
+					y_val += *j;
+				else {
+					xs_out.push_back(x_prev);
+					ys_out.push_back(y_val);
+					x_prev = *i;
+					y_val = *j;
+				}
+			}
 		}
-		if (*(ys.begin() + (x_S1_right - xs.begin())) > 0){
-			x_start = x_S1_right;
+		xs_out.push_back(x_prev);
+		ys_out.push_back(y_val);
+		xs_in = xs_out;
+		ys_in = ys_out; //eliminated the same xs
+
+		if ((xs_in.size() < 2)||ys_in.size()!=xs_in.size())
 			return;
+		xs_out.reserve(2*xs_in.size());
+		ys_out.reserve(2*ys_in.size());
+		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != (xs_in.end() - 1)) && (j != (ys_in.end() - 1)); ++i, ++j){
+			xs_out.push_back(*i);
+			xs_out.push_back(*(i+1)-1e-6); //so I can plot it with gnuplot
+			ys_out.push_back((*(j + 1) + (*j)) / (*(i + 1) - *i)); //xs are now different.
+			ys_out.push_back((*(j + 1) + (*j)) / (*(i + 1) - *i));
 		}
-		x_S1_left = x_S1_right;
-		find_next_peak(xs, ys, x_S1_left, x_S1_right, 0, N_trust); //effectively finds intersection with 0
-		x_start = x_S1_left;
 	}
 
 };

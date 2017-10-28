@@ -39,6 +39,8 @@ public:
 	Drawing* GetDrawing(int index); //if does not exist, doest not create it
 	Drawing* GetDrawing(std::string name, int index, ParameterPile::DrawEngine de);//if does not exist, creates it
 	Drawing* CreateDrawing(std::string name, int index, ParameterPile::DrawEngine de);
+	void Draw (void);
+	void Clear (void);
 };
 
 #endif

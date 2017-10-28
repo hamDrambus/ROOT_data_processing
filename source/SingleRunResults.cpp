@@ -2,7 +2,6 @@
 
 SingleRunResults::SingleRunResults(SingleRunData *_of_what)
 {
-	of_what = _of_what;
 	curr_area = _of_what ? _of_what->getArea():curr_area;
 	setValid(false);
 	_current_status = Status::Empty;

@@ -5,6 +5,7 @@
 #include "GraphicOutputManager.h"
 #include "SignalOperations.h"
 #include "SingleRunResults.h"
+#include "AllRunsResults.h"
 
 class AnalysisManager;
 class AllRunsResults;
@@ -26,8 +27,9 @@ protected:
 	//std::vector<double> xs_GEM;
 	//std::vector<double> ys_GEM;
 
-	/*double PMT3_summed_peaks_area;
-	int PMT3_n_peaks;*/
+	double PMT3_summed_peaks_area;
+	int PMT3_n_peaks;
+	bool PMT_peaks_analysed;
 
 	ParameterPile::experiment_area curr_area; //sets channel area
 
@@ -49,7 +51,7 @@ protected:
 public:
 	SingleRunData(ParameterPile::experiment_area area);
 	SingleRunResults processSingleRun(void);
-	SingleRunResults processSingleRun(const AllRunsResults & all_runs_results);
+	SingleRunResults processSingleRun(const AllRunsResults *all_runs_results);
 	//^ must be called only if the previous SingleRunResults was valid
 	void runProcessedProc(void);
 	void clear_memory(void); //clears only 'input' data, preserves processing results

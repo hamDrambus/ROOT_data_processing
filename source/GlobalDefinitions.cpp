@@ -135,7 +135,7 @@ namespace ParameterPile
 	int GEM_N_of_averaging = 30; //=== N_trust
 	double PMT_run_acceptance_threshold_to_noize = 3;
 	int PMT_N_of_averaging = 1; //=== N_trust. PMT signal is already smoothed by filter
-	int PMT_N_peaks_acceptance = 0;//2
+	int PMT_N_peaks_acceptance = 0;//1 //condition is >1, not >=1
 	double PMT_SArea_peaks_acceptance = 0.0; //V*ms //done - for every runs S_acceptance is obtained from S distribution histogram
 	//TODO: figure out the appropriate
 

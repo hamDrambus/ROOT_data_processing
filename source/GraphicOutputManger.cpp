@@ -232,3 +232,14 @@ Drawing* GraphicOutputManager::CreateDrawing(std::string name, int index, Parame
 	_graphs.push_back(Drawing(name, de, index));
 	return &_graphs.back();
 }
+
+void GraphicOutputManager::Draw(void)
+{
+	for (auto i = _graphs.begin(); i != _graphs.end(); i++)
+		(*i).DrawData();
+}
+
+void GraphicOutputManager::Clear(void)
+{
+	_graphs.clear();
+}

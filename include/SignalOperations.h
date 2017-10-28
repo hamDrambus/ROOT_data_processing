@@ -33,11 +33,11 @@ namespace SignalOperations
 	void find_next_extremum(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust);
 	//TODO: theese 5 above functions rely on the 2nd order polynom properties, so it will be neater to create 2nd order polynome on the range [a,b]
 	//class with such methods as getting maximum, obtaining iterators and such.
-	void find_GEM_start_time(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust = 10);
+	//void find_GEM_start_time(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust = 10);
 	//N trust is the number of points over which 2nd order interpolation takes effect
 	//this is quite specific and complex operation, maybe should be transferred to AnalysisManager
 	void spread_peaks(double x_left, double x_right, std::vector<peak> &peaks);
-
+	void spread_peaks(DVECTOR &xs_in, DVECTOR &ys_in, DVECTOR &xs_out, DVECTOR& ys_out);
 };
 
 #endif

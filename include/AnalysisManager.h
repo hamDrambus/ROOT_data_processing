@@ -32,6 +32,8 @@ protected:
 	virtual void nextRun(void);
 	virtual void processAllRuns(void);
 	virtual void loopAllRuns(void);
+	virtual void loopAllRuns(AllRunsResults *_all_results);
+	//virtual void processOneRun(SingleRunData *run, AllRunsResults *_all_results);
 
 public:
 	//virtual void nextExperiment(void);
