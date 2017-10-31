@@ -41,7 +41,7 @@ protected:
 		ParameterPile::DrawEngine de = ParameterPile::DrawEngine::Gnuplot);
 
 	void file_to_vector(std::string fname, std::vector<double> &xs, std::vector<double> &ys, int index);
-	bool test_PMT_signal(int _N_threshold, double _S_threshold, SingleRunResults &results); //returns false if the PMT signal is empty
+	bool test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, SingleRunResults &results); //returns false if the PMT signal is empty
 	void find_time_limits(void);//TODO: this is much more complicated operation, the most difficult part of this analysis actually
 
 	//bool is_valid;

@@ -1,5 +1,5 @@
 #include "GlobalDefinitions.h"
-#include "AnalysisManager.h"
+#include "MTAnalysisManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,9 +10,10 @@ int main(int argc, char *argv[])
 	TCanvas* c1 = new TCanvas("test", "test_title", 800, 500);
 	TF1 *func = new TF1("test_func", "sin(x)+5*x", 0, 10);
 	func->Draw();
-	AnalysisManager man(ParameterPile::exp_area);
+	MTAnalysisManager man(ParameterPile::exp_area);
 
 	man.processAllExperiments();
+	std::cout << "Finished" << std::endl;
 
 	app->Run();
 	delete app;

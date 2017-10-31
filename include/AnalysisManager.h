@@ -21,6 +21,9 @@ protected:
 	std::vector<SingleRunData> one_run_data;
 	std::vector<SingleRunResults> one_run_results;
 	std::vector<AllRunsResults> all_runs_results;
+
+	TCondition* _cond;
+	TMutex* _thread_mutex;
 #ifdef _TEMP_CODE
 	void* all_exps_data;
 
@@ -39,14 +42,15 @@ public:
 	//virtual void nextExperiment(void);
 
 	virtual void processAllExperiments(void);
-	
-	virtual void save_all_runs(void);
-	virtual void save_all_exps(void);
-
-	virtual bool check_run_processed(void);
-	virtual void save_one_run_results(void);
-	virtual void load_one_run_results(void);
-
+	virtual void proceessAllRunsOneThread(void);//there is supposed to be only single experiment //TODO: there is the first and second iterations
+	//after the first one, one_run_data must not be erased for higher perfomance. After the second iteration data should be erased.
+	//In the case of several experements it may be expensive to store data for every one for the second iteration
+	std::vector<AllRunsResults>* getAllRunsResults(void);
+	void setAllRunsResults(AllRunsResults* to_what);
+	void setCondition(TCondition* cond);
+	TCondition* getCondition(void);
+	void setThreadMutex(TMutex* mutex);
+	TMutex* getThreadMutex(void);
 	//double minimize_function(double value);
 };
 

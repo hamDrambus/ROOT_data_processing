@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sstream>
 
+#include <TThread.h>
 #include <TApplication.h>
 #include <TCanvas.h>
 #include <TGraph.h>
@@ -53,14 +54,46 @@ struct peak
 
 namespace ParameterPile
 {
-	enum DrawEngine {Gnuplot, ROOT};
+	enum DrawEngine { Gnuplot, ROOT };
 
-	struct experiment_area //TODO - make analysis via this class. //->NextFile?
+	class area_vector
 	{
+	protected:
+		bool _is_valid;
+		std::vector<int> _vec;
+		int _last_returned_index;
+		std::vector<int>::iterator _last_returned_index_left;
+	public:
+		area_vector(void);
+		int get_order_index_by_index(int ind);
+		int get_index_by_order_index(int ind);
+		int get_next_index(void); //for running through all indices
+		int get_next_index(int after);
+		void push_pair(int left, int right);
+		void push(int val);
+		bool contains(int index);
+		bool empty(void);
+		std::vector<area_vector> split_area(int N);
+		area_vector intersect (area_vector& with);
+		void clear(); //clears _last_returned_index etc.
+		void erase(); //clears vector
+		//void refine (void); //[2,3][3,4] to [2,4]|OR| [4,5] [1,7] to 
+	};
+
+	class experiment_area //TODO - make analysis via this class. //->NextFile?
+	{
+	public:
+		enum Type {Area, Point};
+	protected:
+		Type _type;
+	public:
+		experiment_area(Type type = Type::Area);
+
 		std::vector<std::string> experiments;
 		std::vector<int> runs; //contains pairs [from, to]
 		std::vector<int> channels; //contains pairs [from, to]
 		std::vector<int> sub_runs; //contains pairs [from, to]
+		
 	};
 
 	bool draw_required(ParameterPile::experiment_area what);
@@ -69,6 +102,7 @@ namespace ParameterPile
 	extern int subruns_per_file;
 	extern bool override_analysis;
 	extern experiment_area exp_area;
+	extern int threads_number;
 
 	extern int filter_MPPC_n_points;
 	extern int filter_MPPC_order;

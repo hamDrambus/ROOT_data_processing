@@ -169,7 +169,7 @@ void SingleRunData::add_draw_data(std::string prefix, GraphicOutputManager& grap
 	}
 }
 
-bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, SingleRunResults &results)
+bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, SingleRunResults &results)
 {
 	int ind = get_order_index_by_index(0, curr_area.channels);
 	if (ind < 0)
@@ -197,8 +197,13 @@ bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, Singl
 		PMT3_n_peaks = peaks.size();
 		PMT_peaks_analysed = true;
 	}
-	if ((PMT3_summed_peaks_area >= _S_threshold) && (PMT3_n_peaks>= _N_threshold))
-		return true;
+	if (_S_max_threshold < _S_threshold){ //means there is no maximum limit
+		if ((PMT3_summed_peaks_area >= _S_threshold) && (PMT3_n_peaks >= _N_threshold))
+			return true;
+	} else {
+		if ((PMT3_summed_peaks_area >= _S_threshold) && (PMT3_summed_peaks_area <= _S_max_threshold) && (PMT3_n_peaks >= _N_threshold))
+			return true;
+	}
 	return false;
 }
 
@@ -232,43 +237,12 @@ SingleRunResults SingleRunData::processSingleRun(void)
 	}
 	add_draw_baselines("base filtered", graph_manager);
 
-	if (!test_PMT_signal(ParameterPile::PMT_N_peaks_acceptance,ParameterPile::PMT_SArea_peaks_acceptance,_result)) {
+	if (!test_PMT_signal(ParameterPile::PMT_N_peaks_acceptance, ParameterPile::PMT_SArea_peaks_acceptance,
+		ParameterPile::PMT_SArea_peaks_acceptance-1, _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
 		goto end_proc;
 	}
-
-	//ind = get_order_index_by_index(2, curr_area.channels);
-	//if (!(ind < 0)){
-	//	_result.xs_GEM = xs_channels[ind];
-	//	_result.ys_GEM = ys_channels[ind];
-	//}
-	////apply_time_limits(xs_GEM, ys_GEM, ParameterPile::S1_time, xs_GEM.back());
-	//if (_result.xs_GEM.empty() || _result.ys_GEM.empty() || _result.xs_GEM.size() != _result.ys_GEM.size()){
-	//	_result._current_status = SingleRunResults::Status::NoGEMsignal;
-	//	_result.setValid(false);
-	//	goto end_proc;
-	//}
-
-	//get peaks, refine base lines, get peaks
-	//get PMT time window (optionally)
-	//get MPPC time window
-	//get MMPC S histogramm, and S in time window
-
-	//get GEM intergral (!!!)//upd: no, first average over all runs
-
-	//get time windows
-
-	//? get MPPC baselines, based on the time window
-	//OR get all baselines again, using time windows
-	//and refine time windows again?
-	//for high voltages base lines are tricky, second algorithm is required
-
-
-	//get peak histograms for MPPCs for every channel [32,63]
-	//get integral signal and (intergral/single_peak_area)
-
-	//get GEM charge (baseline too)
 
 	end_proc:
 	runProcessedProc();
@@ -282,7 +256,7 @@ SingleRunResults SingleRunData::processSingleRun(const AllRunsResults *all_runs_
 	_result._current_status = SingleRunResults::Status::Ok;
 	SavitzkyGolayFilter SGfilter(ParameterPile::filter_MPPC_n_points, ParameterPile::filter_MPPC_order, ParameterPile::filter_MPPC_n_iterations);
 	//TODO: acceptances form all_runs_resultss
-	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, _result)) {
+	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff , _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
 		goto end_proc;

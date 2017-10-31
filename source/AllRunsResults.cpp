@@ -4,7 +4,9 @@ AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 {
 	_exp = experiment;
 	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
+	S_peaks_max_cutoff = S_peaks_cutoff - 1;
 	N_peaks_cutoff = ParameterPile::PMT_N_peaks_acceptance;
+	N_of_runs = 0;
 }
 
 void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_results)
@@ -12,6 +14,7 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 	_Ss.clear();
 	_ns.clear();
 	int n_valid_runs = 0;
+	N_of_runs = single_results.size();
 	for (auto i = single_results.begin(); i != single_results.end(); ++i){
 		if (i->isValid()){ //has meaning only at the secondary function call
 			n_valid_runs++;
@@ -27,112 +30,6 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 			}
 		}
 	}
-	if (!_Ss.empty() && _xs_GEM_sum.empty()) {//_xs_GEM is empty at the first run
-		find_S_cutoff();
-		find_S_cutoff_v2();
-
-		DITERATOR S_max = std::max_element(_Ss.begin(), _Ss.end());
-		TH1D *hist_S = new TH1D("PMT_S_peaks", "PMT_S_peaks", 60, 0, *S_max);
-		/*TH1I *hist_n = new TH1I("PMT_N_peaks", "PMT_N_peaks", 30, 0, 30);*/
-
-		/*double *NNs = new double[_ns.size()];
-		double *SSs = new double[_Ss.size()];*/
-		for (int _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n){
-			/*NNs[_n] = _ns[_n];
-			SSs[_s] = _Ss[_s];*/
-			/*hist_n->Fill(_ns[_n]);*/
-			hist_S->Fill(_Ss[_s]);
-		}
-		TCanvas *c1 = new TCanvas(("S_peaks_distribution " + _exp.experiments.back()).c_str(),
-			("S_peaks_distribution " + _exp.experiments.back()).c_str());
-		c1->cd();
-		hist_S->Draw();
-		c1->Update();
-		TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
-		cutoff->SetLineColor(kRed);
-		cutoff->Draw();
-		c1->Update();
-		/*TCanvas *c2 = new TCanvas(("n_peaks_distribution " + _exp.experiments.back()).c_str(),
-			("n_peaks_distribution " + _exp.experiments.back()).c_str());
-		c2->cd();
-		hist_n->Draw();
-		c2->Update();
-
-		TCanvas *c3 = new TCanvas(("N-S Scatter " + _exp.experiments.back()).c_str(), ("N-S Scatter " + _exp.experiments.back()).c_str());
-		TGraph *gr = new TGraph(std::min(_ns.size(), _Ss.size()), SSs, NNs);
-		c3->cd();
-		gr->Draw("ap");
-		c3->Update();*/
-		/*delete[] NNs;
-		delete[] SSs;*/
-	}
-	if (!_xs_GEM_sum.empty() && (0!=n_valid_runs)){ //x_GEM is not empty only at the second processing (when proper cutoffs were applied)
-		for (auto i = _ys_GEM_sum.begin(); i != _ys_GEM_sum.end(); ++i)
-			*i /= n_valid_runs;
-		ParameterPile::experiment_area area_ = _exp;
-		area_.runs.back()=ParameterPile::areas_to_draw.back().runs.back();
-		area_.sub_runs.back()=ParameterPile::areas_to_draw.back().sub_runs.back();
-		area_.channels.back()=ParameterPile::areas_to_draw.back().channels.back();
-		if (ParameterPile::draw_required(area_)){
-			//xs_GEM.insert(xs_GEM.begin(), 0);
-			//ys_GEM.insert(ys_GEM.begin(), 0);
-			std::string exp = _exp.experiments.back();
-			bool invalid = false;
-			for (auto i = exp.begin(); i != exp.end(); invalid ? i = exp.begin() : ++i){
-				invalid = false;
-				if (*i == '_'){
-					if (i != exp.begin())
-						if (*(i - 1) == '\\')
-							continue;
-					exp.insert(i, '\\');
-					invalid = true;
-				}
-			}
-			Drawing *dr = graph_manager.GetDrawing("GEM_" + area_.experiments.back(), 0, ParameterPile::DrawEngine::Gnuplot);
-			dr->AddToDraw(_xs_GEM_sum, _ys_GEM_sum, "GEM\\\_" + exp, "", 0);
-			std::vector<double> GEM_int;
-			SignalOperations::integrate(_xs_GEM_sum, _ys_GEM_sum, GEM_int);
-			dr->AddToDraw(_xs_GEM_sum, GEM_int, "GEM\\\_I\\\_" + exp, "axes x1y2", 0);
-
-			//find start GEM time 
-			std::vector<double>::iterator x_start = _xs_GEM_sum.begin();
-			find_GEM_start_time(_xs_GEM_sum, _ys_GEM_sum, x_start, ParameterPile::GEM_N_of_averaging, graph_manager);
-			if (x_start != _xs_GEM_sum.end())
-				dr->AddToDraw_vertical(*x_start, -1, 1, "lc rgb \"#FF0000\"", 0);
-			//find finish GEM time
-			std::vector<double>::iterator x_finish = _xs_GEM_sum.begin();
-			double temp_y_max;
-			DVECTOR temp_xs = _xs_GEM_sum, temp_ys_I = GEM_int;
-			SignalOperations::apply_time_limits(temp_xs, temp_ys_I, *x_start, _xs_GEM_sum.back());
-			SignalOperations::get_max(temp_xs, temp_ys_I, x_finish, temp_y_max, ParameterPile::GEM_N_of_averaging);
-			if (x_finish != temp_xs.end())
-				dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"", 0);
-			std::cout << "Experiment " << area_.experiments.back() << " processed" << std::endl;
-			std::cout << "# of runs " << single_results.size() << std::endl;
-			//std::cout << "# of runs with empty PMT signal" << runs_no_PMT << std::endl;
-			if (x_finish != temp_xs.end() && x_start != _xs_GEM_sum.end()){
-				x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
-				double Integ = *(GEM_int.begin() + (x_finish - _xs_GEM_sum.begin())) - *(GEM_int.begin() + (x_start - _xs_GEM_sum.begin()));
-				std::cout << "GEM integral is " << Integ << std::endl;
-#ifdef _TEMP_CODE
-				std::ofstream GEM_results_file;
-				GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS, std::ios_base::app);
-				GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish << std::endl;
-				GEM_results_file.close();
-#endif
-				std::cout << "GEM timelimits are: [" << *x_start << ";" << *x_finish << "]" << std::endl;
-			} else {
-				std::cout << "GEM time boundaries are invalid" << std::endl;
-			}
-		}
-		//TODO: Add averaging over the runs etc.
-		//TODO: Probably will have to use average value for per run processing again.
-		//te best way I guess is to reverse nextRun (add prevRun, use reverse iterators) and 
-		//call processOneRun (averaging results);
-		//the thing is the same may be requred for experiment processing
-		//The other way is do not clean SingleRunData, and simply rerun processOneRun for every member of one_run_data with external pars
-	}
-	graph_manager.Draw();
 }
 
 void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man)
@@ -224,6 +121,66 @@ void AllRunsResults::find_S_cutoff(void)
 	}
 }
 
+void AllRunsResults::find_S_cutoff_v3(void)//TODO: explain the algorithm and mb test it
+{
+	if (_Ss.size() < 10) //not statistically significant. TODO: figure out the number, and ParameterPile, however this is not important
+		return;
+	DVECTOR areas = _Ss;
+	std::sort(areas.begin(), areas.end());
+	double G_mean = TMath::Mean(areas.begin(), areas.end());
+	double G_rms = TMath::RMS(areas.begin(), areas.end());
+	double G_min = *(areas.begin());
+	double G_max = areas.back();
+	//max_cutoff:
+	double max_cutoff = G_mean + 4 * G_rms; //TODO: ParameterPile
+	S_peaks_max_cutoff = max_cutoff;
+	DITERATOR erase_from;
+	for (erase_from = areas.begin(); erase_from != areas.end(); ++erase_from)
+		if ((*erase_from) > max_cutoff)
+			break;
+	areas.erase(erase_from, areas.end());
+	G_max = areas.back();
+	G_mean = TMath::Mean(areas.begin(), areas.end());
+	G_rms = TMath::RMS(areas.begin(), areas.end());
+	//applied max cutoff
+
+	int N_min_above_cutoff = areas.size()*0.2;//at least 20% //TODO: ParameterPile
+	int N_above_global_mean_acceptable = areas.size()*0.05; //see usage below for meaning
+	DVECTOR areas_full = areas;
+	
+	double max_ds = 0;
+	DITERATOR i_max_ds = areas.begin();
+	bool found_max_delta_S = false;
+	while (!found_max_delta_S){
+		for (auto i = areas.begin(); i != (areas.end() - 1); ++i) {
+			if ((*(i + 1) - *i) > max_ds){
+				max_ds = (*(i + 1) - *i);
+				i_max_ds = i + 1;
+			}
+		}
+		if ((areas.end() - i_max_ds) < N_min_above_cutoff) {//it is not the max of interest
+			areas.erase(i_max_ds, areas.end());
+			max_ds = 0;
+			i_max_ds = areas.begin();
+		} else {
+			found_max_delta_S = true;
+		}
+		if (areas.size() < N_min_above_cutoff){
+			i_max_ds = areas.begin();
+			break;
+		}
+	}
+	double mean = TMath::Mean(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
+	double rms = TMath::RMS(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
+	double cutoff = mean - rms * 2; //TODO: Parameter Pile
+	DITERATOR i_mean = SignalOperations::find_x_iterator_by_value(areas.begin(), areas.end() - 1, G_mean);
+	DITERATOR i_cutoff = SignalOperations::find_x_iterator_by_value(areas.begin(), areas.end() - 1, cutoff);
+	if (G_mean < cutoff)
+		if ((i_cutoff - i_mean) >= N_above_global_mean_acceptable)
+			cutoff = G_mean;//or set to S_peaks_cutoff ?
+	S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
+}
+
 void AllRunsResults::find_S_cutoff_v2(void)
 {
 	if (_Ss.size() < 10) //not statistically significant. TODO: figure out the number, and ParameterPile, however this is not important
@@ -237,4 +194,136 @@ void AllRunsResults::find_S_cutoff_v2(void)
 	Drawing *dr = graph_manager.GetDrawing(_exp.experiments.back() + " S_spreaded", 1, ParameterPile::DrawEngine::Gnuplot);
 	dr->AddToDraw(x_spreaded, y_spreaded, _exp.experiments.back() + " S_spreaded", "w lines", 0);
 	//dr->DrawData();
+}
+
+void AllRunsResults::Join(AllRunsResults* with)
+{
+	_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
+	_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
+	N_peaks_cutoff = with->N_peaks_cutoff;
+	S_peaks_cutoff = with->S_peaks_cutoff;
+	N_of_runs += with->N_of_runs;
+	if (_xs_GEM_sum.empty()) {
+		_xs_GEM_sum = with->_xs_GEM_sum;
+		_ys_GEM_sum = with->_ys_GEM_sum;
+	} else {
+		for (auto i = _ys_GEM_sum.begin(), j = with->_ys_GEM_sum.begin(); (i != _ys_GEM_sum.end()) && (j != with->_ys_GEM_sum.end()); ++j, ++i)
+			*i += *j;
+	}
+}
+
+void AllRunsResults::Joined(void)
+{
+	if (!_Ss.empty() && _xs_GEM_sum.empty()) {//_xs_GEM is empty at the first run
+		find_S_cutoff_v3();
+		//find_S_cutoff_v2();
+
+		DITERATOR S_max = std::max_element(_Ss.begin(), _Ss.end());
+		double hist_S_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S_max) : *S_max;
+		TH1D *hist_S = new TH1D("PMT_S_peaks", "PMT_S_peaks", 60, 0, hist_S_max);
+		/*TH1I *hist_n = new TH1I("PMT_N_peaks", "PMT_N_peaks", 30, 0, 30);*/
+
+		/*double *NNs = new double[_ns.size()];
+		double *SSs = new double[_Ss.size()];*/
+		for (int _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n){
+			if ((S_peaks_max_cutoff > S_peaks_cutoff) && (_Ss[_s] > S_peaks_max_cutoff))
+				continue; //do not draw if maximum limit is imposed && element exceeds it
+			/*NNs[_n] = _ns[_n];
+			SSs[_s] = _Ss[_s];*/
+			/*hist_n->Fill(_ns[_n]);*/
+			hist_S->Fill(_Ss[_s]);
+		}
+		TCanvas *c1 = new TCanvas(("S_peaks_distribution " + _exp.experiments.back()).c_str(),
+			("S_peaks_distribution " + _exp.experiments.back()).c_str());
+		c1->cd();
+		hist_S->Draw();
+		c1->Update();
+		TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
+		cutoff->SetLineColor(kRed);
+		cutoff->Draw();
+		c1->Update();
+		/*TCanvas *c2 = new TCanvas(("n_peaks_distribution " + _exp.experiments.back()).c_str(),
+		("n_peaks_distribution " + _exp.experiments.back()).c_str());
+		c2->cd();
+		hist_n->Draw();
+		c2->Update();
+
+		TCanvas *c3 = new TCanvas(("N-S Scatter " + _exp.experiments.back()).c_str(), ("N-S Scatter " + _exp.experiments.back()).c_str());
+		TGraph *gr = new TGraph(std::min(_ns.size(), _Ss.size()), SSs, NNs);
+		c3->cd();
+		gr->Draw("ap");
+		c3->Update();*/
+		/*delete[] NNs;
+		delete[] SSs;*/
+	}
+	int n_valid_runs = _Ss.size();
+	if (!_xs_GEM_sum.empty() && (0 != n_valid_runs)){ //x_GEM is not empty only at the second processing (when proper cutoffs were applied)
+		for (auto i = _ys_GEM_sum.begin(); i != _ys_GEM_sum.end(); ++i)
+			*i /= n_valid_runs;
+		ParameterPile::experiment_area area_ = _exp;
+		area_.runs.back() = ParameterPile::areas_to_draw.back().runs.back();
+		area_.sub_runs.back() = ParameterPile::areas_to_draw.back().sub_runs.back();
+		area_.channels.back() = ParameterPile::areas_to_draw.back().channels.back();
+		if (ParameterPile::draw_required(area_)){
+			//xs_GEM.insert(xs_GEM.begin(), 0);
+			//ys_GEM.insert(ys_GEM.begin(), 0);
+			std::string exp = _exp.experiments.back();
+			bool invalid = false;
+			for (auto i = exp.begin(); i != exp.end(); invalid ? i = exp.begin() : ++i){
+				invalid = false;
+				if (*i == '_'){
+					if (i != exp.begin())
+						if (*(i - 1) == '\\')
+							continue;
+					exp.insert(i, '\\');
+					invalid = true;
+				}
+			}
+			Drawing *dr = graph_manager.GetDrawing("GEM_" + area_.experiments.back(), 0, ParameterPile::DrawEngine::Gnuplot);
+			dr->AddToDraw(_xs_GEM_sum, _ys_GEM_sum, "GEM\\\_" + exp, "", 0);
+			std::vector<double> GEM_int;
+			SignalOperations::integrate(_xs_GEM_sum, _ys_GEM_sum, GEM_int);
+			dr->AddToDraw(_xs_GEM_sum, GEM_int, "GEM\\\_I\\\_" + exp, "axes x1y2", 0);
+
+			//find start GEM time 
+			std::vector<double>::iterator x_start = _xs_GEM_sum.begin();
+			find_GEM_start_time(_xs_GEM_sum, _ys_GEM_sum, x_start, ParameterPile::GEM_N_of_averaging, graph_manager);
+			if (x_start != _xs_GEM_sum.end())
+				dr->AddToDraw_vertical(*x_start, -1, 1, "lc rgb \"#FF0000\"", 0);
+			//find finish GEM time
+			std::vector<double>::iterator x_finish = _xs_GEM_sum.begin();
+			double temp_y_max;
+			DVECTOR temp_xs = _xs_GEM_sum, temp_ys_I = GEM_int;
+			SignalOperations::apply_time_limits(temp_xs, temp_ys_I, *x_start, _xs_GEM_sum.back());
+			SignalOperations::get_max(temp_xs, temp_ys_I, x_finish, temp_y_max, ParameterPile::GEM_N_of_averaging);
+			if (x_finish != temp_xs.end())
+				dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"", 0);
+			std::cout << "Experiment " << area_.experiments.back() << " processed" << std::endl;
+			std::cout << "# of runs " << N_of_runs << std::endl;
+			std::cout << "# of valid runs " << n_valid_runs << std::endl;
+			//std::cout << "# of runs with empty PMT signal" << runs_no_PMT << std::endl;
+			if (x_finish != temp_xs.end() && x_start != _xs_GEM_sum.end()){
+				x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
+				double Integ = *(GEM_int.begin() + (x_finish - _xs_GEM_sum.begin())) - *(GEM_int.begin() + (x_start - _xs_GEM_sum.begin()));
+				std::cout << "GEM integral is " << Integ << std::endl;
+#ifdef _TEMP_CODE
+				std::ofstream GEM_results_file;
+				GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS, std::ios_base::app);
+				GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish<<"\t"<<n_valid_runs<<"\t"
+					<<N_of_runs<<"\t"<<S_peaks_cutoff << std::endl;
+				GEM_results_file.close();
+#endif
+				std::cout << "GEM timelimits are: [" << *x_start << ";" << *x_finish << "]" << std::endl;
+			} else {
+				std::cout << "GEM time boundaries are invalid" << std::endl;
+			}
+		}
+		//TODO: Add averaging over the runs etc.
+		//TODO: Probably will have to use average value for per run processing again.
+		//te best way I guess is to reverse nextRun (add prevRun, use reverse iterators) and 
+		//call processOneRun (averaging results);
+		//the thing is the same may be requred for experiment processing
+		//The other way is do not clean SingleRunData, and simply rerun processOneRun for every member of one_run_data with external pars
+	}
+	graph_manager.Draw();
 }

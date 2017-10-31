@@ -4,12 +4,8 @@ AnalysisManager::AnalysisManager(ParameterPile::experiment_area exp_area)
 {
 	_exp_area = exp_area;
 	curr_run = NextRunIs::Null;
-#ifdef _TEMP_CODE //TODO: move this to the all_runs_data
-	std::ofstream file;
-	open_output_file(std::string(OUTPUT_DIR) + OUTPUT_GEMS, file);//creates folder AND trucates the file
-	file << "Experiment\tIntegral[V*us]\tt_from\tt_to" << std::endl;
-	file.close();
-#endif
+	_cond = NULL;
+	_thread_mutex = NULL;
 }
 
 void AnalysisManager::nextRun(void)
@@ -57,11 +53,15 @@ void AnalysisManager::processOneRun(void) //current_under_processing must be pre
 	one_run_data.push_back(SingleRunData(current_under_processing));
 	one_run_results.push_back(one_run_data.back().processSingleRun());
 	if (!one_run_results.back().isValid()){
+		/*std::cout << "invalid: " << current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
+			<< current_under_processing.sub_runs.back() << "_processed" << std::endl;*/
+		//std::cout << "reason: " << one_run_results.back().getStatus()<<std::endl;
+		//std::cout << "S=" << one_run_results.back().PMT3_summed_peaks_area << "| N = " << one_run_results.back().PMT3_n_peaks << std::endl;
 		one_run_results.pop_back();
 		one_run_data.pop_back();
 	} else {
-		std::cout<<"processed: "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
-					<< current_under_processing.sub_runs.back() << "_processed" << std::endl;
+		/*std::cout<<"processed: "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
+					<< current_under_processing.sub_runs.back() << "_processed" << std::endl;*/
 	}
 }
 
@@ -90,12 +90,15 @@ void AnalysisManager::processAllRuns(void)
 	loopAllRuns();
 	all_runs_results.push_back(AllRunsResults(one_run_results.back().curr_area));
 	all_runs_results.back().processAllRuns(one_run_results);
+	all_runs_results.back().Joined();//all in one thread, so it is already joined
 	loopAllRuns(&all_runs_results.back());
 	all_runs_results.back().processAllRuns(one_run_results);
+	all_runs_results.back().Joined();//all in one thread, so it is already joined
 
 	one_run_data.clear();
 	one_run_results.clear();
 }
+
 void AnalysisManager::processAllExperiments(void)
 {
 	nextRun();
@@ -106,24 +109,44 @@ void AnalysisManager::processAllExperiments(void)
 	//TODO: average, sumarize over all of the experiments
 }
 
-void AnalysisManager::save_all_runs(void)
+void AnalysisManager::proceessAllRunsOneThread(void)
 {
-
+	nextRun();
+	ParameterPile::experiment_area area = current_under_processing;
+	if (all_runs_results.empty()) { //first iteration
+		loopAllRuns();
+		while (curr_run != NextRunIs::Null)
+			nextRun();//skip the rest of experiments if any
+		//std::cout << "one_run_results.size()==" << one_run_results.size()<<std::endl;
+		all_runs_results.push_back(AllRunsResults(area));
+		all_runs_results.back().processAllRuns(one_run_results); //one_run_results may be empty
+	} else {
+		loopAllRuns(&all_runs_results.back());
+		all_runs_results.back().processAllRuns(one_run_results);
+		one_run_data.clear();
+		one_run_results.clear();
+	}
+	//std::cout << "finish_proceessAllRunsOneThread" << std::endl;
 }
-void AnalysisManager::save_all_exps(void)
+
+std::vector<AllRunsResults>* AnalysisManager::getAllRunsResults(void)
 {
-
+	return &all_runs_results;
 }
 
-bool AnalysisManager::check_run_processed(void)
+void AnalysisManager::setAllRunsResults(AllRunsResults* to_what)
 {
-	return false;
+	if (all_runs_results.empty())
+		all_runs_results.push_back(*to_what);
+	else
+		all_runs_results.back() = *to_what;
 }
-void AnalysisManager::save_one_run_results(void)
-{
 
-}
-void AnalysisManager::load_one_run_results(void)
-{
-
-}
+void AnalysisManager::setCondition(TCondition* cond)
+{	_cond = cond;}
+TCondition* AnalysisManager::getCondition(void)
+{	return _cond;}
+void AnalysisManager::setThreadMutex(TMutex* mutex)
+{	_thread_mutex = mutex;}
+TMutex* AnalysisManager::getThreadMutex(void)
+{	return _thread_mutex;}

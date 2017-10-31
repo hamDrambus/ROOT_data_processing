@@ -346,33 +346,6 @@ namespace SignalOperations {
 		x_start = xs.end(); //not found
 	}
 
-	//void find_GEM_start_time(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust)
-	//{
-	//	DVECTOR xs_before_S1 = xs, ys_before_S1 = ys;
-	//	apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_time);
-	//	DITERATOR x_befS1_max;
-	//	double noize_amp;
-	//	get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
-	//	noize_amp *= 1.1;
-	//	DITERATOR x_S1_left = xs.begin();
-	//	DITERATOR x_S1_right = xs.begin();
-	//	find_next_peak(xs, ys, x_S1_left, x_S1_right, noize_amp, N_trust);
-	//	find_next_extremum(xs, ys, (++x_S1_right), N_trust);
-	//	find_next_extremum(xs, ys, (++x_S1_right), N_trust);
-	//	find_next_extremum(xs, ys, (++x_S1_right), N_trust);
-	//	if (x_S1_right == xs.end()){
-	//		x_start = xs.end();
-	//		return;
-	//	}
-	//	if (*(ys.begin() + (x_S1_right - xs.begin())) > 0){
-	//		x_start = x_S1_right;
-	//		return;
-	//	}
-	//	x_S1_left = x_S1_right;
-	//	find_next_peak(xs, ys, x_S1_left, x_S1_right, 0, N_trust); //effectively finds intersection with 0
-	//	x_start = x_S1_left;
-	//}
-
 	void spread_peaks(double x_left, double x_right, std::vector<peak> &peaks)
 	{
 
