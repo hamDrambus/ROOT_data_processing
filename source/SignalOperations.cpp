@@ -1,6 +1,7 @@
 #include "SignalOperations.h"
 #include "Math/Functor.h"
 #include "Math/BrentMinimizer1D.h"
+#include "TSpectrum.h"
 #include "Polynom2Order.h"
 #include "GraphicOutputManager.h"
 
@@ -79,6 +80,22 @@ namespace SignalOperations {
 		if (0 == Sum_dx)
 			return approx;
 		return (Sum_int / Sum_dx) + approx;
+	}
+
+	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+		ys_out.clear();
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		spec->Background(f_ys, ys.size(), 50, TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+		ys_out.reserve(ys.size());
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete [] f_ys;
+		spec->Delete();
 	}
 
 	void integrate(std::vector<double>&xs, std::vector<double>&ys, std::vector<double> &y_out, double baseline)
@@ -178,7 +195,7 @@ namespace SignalOperations {
 			N_trust = 1;
 			use_fit = false;
 		}
-		int delta = N_trust / 2 + 1;
+		int delta = N_trust / 2;
 		y_max = *(ys.begin()+(x_start - xs.begin()));
 		x_max = x_start;
 
@@ -228,7 +245,7 @@ namespace SignalOperations {
 			N_trust = 1;
 			use_fit = false;
 		}
-		int delta = N_trust / 2 + 1;
+		int delta = N_trust / 2;
 		std::vector<double>::iterator approx_x_left = minimal_iterator;
 		std::vector<double>::iterator approx_x_right = xs.end();
 		bool found_peak = false;
@@ -245,6 +262,13 @@ namespace SignalOperations {
 				DITERATOR x_inter1, x_inter2;
 				double x_inter_exact1, x_inter_exact2;
 				fitter.FindIntersection(x_inter1, x_inter2, x_inter_exact1, x_inter_exact2, threshold);
+				//if (x_inter1 != xs.end() && x_inter2 != xs.end() && !found_peak) { //narrow peak case, found both point at the same iteration
+				//	if ((fitter.Derivative(x_inter_exact2) >= 0.0) && (fitter.Derivative(x_inter_exact1)) <= 0){
+				//		x_start = x_inter2;
+				//		x_finish = x_inter1;
+				//		return;
+				//	}
+				//}
 				if (x_inter2 != xs.end()){
 					if (found_peak){
 						if (fitter.Derivative(x_inter_exact2) <= 0.0){
@@ -307,7 +331,7 @@ namespace SignalOperations {
 					pk.A = -1;
 				peaks.push_back(pk);
 				x_peak_l = x_peak_r;
-				int delta_i = 1 + N_trust / 2;
+				int delta_i = N_trust / 2;
 				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
 			}
 		}
@@ -320,7 +344,7 @@ namespace SignalOperations {
 			N_trust = 1;
 			use_fit = false;
 		}
-		int delta = N_trust / 2 + 1;
+		int delta = N_trust / 2;
 		if (use_fit){
 			Polynom2Order fitter;
 			for (auto i = x_start, j = ys.begin()+(x_start - xs.begin()); (i != xs.end()) && (j != ys.end());

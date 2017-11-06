@@ -106,10 +106,8 @@ void SingleRunData::add_draw_baselines(std::string prefix, GraphicOutputManager&
 void SingleRunData::add_draw_data(std::string prefix, GraphicOutputManager& graph_manager, ParameterPile::DrawEngine de)
 {
 	for (int ch = curr_area.channels.get_next_index(); !(ch < 0); ch = curr_area.channels.get_next_index()) {
-		ParameterPile::experiment_area area(ParameterPile::experiment_area::Point);
-		area.experiments = curr_area.experiments;
-		area.runs = curr_area.runs;
-		area.sub_runs = curr_area.sub_runs;
+		ParameterPile::experiment_area area = curr_area.to_point();
+		area.channels.erase();
 		area.channels.push_back(ch);
 		if (ParameterPile::draw_required(area)){
 			std::string plot_name = "";
@@ -175,6 +173,9 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(const AllRunsResults *al
 		return _result;
 
 	SavitzkyGolayFilter SGfilter(ParameterPile::filter_PMT_n_points, ParameterPile::filter_PMT_order, ParameterPile::filter_PMT_n_iterations);
+#ifdef _TEMP_CODE
+	SavitzkyGolayFilter MPPC_SGfilter(ParameterPile::filter_MPPC_n_points, ParameterPile::filter_MPPC_order, ParameterPile::filter_MPPC_n_iterations);
+#endif
 	for (int ch = 0; ch < 2; ch++){
 		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if (ind < 0)
@@ -184,8 +185,67 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(const AllRunsResults *al
 		xs_channels[ind] = xs;
 		ys_channels[ind] = ys;
 	} //apply the filter to PMTs
+#ifndef _TEMP_CODE
 	add_draw_data("filtered_",graph_manager);
+#endif
 
+#ifdef _TEMP_CODE
+	for (int ch = 32; ch < 64; ch++){
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if (ind >= 0)
+			SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
+	} // invert MPPCs
+	//add_draw_data("in_",graph_manager);
+	for (int ch = 32; ch < 64; ch++){
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if (ind < 0)
+			continue;
+		std::vector<double> xs, ys;
+		SGfilter(xs_channels[ind], ys_channels[ind], xs, ys);
+		xs_channels[ind] = xs;
+		ys_channels[ind] = ys;
+		_result.mppc_baseline_xs.push_back(xs_channels[ind]);
+		_result.mppc_baseline_ys.push_back(DVECTOR());
+	}
+	add_draw_data("filtered_", graph_manager);
+#endif
+	for (int ch = 32, mppc_ind = 0; ch < 64; ch++){
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if (ind < 0)
+			continue;
+		SignalOperations::find_baseline_by_ROOT(xs_channels[ind], ys_channels[ind], _result.mppc_baseline_ys[mppc_ind]);
+		SignalOperations::substract_baseline(ys_channels[ind], _result.mppc_baseline_ys[mppc_ind]);
+		_result.mppc_peaks.push_back(std::vector<peak>());
+		SignalOperations::find_peaks(xs_channels[ind], ys_channels[ind], _result.mppc_peaks.back(), 0, 0.01, 10);
+		DVECTOR x_peaks, y_peaks;
+		SignalOperations::peaks_to_yx(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(), x_peaks, y_peaks);
+		DVECTOR x_peaks_spreaded, y_peaks_spreaded;
+		SignalOperations::spread_peaks(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(),x_peaks_spreaded, y_peaks_spreaded);
+#ifdef _TEMP_CODE
+		ParameterPile::experiment_area area = curr_area.to_point();
+		area.channels.erase();
+		area.channels.push_back(ch);
+		if (ParameterPile::draw_required(area)){
+			std::string plot_name = "";
+			plot_name += curr_area.experiments.back() + "_";
+			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch) + "_sub_" + std::to_string(area.sub_runs.back());
+			int ind = curr_area.channels.get_order_index_by_index(ch);
+
+			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, ParameterPile::DrawEngine::Gnuplot);
+			if (NULL != dr) {
+				dr->AddToDraw(_result.mppc_baseline_xs[mppc_ind], _result.mppc_baseline_ys[mppc_ind], "ROOT baseline", "w l", 0);
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline "+std::to_string(curr_area.runs.back()), "", 0);
+				dr->AddToDraw_baseline(0.01, "threshold");
+			}
+			dr = graph_manager.GetDrawing(plot_name + "peaks", ch + 100, ParameterPile::DrawEngine::Gnuplot);
+			if (NULL != dr) {
+				dr->AddToDraw(x_peaks, y_peaks, "peaks " + std::to_string(curr_area.runs.back()), "w l", 0);
+				dr->AddToDraw(x_peaks_spreaded, y_peaks_spreaded, "peaks spereaded " + std::to_string(curr_area.runs.back()), "w l", 0);
+			}
+		}
+#endif
+		mppc_ind++;
+	}
 	//int ind = curr_area.channels.get_order_index_by_index(0);
 	//if (!(ind < 0)){ //find baseline only for the sum of PMTs for the first run
 	//	std::vector<peak> no_peaks;
@@ -208,20 +268,20 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 	SingleRunResults _result(this);
 	_result.setValid(true);
 	_result._current_status = SingleRunResults::Status::Ok;
+#ifndef _TEMP_CODE
 	SavitzkyGolayFilter SGfilter(ParameterPile::filter_MPPC_n_points, ParameterPile::filter_MPPC_order, ParameterPile::filter_MPPC_n_iterations);
-
+#endif
 	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff, _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
 		goto end_proc;
 	}
-
+#ifndef _TEMP_CODE
 	for (int ch = 32; ch < 64; ch++){
 		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if (ind >= 0)
 			SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
 	} // invert MPPCs
-
 	//add_draw_data("in_",graph_manager);
 	for (int ch = 32; ch < 64; ch++){
 		int ind = curr_area.channels.get_order_index_by_index(ch);
@@ -233,6 +293,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		ys_channels[ind] = ys;
 	}
 	add_draw_data("filtered_", graph_manager);
+#endif
 
 	//get base lines
 	for (auto i = xs_channels.begin(), j = ys_channels.begin(); (i != xs_channels.end()) && (j != ys_channels.end()); i++, j++){
@@ -254,7 +315,9 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		found_base_lines[i - xs_channels.begin()] = SignalOperations::find_baseline_by_median(found_base_lines[i - xs_channels.begin()],
 			*i, *j, no_peaks);//memory is allocated in the constructor
 	}
+#ifndef _TEMP_CODE
 	add_draw_baselines("base filtered", graph_manager);
+#endif
 
 #ifdef _PROCESS_GEMS
 	int ind = curr_area.channels.get_order_index_by_index(2);
@@ -262,13 +325,13 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		_result.xs_GEM = xs_channels[ind];
 		_result.ys_GEM = ys_channels[ind];
 	}
-
 	if (_result.xs_GEM.empty() || _result.ys_GEM.empty() || _result.xs_GEM.size() != _result.ys_GEM.size()){
 		_result._current_status = SingleRunResults::Status::NoGEMsignal;
 		_result.setValid(false);
 		goto end_proc;
 	}
 #endif
+
 end_proc:
 	runProcessedProc();
 	return _result;

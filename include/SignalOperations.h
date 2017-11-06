@@ -9,6 +9,8 @@ namespace SignalOperations
 	void invert_y(std::vector<double> &x_in_out, std::vector<double> &y_in_out);
 	double find_baseline_by_median(double approx, std::vector<double>&xs, std::vector<double>&ys, std::vector<peak> &peaks);
 	double find_baseline_by_integral(double approx, std::vector<double>&xs, std::vector<double>&ys, std::vector<peak> &peaks);
+	void find_baseline_by_ROOT (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
+
 	void integrate(std::vector<double>&xs, std::vector<double>&ys, std::vector<double> &y_out, double baseline = 0);
 	void integrate(std::vector<double>&xs, std::vector<double>&ys, std::vector<double> &x_out, std::vector<double> &y_out,
 		double left, double right, double baseline = 0);

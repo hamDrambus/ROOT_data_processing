@@ -74,7 +74,7 @@ namespace ParameterPile
 	int subruns_per_file = 10;
 	bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 6; //obv. must be >=1
+	int threads_number = 1; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
@@ -159,12 +159,12 @@ namespace ParameterPile
 		areas_to_draw.back().experiments.push_back("16_thmV");
 		areas_to_draw.back().experiments.push_back("18_thmV");
 		areas_to_draw.back().experiments.push_back("20_thmV");
-		areas_to_draw.back().runs.push_back(0);
-		areas_to_draw.back().runs.push_back(0);
-		areas_to_draw.back().channels.push_back(0);
-		areas_to_draw.back().channels.push_back(0);
-		areas_to_draw.back().channels.push_back(2);
-		areas_to_draw.back().channels.push_back(2);
+		areas_to_draw.back().runs.push_back(3396);
+		areas_to_draw.back().runs.push_back(3400);
+		//areas_to_draw.back().channels.push_back(0);
+		//areas_to_draw.back().channels.push_back(0);
+		//areas_to_draw.back().channels.push_back(2);
+		//areas_to_draw.back().channels.push_back(2);
 		areas_to_draw.back().channels.push_back(40);
 		areas_to_draw.back().channels.push_back(41);
 		areas_to_draw.back().sub_runs.push_back(1);
@@ -174,14 +174,14 @@ namespace ParameterPile
 		exp_area.channels.push_back(0);
 		exp_area.channels.push_back(2);
 		exp_area.channels.push_back(2);
-		//exp_area.channels.push_back(41);
-		//exp_area.channels.push_back(41);
+		exp_area.channels.push_back(41);
+		exp_area.channels.push_back(41);
 		
-		exp_area.runs.push_back(2000);
-		exp_area.runs.push_back(5000);
+		exp_area.runs.push_back(3396);
+		exp_area.runs.push_back(3400);
 		
-		exp_area.sub_runs.push_back(0);
-		exp_area.sub_runs.push_back(0);//subruns_per_file-1);
+		exp_area.sub_runs.push_back(1);
+		exp_area.sub_runs.push_back(1);//subruns_per_file-1);
 
 		exp_area.experiments.push_back("4_thmV");
 		/*exp_area.experiments.push_back("5_thmV");
