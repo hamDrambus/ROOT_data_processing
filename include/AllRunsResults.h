@@ -19,21 +19,24 @@ protected:
 	DVECTOR _xs_GEM_sum;
 	DVECTOR _ys_GEM_sum;
 	int N_of_runs;
+	int Iteration_N;
 	ParameterPile::experiment_area _exp;
 	GraphicOutputManager graph_manager;
 	double S_peaks_cutoff;
 	double N_peaks_cutoff;
 	double S_peaks_max_cutoff;
+
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
-	void find_S_cutoff_v2(void);
-	void find_S_cutoff_v3(void);
+	//void find_S_cutoff_v2(void);
 public:
 	AllRunsResults(ParameterPile::experiment_area experiment);//only experiment and channells are important here
 	void processAllRuns(std::vector<SingleRunResults> &single_results);
 	//For multithreading:
-	void Join(AllRunsResults* with);
-	void Joined(void);
+	void Merge(AllRunsResults* with);
+	void Merged(void);
+	void Clear(void);
+	int Iteration(void) const;
 
 	friend AnalysisManager;
 	friend SingleRunData;

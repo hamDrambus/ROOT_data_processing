@@ -50,19 +50,13 @@ protected:
 	void readOneRun(SingleRunResults &results);
 public:
 	SingleRunData(ParameterPile::experiment_area area);
-	SingleRunResults processSingleRun(void);
+	SingleRunResults processSingleRun_Iter_0(const AllRunsResults *all_runs_results);
+	SingleRunResults processSingleRun_Iter_1(const AllRunsResults *all_runs_results);
 	SingleRunResults processSingleRun(const AllRunsResults *all_runs_results);
 	//^ must be called only if the previous SingleRunResults was valid
 	void runProcessedProc(void);
 	void clear_memory(void); //clears only 'input' data, preserves processing results
 	ParameterPile::experiment_area getArea(void) const;
-
-	//SingleRunData::Status getStatus(void) const;
-	//SingleRunResults* get_result(void) const;
-
-	friend std::ofstream & operator << (std::ofstream& str, SingleRunData& data);
-	friend std::ifstream & operator >> (std::ifstream& str, SingleRunData& data);
-	//friend AnalysisManager; //TODO: TEMP?
 };
 
 #endif

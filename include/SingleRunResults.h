@@ -20,9 +20,11 @@ protected:
 	std::vector<double> xs_GEM;
 	std::vector<double> ys_GEM;
 	std::vector<std::vector<peak>> mppc_peaks; //only for mppc channels
+	std::vector<DVECTOR> mppc_baseline_xs;
+	std::vector<DVECTOR> mppc_baseline_ys;
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
-	//SingleRunData *of_what;
+
 	bool is_valid;
 public:
 	SingleRunResults(SingleRunData *of_what);

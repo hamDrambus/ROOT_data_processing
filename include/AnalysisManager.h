@@ -31,10 +31,10 @@ protected:
 #endif
 
 	enum NextRunIs { FirstRun, NewSubRun, NewRun, NewExperiment, Null} curr_run;
-	virtual void processOneRun(void);
+	virtual void processOneRun_first_iteration(AllRunsResults *_all_results);
 	virtual void nextRun(void);
 	virtual void processAllRuns(void);
-	virtual void loopAllRuns(void);
+	virtual void loopAllRuns_first_iteration(AllRunsResults *_all_results);
 	virtual void loopAllRuns(AllRunsResults *_all_results);
 	//virtual void processOneRun(SingleRunData *run, AllRunsResults *_all_results);
 

@@ -81,25 +81,6 @@ namespace SignalOperations {
 		return (Sum_int / Sum_dx) + approx;
 	}
 
-	void find_peaks(DVECTOR &xs, DVECTOR &ys, std::vector<peak> &peaks, double base_line, double threshold, int N_trust)
-	{
-		peaks.clear();
-		DITERATOR x_peak_l = xs.begin(), x_peak_r = xs.begin();
-		while (x_peak_l != xs.end()){
-			SignalOperations::find_next_peak(xs, ys, x_peak_l, x_peak_r, threshold, N_trust);
-			if (x_peak_l != xs.end()){
-				peak pk;
-				pk.left = *x_peak_l;
-				pk.right = *x_peak_r;
-				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, base_line);
-				peaks.push_back(pk);
-				x_peak_l = x_peak_r;
-				int delta_i = 1 + N_trust / 2;
-				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
-			}
-		}
-	}
-
 	void integrate(std::vector<double>&xs, std::vector<double>&ys, std::vector<double> &y_out, double baseline)
 	{
 		y_out.clear();
@@ -173,7 +154,7 @@ namespace SignalOperations {
 		ys.erase(ys.begin(), iterator_left_y);
 	}
 
-	std::vector<double>::iterator find_x_iterator_by_value(std::vector<double>::iterator &x_left, std::vector<double>::iterator &x_right, double x)
+	DITERATOR find_x_iterator_by_value(DITERATOR &x_left, DITERATOR &x_right, double x)
 	{
 		for (auto h = x_left; h != x_right; h++) //find in which point of the vector the maximum realizes
 			if (!(*h > x) && !(*(h + 1) < x)){
@@ -185,9 +166,9 @@ namespace SignalOperations {
 			}
 		return x_left; // mustn't occur
 	}
-
-	void get_max(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_max, double &y_max, int N_trust)
+	void get_max(DVECTOR &xs, DVECTOR &ys, DITERATOR x_start, DITERATOR x_finish, DITERATOR &x_max, double &y_max, int N_trust)
 	{
+		N_trust = std::min(x_finish - x_start, N_trust); //other funtions return invalid results in this case
 		if (xs.size() != ys.size()){
 			x_max = xs.end();
 			return;
@@ -198,20 +179,20 @@ namespace SignalOperations {
 			use_fit = false;
 		}
 		int delta = N_trust / 2 + 1;
-		y_max = *(ys.begin());
-		x_max = xs.begin();
+		y_max = *(ys.begin()+(x_start - xs.begin()));
+		x_max = x_start;
 
 		if (use_fit){
 			Polynom2Order fitter;
-			for (auto i = xs.begin(), j = ys.begin(); (i != xs.end()) && (j != ys.end());
+			for (auto i = x_start, j = ys.begin() + (x_start-xs.begin()); (i != xs.end()) && (j != ys.end())&&(i<x_finish);
 				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
 				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
-				
+
 				TVectorD coefs;
 				DITERATOR x_left = i + shift;
-				fitter(xs, ys, x_left-xs.begin(), N_trust, coefs, *x_left);
+				fitter(xs, ys, x_left - xs.begin(), N_trust, coefs, *x_left);
 
-				double y_max_exact,x_max_exact;
+				double y_max_exact, x_max_exact;
 				DITERATOR x_max_here;
 				fitter.FindMaximum(x_max_here, x_max_exact, y_max_exact);
 				if (y_max < y_max_exact){
@@ -220,17 +201,20 @@ namespace SignalOperations {
 				}
 			}
 		} else //do not use the fit
-			for (auto i = xs.begin(), j = ys.begin(); (i != xs.end()) && (j != ys.end()); ++i, ++j){
+			for (auto i = x_start, j = ys.begin() + (x_start - xs.begin()); (i != xs.end()) && (j != ys.end()) && (i<x_finish); ++i, ++j){
 				if (*j > y_max){
 					x_max = i;
 					y_max = *j;
 				}
 			}
 	}
+	void get_max(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_max, double &y_max, int N_trust)
+	{	get_max(xs, ys, xs.begin(), xs.end(), x_max, y_max, N_trust);}
 	//after getting the peak, the next search must be started from (x_finish+1) or +(N_trust/2)!!!
 	void find_next_peak(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start,
-		DITERATOR &x_finish, double threshold, int N_trust)//TODO: does not handle double peak which middle
-		//is slightly above the threshold (slightly means that 2nd order fit would intersect the threshold)
+		DITERATOR &x_finish, double threshold, int N_trust)//done - now every step by x uses fitting 
+		//TODO: does not handle double peak which middle is slightly above
+		//the threshold (slightly means that 2nd order fit would intersect the threshold)
 	{
 		x_finish = xs.end();
 		if ((xs.size() != ys.size())||((xs.end()-x_start)<N_trust)){
@@ -306,7 +290,30 @@ namespace SignalOperations {
 		x_start = xs.end();
 	}
 
-	void find_next_extremum(std::vector<double>&xs, std::vector<double>&ys, std::vector<double>::iterator &x_start, int N_trust)
+	void find_peaks(DVECTOR &xs, DVECTOR &ys, std::vector<peak> &peaks, double base_line, double threshold, int N_trust)
+	{
+		peaks.clear();
+		DITERATOR x_peak_l = xs.begin(), x_peak_r = xs.begin();
+		while (x_peak_l != xs.end()){
+			SignalOperations::find_next_peak(xs, ys, x_peak_l, x_peak_r, threshold, N_trust);
+			if (x_peak_l != xs.end()){
+				peak pk;
+				pk.left = *x_peak_l;
+				pk.right = *x_peak_r;
+				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, base_line);
+				DITERATOR pk_max;
+				SignalOperations::get_max(xs, ys, x_peak_l, x_peak_r + 1, pk_max, pk.A, N_trust);
+				if (pk_max == xs.end())
+					pk.A = -1;
+				peaks.push_back(pk);
+				x_peak_l = x_peak_r;
+				int delta_i = 1 + N_trust / 2;
+				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
+			}
+		}
+	}
+
+	void find_next_extremum(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust)
 	{
 		bool use_fit = true;
 		if (N_trust < 3) {//2nd order polynom
@@ -318,7 +325,6 @@ namespace SignalOperations {
 			Polynom2Order fitter;
 			for (auto i = x_start, j = ys.begin()+(x_start - xs.begin()); (i != xs.end()) && (j != ys.end());
 				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
-				//TODO: is valid?
 				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
 				TVectorD coefs;
 				std::vector<double>::iterator x_left = i + shift;
@@ -346,12 +352,52 @@ namespace SignalOperations {
 		x_start = xs.end(); //not found
 	}
 
-	void spread_peaks(double x_left, double x_right, std::vector<peak> &peaks)
+	void spread_peaks(double x_left, double x_right, std::vector<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
-
+		//doesn't check whether peaks are valid (e.g. peak.A<0)
+		xs_out.clear();
+		ys_out.clear();
+		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp){
+			bool is_first = (pp == peaks.begin());
+			double x_l = is_first ? x_left - 1e-7 : ((pp - 1)->left + (pp - 1)->right) / 2;
+			double x_r = (pp->left + pp->right);
+			double y_v = is_first ? 0.5*pp->S : 0.5*((pp - 1)->S + pp->S);
+			xs_out.push_back(x_l + 1e-7);
+			xs_out.push_back(x_r - 1e-7);
+			ys_out.push_back(y_v);
+			ys_out.push_back(y_v);
+		}
+		double x_l = peaks.empty() ? x_left : 0.5*(peaks.back().left + peaks.back().right);
+		double x_r = x_right;
+		double y_v = peaks.empty() ? 0 : 0.5*(peaks.back().S);
+		xs_out.push_back(x_l + 1e-7);
+		xs_out.push_back(x_r);
+		ys_out.push_back(y_v);
+		ys_out.push_back(y_v);
 	}
 
-	void spread_peaks(DVECTOR &xs_in, DVECTOR &ys_in,DVECTOR &xs_out, DVECTOR& ys_out)
+	void peaks_to_yx(double x_left, double x_right, std::vector<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
+	{
+		xs_out.clear();
+		ys_out.clear();
+		xs_out.push_back(x_left);
+		ys_out.push_back(0);
+		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp) {
+			double y_v = pp->S / (pp->right - pp->left);
+			xs_out.push_back(pp->left - 1e-7);
+			ys_out.push_back(0);
+			xs_out.push_back(pp->left + 1e-7);
+			ys_out.push_back(y_v);
+			xs_out.push_back(pp->right - 1e-7);
+			ys_out.push_back(y_v);
+			xs_out.push_back(pp->right + 1e-7);
+			ys_out.push_back(0);
+		}
+		xs_out.push_back(x_right);
+		ys_out.push_back(0);
+	}
+
+	void spread_peaks(DVECTOR &xs_in, DVECTOR &ys_in, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
 		xs_out.clear();
 		ys_out.clear();
@@ -387,10 +433,23 @@ namespace SignalOperations {
 		ys_out.reserve(2*ys_in.size());
 		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != (xs_in.end() - 1)) && (j != (ys_in.end() - 1)); ++i, ++j){
 			xs_out.push_back(*i);
-			xs_out.push_back(*(i+1)-1e-6); //so I can plot it with gnuplot
+			xs_out.push_back(*(i+1)-1e-7); //so I can plot it with gnuplot
 			ys_out.push_back((*(j + 1) + (*j)) / (*(i + 1) - *i)); //xs are now different.
 			ys_out.push_back((*(j + 1) + (*j)) / (*(i + 1) - *i));
 		}
+	}
+
+	void substract_baseline(DVECTOR &ys_in, double base_line)
+	{
+		for (auto i = ys_in.begin(); i != ys_in.end(); ++i)
+			*i -= base_line;
+	}
+	void substract_baseline(DVECTOR &ys_in, DVECTOR &base_ys)
+	{
+		if (ys_in.size() != base_ys.size())
+			return;
+		for (auto i = ys_in.begin(), j = base_ys.begin(); (i != ys_in.end())&&(j!=base_ys.end()); ++i, ++j)
+			*i -= *j;
 	}
 
 };

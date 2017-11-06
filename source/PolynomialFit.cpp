@@ -49,7 +49,7 @@ void PolynomialFit::operator ()(const std::vector<double> &xs_in, const std::vec
 	TMatrixD mT = mat;
 	mT.T();
 	_last_coefs.ResizeTo(_order + 1);
-	_last_coefs = ((mT*mat).Invert())*mT*Y; //TODO?: optimize excessive multiplication when only A[0] is requred
+	_last_coefs = ((mT*mat).Invert())*mT*Y;
 	pars_out.ResizeTo(_last_coefs);
 	pars_out = _last_coefs;
 }

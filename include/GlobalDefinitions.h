@@ -17,6 +17,8 @@
 #include <Math/Point2D.h>
 #include <windows.h>
 
+#include "ExperimentArea.h"
+
 #undef max
 #undef min
 
@@ -41,63 +43,25 @@
 #define DVECTOR std::vector<double>
 #define DITERATOR std::vector<double>::iterator
 
-void open_output_file(std::string name, std::ofstream &str);
-int get_next_index(std::vector<int> areas, int curr_index);
-int get_order_index_by_index(int ind, std::vector<int> &areas);
+#define _PROCESS_GEMS
 
-struct peak
+void open_output_file(std::string name, std::ofstream &str);
+
+struct peak //TODO: add amplitude
 {
 	double left;
 	double right;
-	double S;
+	double S; //Area
+	double A; //Amplitude (from baseline)
 };
 
 namespace ParameterPile
 {
 	enum DrawEngine { Gnuplot, ROOT };
 
-	class area_vector
-	{
-	protected:
-		bool _is_valid;
-		std::vector<int> _vec;
-		int _last_returned_index;
-		std::vector<int>::iterator _last_returned_index_left;
-	public:
-		area_vector(void);
-		int get_order_index_by_index(int ind);
-		int get_index_by_order_index(int ind);
-		int get_next_index(void); //for running through all indices
-		int get_next_index(int after);
-		void push_pair(int left, int right);
-		void push(int val);
-		bool contains(int index);
-		bool empty(void);
-		std::vector<area_vector> split_area(int N);
-		area_vector intersect (area_vector& with);
-		void clear(); //clears _last_returned_index etc.
-		void erase(); //clears vector
-		//void refine (void); //[2,3][3,4] to [2,4]|OR| [4,5] [1,7] to 
-	};
-
-	class experiment_area //TODO - make analysis via this class. //->NextFile?
-	{
-	public:
-		enum Type {Area, Point};
-	protected:
-		Type _type;
-	public:
-		experiment_area(Type type = Type::Area);
-
-		std::vector<std::string> experiments;
-		std::vector<int> runs; //contains pairs [from, to]
-		std::vector<int> channels; //contains pairs [from, to]
-		std::vector<int> sub_runs; //contains pairs [from, to]
-		
-	};
-
 	bool draw_required(ParameterPile::experiment_area what);
-	extern std::vector <experiment_area> areas_to_draw;//TODO
+	
+	extern std::vector <experiment_area> areas_to_draw;
 	extern std::string this_path;
 	extern int subruns_per_file;
 	extern bool override_analysis;
@@ -124,6 +88,13 @@ namespace ParameterPile
 	extern int PMT_N_of_averaging; //=== N_trust
 	extern int PMT_N_peaks_acceptance;
 	extern double PMT_SArea_peaks_acceptance; //V*ms
+	extern double PMT_min_fraction_above_cutoff;
+	extern int PMT_min_statistics;
+	extern double PMT_mean_above_cutoff_acceptance;
+	extern double PMT_right_cutoff_from_RMS;
+	extern double PMT_left_cutoff_from_RMS;
+
+	extern int Max_iteration_N;
 
 	extern int gnuplot_pad_size;
 	extern int gnuplot_max_size;

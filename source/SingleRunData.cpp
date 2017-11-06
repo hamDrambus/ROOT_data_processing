@@ -6,50 +6,32 @@ SingleRunData::SingleRunData(ParameterPile::experiment_area area)
 {
 	curr_area.channels = area.channels;
 	curr_area.experiments = area.experiments;
-	curr_area.runs.push_back(area.runs[0]); //only one run is in this class, so no pairs
-	curr_area.sub_runs.push_back(area.sub_runs[0]); //only one subrun is in this class
+	curr_area.runs.push_back(area.runs.back());//only one run is in this class, so no pairs
+	curr_area.sub_runs.push_back(area.sub_runs.back()); //only one subrun is in this class
 
-	bool even = true;
-	int l =-1, r = -1;
-	for (auto i = curr_area.channels.begin(); i != curr_area.channels.end();i++,even=!even){
-		if (even)
-			l = *i;
-		else {
-			r = *i;
-			for (int c = l; c < r + 1; c++)
-				found_base_lines.push_back(ParameterPile::baseline_approx_value[get_order_index_by_index(c, curr_area.channels)]);
-		}
+	//curr_area.channels.clear(); - not really required unless break is used in the cycle with following for(;;)
+	for (int ch = curr_area.channels.get_next_index(); !(ch<0);ch = curr_area.channels.get_next_index()){
+		found_base_lines.push_back(ParameterPile::baseline_approx_value[curr_area.channels.get_order_index_by_index(ch)]);
 	}
 	PMT3_summed_peaks_area = 0;
 	PMT3_n_peaks = 0;
 	PMT_peaks_analysed = false;
-	//_current_status = Status::Empty;
-	//setValid(false);
 }
 
 void SingleRunData::readOneRun(SingleRunResults &_result)
 {
 	xs_channels.clear();
 	ys_channels.clear();
-	bool even = true;
-	int l = -1, r = -1;
 	bool empty_run = true;
-	for (auto i = curr_area.channels.begin(); i != curr_area.channels.end(); i++, even = !even){
-		if (even)
-			l = *i;
-		else {
-			r = *i;
-			for (int ch = l; ch < r + 1; ch++){
-				xs_channels.push_back(std::vector<double>());
-				ys_channels.push_back(std::vector<double>());
-				std::string path = DATA_PREFIX;
-				path += "event_x-ray_" + curr_area.experiments.back() + "\\";
-				path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(ch) + ".dat";
-				file_to_vector(path, xs_channels.back(), ys_channels.back(), curr_area.sub_runs.back());
-				if (!xs_channels.back().empty() && !ys_channels.empty())
-					empty_run = false;
-			}
-		}
+	for (int ch = curr_area.channels.get_next_index(); !(ch < 0); ch = curr_area.channels.get_next_index()){
+		xs_channels.push_back(std::vector<double>());
+		ys_channels.push_back(std::vector<double>());
+		std::string path = DATA_PREFIX;
+		path += "event_x-ray_" + curr_area.experiments.back() + "\\";
+		path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(ch) + ".dat";
+		file_to_vector(path, xs_channels.back(), ys_channels.back(), curr_area.sub_runs.back());
+		if (!xs_channels.back().empty() && !ys_channels.empty())
+			empty_run = false;
 	}
 	if (empty_run || xs_channels.empty() || ys_channels.empty() || xs_channels.size() != ys_channels.size()){
 		_result._current_status = SingleRunResults::Status::NotLoaded;
@@ -84,7 +66,7 @@ void SingleRunData::file_to_vector(std::string fname, std::vector<double> &xs, s
 			unsigned char b2_ = static_cast<unsigned char>(bytes[0]);
 			unsigned int val_ = ((b1_ << 8) | b2_);
 			double val = val_;
-			//TODO: move to per channel processing
+			//depr: it is ok as it is //TODO: move to per channel processing
 			val = DATA_VOLTAGE_AMPLITUDE*(val / DATA_VOLTAGE_CHANNELS) + DATA_VOLTAGE_OF_ZERO_CHANNEL;
 			xs.push_back(read_N*DATA_TIME_CONSTANT);
 			ys.push_back(val);
@@ -102,80 +84,57 @@ void SingleRunData::find_time_limits(void)
 
 void SingleRunData::add_draw_baselines(std::string prefix, GraphicOutputManager& graph_manager, ParameterPile::DrawEngine de)
 {
-	bool even = true;
-	int l = -1, r = -1;
-	for (auto i = curr_area.channels.begin(); i != curr_area.channels.end(); i++, even = !even){
-		if (even)
-			l = *i;
-		else {
-			r = *i;
-			for (int ch = l; ch < r + 1; ch++){
-				ParameterPile::experiment_area area;
-				area.experiments = curr_area.experiments;
-				area.runs = curr_area.runs;
-				area.sub_runs = curr_area.sub_runs;
-				area.channels.push_back(ch);
-				area.channels.push_back(ch);
-				if (ParameterPile::draw_required(area)){
-					std::string plot_name = "";
-					plot_name += curr_area.experiments.back() + "_";
-					plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch);
-					int ind = get_order_index_by_index(ch, curr_area.channels);
+	for (int ch = curr_area.channels.get_next_index(); !(ch < 0); ch = curr_area.channels.get_next_index()) {
+		ParameterPile::experiment_area area = curr_area.to_point(); //TODO: add constructor of point from area
+		area.channels.erase();
+		area.channels.push_back(ch);
+		if (ParameterPile::draw_required(area)){
+			std::string plot_name = "";
+			plot_name += curr_area.experiments.back() + "_";
+			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch);
+			int ind = curr_area.channels.get_order_index_by_index(ch);
 
-					Drawing *dr = graph_manager.GetDrawing(plot_name, ch, de);
-					if (NULL == dr)
-						return;
-					dr->AddToDraw_baseline(found_base_lines[ind], prefix,"", 0);
-					//dr->AddToDraw(found_base_lines[ind], prefix, 1);
-				}
-			}
+			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, de);
+			if (NULL == dr)
+				return;
+			dr->AddToDraw_baseline(found_base_lines[ind], prefix, "", 0);
+			//dr->AddToDraw(found_base_lines[ind], prefix, 1);
 		}
 	}
 }
 
-
 void SingleRunData::add_draw_data(std::string prefix, GraphicOutputManager& graph_manager, ParameterPile::DrawEngine de)
 {
-	bool even = true;
-	int l = -1, r = -1;
-	for (auto i = curr_area.channels.begin(); i != curr_area.channels.end(); i++, even = !even){
-		if (even)
-			l = *i;
-		else {
-			r = *i;
-			for (int ch = l; ch < r + 1; ch++){
-				ParameterPile::experiment_area area;
-				area.experiments = curr_area.experiments;
-				area.runs = curr_area.runs;
-				area.sub_runs = curr_area.sub_runs;
-				area.channels.push_back(ch);
-				area.channels.push_back(ch);
-				if (ParameterPile::draw_required(area)){
-					std::string plot_name = "";
-					plot_name += curr_area.experiments.back() + "_";
-					plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch)+"_sub_"+std::to_string(area.sub_runs.back());
-					int ind = get_order_index_by_index(ch, curr_area.channels);
+	for (int ch = curr_area.channels.get_next_index(); !(ch < 0); ch = curr_area.channels.get_next_index()) {
+		ParameterPile::experiment_area area(ParameterPile::experiment_area::Point);
+		area.experiments = curr_area.experiments;
+		area.runs = curr_area.runs;
+		area.sub_runs = curr_area.sub_runs;
+		area.channels.push_back(ch);
+		if (ParameterPile::draw_required(area)){
+			std::string plot_name = "";
+			plot_name += curr_area.experiments.back() + "_";
+			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch) + "_sub_" + std::to_string(area.sub_runs.back());
+			int ind = curr_area.channels.get_order_index_by_index(ch);
 
-					Drawing *dr = graph_manager.GetDrawing(plot_name, ch,de);
-					if (NULL == dr)
-						return;
-					/*if (prefix == "in_")
-						dr->AddToDraw(xs_channels[ind], ys_channels[ind], prefix, 1);
-					dr->AddToDraw(xs_channels[ind], ys_channels[ind], prefix, prefix=="in_" ? 0:1);*/
-					dr->AddToDraw(xs_channels[ind], ys_channels[ind], prefix,"", 0);
-				}
-			}
+			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, de);
+			if (NULL == dr)
+				return;
+			/*if (prefix == "in_")
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], prefix, 1);
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], prefix, prefix=="in_" ? 0:1);*/
+			dr->AddToDraw(xs_channels[ind], ys_channels[ind], prefix, "", 0);
 		}
 	}
 }
 
 bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, SingleRunResults &results)
 {
-	int ind = get_order_index_by_index(0, curr_area.channels);
+	int ind = curr_area.channels.get_order_index_by_index(0);
 	if (ind < 0)
 		return true; //can't test, so assuming the PMT signal is correct
 	
-	if (!PMT_peaks_analysed){ //of threshold is constant, the there is no need to recalculate this code
+	if (!PMT_peaks_analysed){ //if threshold is constant, then there is no need to recalculate this code
 		DVECTOR xs_before_S1 = xs_channels[ind], ys_before_S1 = ys_channels[ind];
 		SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs_before_S1.begin()), ParameterPile::S1_time);
 		double noise_amp;
@@ -207,7 +166,7 @@ bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, doubl
 	return false;
 }
 
-SingleRunResults SingleRunData::processSingleRun(void)
+SingleRunResults SingleRunData::processSingleRun_Iter_0(const AllRunsResults *all_runs_results)
 {
 	SingleRunResults _result(this);
 	readOneRun(_result);
@@ -217,61 +176,55 @@ SingleRunResults SingleRunData::processSingleRun(void)
 
 	SavitzkyGolayFilter SGfilter(ParameterPile::filter_PMT_n_points, ParameterPile::filter_PMT_order, ParameterPile::filter_PMT_n_iterations);
 	for (int ch = 0; ch < 2; ch++){
-		int ind = get_order_index_by_index(ch, curr_area.channels);
+		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if (ind < 0)
 			continue;
 		std::vector<double> xs, ys;
 		SGfilter(xs_channels[ind], ys_channels[ind], xs, ys);
 		xs_channels[ind] = xs;
 		ys_channels[ind] = ys;
-	}
-	//apply the filter to PMTs
+	} //apply the filter to PMTs
 	add_draw_data("filtered_",graph_manager);
 
-	//get base lines
-	int ind = get_order_index_by_index(0, curr_area.channels);
-	if (!(ind < 0)){ //find only for the PMT sum for the first run
-		std::vector<peak> no_peaks;
-		found_base_lines[ind] = SignalOperations::find_baseline_by_median(found_base_lines[ind],
-			xs_channels[ind], ys_channels[ind], no_peaks);
-	}
-	add_draw_baselines("base filtered", graph_manager);
+	//int ind = curr_area.channels.get_order_index_by_index(0);
+	//if (!(ind < 0)){ //find baseline only for the sum of PMTs for the first run
+	//	std::vector<peak> no_peaks;
+	//	found_base_lines[ind] = SignalOperations::find_baseline_by_median(found_base_lines[ind],
+	//		xs_channels[ind], ys_channels[ind], no_peaks);
+	//}
+	//add_draw_baselines("base filtered", graph_manager);
 
-	if (!test_PMT_signal(ParameterPile::PMT_N_peaks_acceptance, ParameterPile::PMT_SArea_peaks_acceptance,
-		ParameterPile::PMT_SArea_peaks_acceptance-1, _result)) {
+	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff, _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
-		goto end_proc;
 	}
 
-	end_proc:
 	runProcessedProc();
 	return _result;
 }
 
-SingleRunResults SingleRunData::processSingleRun(const AllRunsResults *all_runs_results)
+SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *all_runs_results)
 {
 	SingleRunResults _result(this);
 	_result.setValid(true);
 	_result._current_status = SingleRunResults::Status::Ok;
 	SavitzkyGolayFilter SGfilter(ParameterPile::filter_MPPC_n_points, ParameterPile::filter_MPPC_order, ParameterPile::filter_MPPC_n_iterations);
-	//TODO: acceptances form all_runs_resultss
-	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff , _result)) {
+
+	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff, _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
 		goto end_proc;
 	}
 
 	for (int ch = 32; ch < 64; ch++){
-		int ind = get_order_index_by_index(ch, curr_area.channels);
-		if (ind < 0)
-			continue;
-		SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if (ind >= 0)
+			SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
 	} // invert MPPCs
 
 	//add_draw_data("in_",graph_manager);
 	for (int ch = 32; ch < 64; ch++){
-		int ind = get_order_index_by_index(ch, curr_area.channels);
+		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if (ind < 0)
 			continue;
 		std::vector<double> xs, ys;
@@ -284,14 +237,14 @@ SingleRunResults SingleRunData::processSingleRun(const AllRunsResults *all_runs_
 	//get base lines
 	for (auto i = xs_channels.begin(), j = ys_channels.begin(); (i != xs_channels.end()) && (j != ys_channels.end()); i++, j++){
 		std::vector<peak> no_peaks;
-		if ((i - xs_channels.begin()) == get_order_index_by_index(2, curr_area.channels)){//GEM
+		if ((i - xs_channels.begin()) == curr_area.channels.get_order_index_by_index(2)){//GEM
 			peak before_S1;
 			before_S1.left = ParameterPile::S1_time;
 			before_S1.right = (*i).back();
 			before_S1.S = 0;
 			no_peaks.push_back(before_S1);
 			found_base_lines[i - xs_channels.begin()] =
-				SignalOperations::find_baseline_by_median(found_base_lines[i - xs_channels.begin()], *i, *j, no_peaks);
+				SignalOperations::find_baseline_by_integral(found_base_lines[i - xs_channels.begin()], *i, *j, no_peaks);
 			//memory for found_base_lines is allocated in the constructor
 			for (auto g = (*j).begin(); g != (*j).end(); ++g)
 				*g -= found_base_lines[i - xs_channels.begin()];
@@ -303,22 +256,31 @@ SingleRunResults SingleRunData::processSingleRun(const AllRunsResults *all_runs_
 	}
 	add_draw_baselines("base filtered", graph_manager);
 
-/*#ifndef _TEMP_CODE*/ //for a while, do not pass GEMs to single_results and hence all_results
-	int ind = get_order_index_by_index(2, curr_area.channels);
-	if (!(ind < 0)){
+#ifdef _PROCESS_GEMS
+	int ind = curr_area.channels.get_order_index_by_index(2);
+	if (ind >= 0){
 		_result.xs_GEM = xs_channels[ind];
 		_result.ys_GEM = ys_channels[ind];
 	}
-	//apply_time_limits(xs_GEM, ys_GEM, ParameterPile::S1_time, xs_GEM.back());
+
 	if (_result.xs_GEM.empty() || _result.ys_GEM.empty() || _result.xs_GEM.size() != _result.ys_GEM.size()){
 		_result._current_status = SingleRunResults::Status::NoGEMsignal;
 		_result.setValid(false);
 		goto end_proc;
 	}
-//#endif
+#endif
 end_proc:
 	runProcessedProc();
 	return _result;
+}
+
+SingleRunResults SingleRunData::processSingleRun(const AllRunsResults *all_runs_results)
+{
+	if (0 == all_runs_results->Iteration())
+		return processSingleRun_Iter_0(all_runs_results);
+	if (1 == all_runs_results->Iteration())
+		return processSingleRun_Iter_1(all_runs_results);
+	return SingleRunResults(this);
 }
 
 void SingleRunData::runProcessedProc(void)
@@ -334,15 +296,3 @@ void SingleRunData::clear_memory(void) //clears only 'input' data, preserves pro
 }
 
 ParameterPile::experiment_area SingleRunData::getArea(void) const {	return curr_area;}
-
-std::ofstream & operator << (std::ofstream& str, SingleRunData& data)
-{
-	return str;
-}
-
-std::ifstream & operator >> (std::ifstream& str, SingleRunData& data)
-{
-	/*if (!data.isValid())
-		return str;*/
-	return str;
-}

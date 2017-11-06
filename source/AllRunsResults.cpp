@@ -7,6 +7,7 @@ AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 	S_peaks_max_cutoff = S_peaks_cutoff - 1;
 	N_peaks_cutoff = ParameterPile::PMT_N_peaks_acceptance;
 	N_of_runs = 0;
+	Iteration_N = 0;
 }
 
 void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_results)
@@ -20,6 +21,7 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 			n_valid_runs++;
 			_Ss.push_back((*i).PMT3_summed_peaks_area);
 			_ns.push_back((*i).PMT3_n_peaks);
+#ifdef _PROCESS_GEMS
 			if (_xs_GEM_sum.empty()){
 				_xs_GEM_sum = (*i).xs_GEM;
 				_ys_GEM_sum = (*i).ys_GEM;
@@ -28,6 +30,7 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 					(ys1 != _ys_GEM_sum.end() && ys2 != (*i).ys_GEM.end()); ++ys1, ++ys2)
 					*ys1 += *ys2;
 			}
+#endif
 		}
 	}
 }
@@ -79,51 +82,12 @@ void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_
 	x_start = x_S1_left;
 }
 
-void AllRunsResults::find_S_cutoff(void)
+void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and mb test it
+//"mb" because the actual test is S histograms pictures with cutoffs. If pictures are ok, there is no need to
+//test the algorithm excessively
 {
-	if (_Ss.size() < 10) //not statistically significant. TODO: figure out the number, and ParameterPile, however this is not important
-		return;
-	DVECTOR areas = _Ss;
-	std::sort(areas.begin(), areas.end());
-	DVECTOR areas_full = areas;
-	double max_ds = 0;
-	DITERATOR i_max_ds = areas.begin();
-	bool found_max_delta_S = false;
-	while (!found_max_delta_S){
-		for (auto i = areas.begin(); i != (areas.end() - 1); ++i) {
-			if ((*(i + 1) - *i) > max_ds){
-				max_ds = (*(i + 1) - *i);
-				i_max_ds = i + 1;
-			}
-		}
-		if ((areas.end() - i_max_ds) < 10) {//it is not the max of interest
-			areas.erase(i_max_ds, areas.end());
-			max_ds = 0;
-			i_max_ds = areas.begin();
-		} else {
-			found_max_delta_S = true;
-		}
-		if (areas.size() < 10){
-			i_max_ds = areas.begin();
-			break;
-		}
-	}
-	if (found_max_delta_S) {
-		double mean = TMath::Mean(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
-		double rms = TMath::RMS(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
-		double cutoff = mean - rms * 2 ; //TODO: Parameter Pile
-		S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
-	} else {
-		double mean = TMath::Mean(areas_full.begin(), areas_full.end());
-		double rms = TMath::RMS(areas_full.begin(), areas_full.end());
-		double cutoff = mean - rms * 2; //TODO: Parameter Pile
-		S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
-	}
-}
-
-void AllRunsResults::find_S_cutoff_v3(void)//TODO: explain the algorithm and mb test it
-{
-	if (_Ss.size() < 10) //not statistically significant. TODO: figure out the number, and ParameterPile, however this is not important
+	if (_Ss.size() < ParameterPile::PMT_min_statistics) //not statistically significant. TODO: figure out the number,
+		//and ParameterPile, however this is not important
 		return;
 	DVECTOR areas = _Ss;
 	std::sort(areas.begin(), areas.end());
@@ -132,7 +96,7 @@ void AllRunsResults::find_S_cutoff_v3(void)//TODO: explain the algorithm and mb 
 	double G_min = *(areas.begin());
 	double G_max = areas.back();
 	//max_cutoff:
-	double max_cutoff = G_mean + 4 * G_rms; //TODO: ParameterPile
+	double max_cutoff = G_mean + ParameterPile::PMT_right_cutoff_from_RMS * G_rms;
 	S_peaks_max_cutoff = max_cutoff;
 	DITERATOR erase_from;
 	for (erase_from = areas.begin(); erase_from != areas.end(); ++erase_from)
@@ -144,8 +108,8 @@ void AllRunsResults::find_S_cutoff_v3(void)//TODO: explain the algorithm and mb 
 	G_rms = TMath::RMS(areas.begin(), areas.end());
 	//applied max cutoff
 
-	int N_min_above_cutoff = areas.size()*0.2;//at least 20% //TODO: ParameterPile
-	int N_above_global_mean_acceptable = areas.size()*0.05; //see usage below for meaning
+	int N_min_above_cutoff = areas.size()*ParameterPile::PMT_min_fraction_above_cutoff;
+	int N_above_global_mean_acceptable = areas.size()*ParameterPile::PMT_mean_above_cutoff_acceptance; //see usage below for meaning
 	DVECTOR areas_full = areas;
 	
 	double max_ds = 0;
@@ -172,7 +136,7 @@ void AllRunsResults::find_S_cutoff_v3(void)//TODO: explain the algorithm and mb 
 	}
 	double mean = TMath::Mean(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
 	double rms = TMath::RMS(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
-	double cutoff = mean - rms * 2; //TODO: Parameter Pile
+	double cutoff = mean - rms * ParameterPile::PMT_left_cutoff_from_RMS;
 	DITERATOR i_mean = SignalOperations::find_x_iterator_by_value(areas.begin(), areas.end() - 1, G_mean);
 	DITERATOR i_cutoff = SignalOperations::find_x_iterator_by_value(areas.begin(), areas.end() - 1, cutoff);
 	if (G_mean < cutoff)
@@ -181,28 +145,29 @@ void AllRunsResults::find_S_cutoff_v3(void)//TODO: explain the algorithm and mb 
 	S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
 }
 
-void AllRunsResults::find_S_cutoff_v2(void)
-{
-	if (_Ss.size() < 10) //not statistically significant. TODO: figure out the number, and ParameterPile, however this is not important
-		return;
-	DVECTOR areas = _Ss;
-	std::sort(areas.begin(), areas.end());
-	DVECTOR ys;
-	ys.resize(areas.size(), 1);
-	DVECTOR x_spreaded, y_spreaded;
-	SignalOperations::spread_peaks(areas, ys, x_spreaded, y_spreaded);
-	Drawing *dr = graph_manager.GetDrawing(_exp.experiments.back() + " S_spreaded", 1, ParameterPile::DrawEngine::Gnuplot);
-	dr->AddToDraw(x_spreaded, y_spreaded, _exp.experiments.back() + " S_spreaded", "w lines", 0);
-	//dr->DrawData();
-}
+//void AllRunsResults::find_S_cutoff_v2(void)
+//{
+//	if (_Ss.size() < 10) //not statistically significant. TODO: figure out the number, and ParameterPile, however this is not important
+//		return;
+//	DVECTOR areas = _Ss;
+//	std::sort(areas.begin(), areas.end());
+//	DVECTOR ys;
+//	ys.resize(areas.size(), 1);
+//	DVECTOR x_spreaded, y_spreaded;
+//	SignalOperations::spread_peaks(areas, ys, x_spreaded, y_spreaded);
+//	Drawing *dr = graph_manager.GetDrawing(_exp.experiments.back() + " S_spreaded", 1, ParameterPile::DrawEngine::Gnuplot);
+//	dr->AddToDraw(x_spreaded, y_spreaded, _exp.experiments.back() + " S_spreaded", "w lines", 0);
+//	//dr->DrawData();
+//}
 
-void AllRunsResults::Join(AllRunsResults* with)
+void AllRunsResults::Merge(AllRunsResults* with)
 {
 	_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
 	_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
 	N_peaks_cutoff = with->N_peaks_cutoff;
 	S_peaks_cutoff = with->S_peaks_cutoff;
 	N_of_runs += with->N_of_runs;
+	//Iteration_N = with->Iteration_N;
 	if (_xs_GEM_sum.empty()) {
 		_xs_GEM_sum = with->_xs_GEM_sum;
 		_ys_GEM_sum = with->_ys_GEM_sum;
@@ -212,11 +177,10 @@ void AllRunsResults::Join(AllRunsResults* with)
 	}
 }
 
-void AllRunsResults::Joined(void)
+void AllRunsResults::Merged(void)
 {
-	if (!_Ss.empty() && _xs_GEM_sum.empty()) {//_xs_GEM is empty at the first run
-		find_S_cutoff_v3();
-		//find_S_cutoff_v2();
+	if (!_Ss.empty() && (0==Iteration_N)) {//_xs_GEM is empty at the first run
+		find_S_cutoff();
 
 		DITERATOR S_max = std::max_element(_Ss.begin(), _Ss.end());
 		double hist_S_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S_max) : *S_max;
@@ -257,13 +221,13 @@ void AllRunsResults::Joined(void)
 		delete[] SSs;*/
 	}
 	int n_valid_runs = _Ss.size();
-	if (!_xs_GEM_sum.empty() && (0 != n_valid_runs)){ //x_GEM is not empty only at the second processing (when proper cutoffs were applied)
+#ifdef _PROCESS_GEMS
+	if (!_xs_GEM_sum.empty() && (0 != n_valid_runs)&&(1==Iteration_N)){
+		//x_GEM is not empty only at the second processing (when proper cutoffs were applied)
 		for (auto i = _ys_GEM_sum.begin(); i != _ys_GEM_sum.end(); ++i)
 			*i /= n_valid_runs;
-		ParameterPile::experiment_area area_ = _exp;
-		area_.runs.back() = ParameterPile::areas_to_draw.back().runs.back();
-		area_.sub_runs.back() = ParameterPile::areas_to_draw.back().sub_runs.back();
-		area_.channels.back() = ParameterPile::areas_to_draw.back().channels.back();
+		ParameterPile::experiment_area area_ = ParameterPile::areas_to_draw.back().to_point();
+		area_.experiments = _exp.experiments;
 		if (ParameterPile::draw_required(area_)){
 			//xs_GEM.insert(xs_GEM.begin(), 0);
 			//ys_GEM.insert(ys_GEM.begin(), 0);
@@ -306,24 +270,36 @@ void AllRunsResults::Joined(void)
 				x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
 				double Integ = *(GEM_int.begin() + (x_finish - _xs_GEM_sum.begin())) - *(GEM_int.begin() + (x_start - _xs_GEM_sum.begin()));
 				std::cout << "GEM integral is " << Integ << std::endl;
-#ifdef _TEMP_CODE
+		
 				std::ofstream GEM_results_file;
 				GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS, std::ios_base::app);
 				GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish<<"\t"<<n_valid_runs<<"\t"
 					<<N_of_runs<<"\t"<<S_peaks_cutoff << std::endl;
 				GEM_results_file.close();
-#endif
+				
 				std::cout << "GEM timelimits are: [" << *x_start << ";" << *x_finish << "]" << std::endl;
 			} else {
 				std::cout << "GEM time boundaries are invalid" << std::endl;
 			}
 		}
-		//TODO: Add averaging over the runs etc.
-		//TODO: Probably will have to use average value for per run processing again.
-		//te best way I guess is to reverse nextRun (add prevRun, use reverse iterators) and 
-		//call processOneRun (averaging results);
-		//the thing is the same may be requred for experiment processing
-		//The other way is do not clean SingleRunData, and simply rerun processOneRun for every member of one_run_data with external pars
 	}
+#endif
+	Iteration_N++;
 	graph_manager.Draw();
+}
+
+int AllRunsResults::Iteration(void) const
+{	return Iteration_N;}
+
+void AllRunsResults::Clear(void)
+{
+	_Ss.clear();
+	_ns.clear();
+	//N_peaks_cutoff preserve
+	//S_peaks_cutoff preserve
+	N_of_runs = 0;
+	//Iteration_N preserve;
+	_xs_GEM_sum.clear();
+	_ys_GEM_sum.clear();
+	graph_manager.Clear();
 }
