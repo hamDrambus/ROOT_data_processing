@@ -62,9 +62,9 @@ void Drawing::AddToDraw(std::vector<double> xs, std::vector<double> ys, std::str
 void Drawing::AddToDraw_baseline(double base_line, std::string title, std::string extra_txt, int pad_index)
 {
 	std::string definition_lines;
-	definition_lines=("a = " + std::to_string(base_line)+"\n");
-	definition_lines+="base(x) = a";
-	AddToDraw(definition_lines, "base(x)", title, extra_txt, pad_index);
+	//definition_lines=("a = " + std::to_string(base_line)+"\n");
+	//definition_lines+="base(x) = a";
+	AddToDraw(definition_lines, std::to_string(base_line), title, extra_txt, pad_index);
 }
 
 void Drawing::AddToDraw_vertical(double x_pos, double from_y, double to_y, std::string extra_txt, int pad_index)

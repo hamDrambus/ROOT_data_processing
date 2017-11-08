@@ -5,8 +5,8 @@
 //done TODO: 1 clean up cutoff algorithms (comment them?)
 //done (not tested) TODO: 2 add peak amplitude and refine peak finding operations
 //TODO: 3 global: analyse MPPCs :
-	// 1) fix spread peaks funtion
-	// 2) improme find peak funtion: thresh1 for finding peak as currenly + 
+	// done 1) fix spread peaks function
+	// done 2) improve find peak function: thresh1 for finding peak as currenly + 
 	//		thresh2 for finding actual peak edges
 	// 3) Tweak filter's + ROOT background function parameters
 	// 4) It's time to analyse MPPC for low fields:
@@ -14,7 +14,8 @@
 	//		2) find noise for the first 32 ms
 	//		3) Find peaks for first 32 ms
 	//		4) improve baseline omitting peaks
-	//		5) using noise*Factor find all peaks
+	//		5) using noise*Factor find all peaks. use ROOT's baseline for that? Then get baseline without peaks by avr over dt. update peaks.
+	//			should for for small baseline deviation
 	//		6) determine time windows for S1 and S2 signals using peaks (possible peak spread)
 	//			For stability use limitation for that windows
 	//		7) Tot. histograms of peaks outside S2 and S1 and inside S2

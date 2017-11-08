@@ -14,10 +14,14 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 {
 	_Ss.clear();
 	_ns.clear();
+	mppc_peaks_in_S2_area.clear();
+	mppc_S2_start_time.clear();
+	mppc_S2_finish_time.clear();
+	mppc_all_peaks_Ss.clear();
 	int n_valid_runs = 0;
 	N_of_runs = single_results.size();
 	for (auto i = single_results.begin(); i != single_results.end(); ++i){
-		if (i->isValid()){ //has meaning only at the secondary function call
+		if (i->isValid()) { //has meaning only at the secondary function call
 			n_valid_runs++;
 			_Ss.push_back((*i).PMT3_summed_peaks_area);
 			_ns.push_back((*i).PMT3_n_peaks);
@@ -31,6 +35,39 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 					*ys1 += *ys2;
 			}
 #endif
+			bool first = false, valid = true;
+			if (mppc_peaks_in_S2_area.empty())
+				first = true;
+			if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
+				|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size()))
+				valid = false;
+			if ((i->mppc_S2_peaks_area.size() != i->mppc_S2_start_t.size()) || (i->mppc_S2_peaks_area.size() != i->mppc_S2_finish_t.size())
+				|| (i->mppc_S2_peaks_area.size() != i->mppc_peaks.size()))
+				valid = false;
+			if (!valid) {
+				std::cout << "SingleRunResulst MPPC channels size mismatch" << std::endl;
+				continue; 
+			}
+			int sz = i->mppc_S2_peaks_area.size();
+			if (first){
+				mppc_peaks_in_S2_area.resize(sz, DVECTOR());
+				mppc_S2_start_time.resize(sz, DVECTOR());
+				mppc_S2_finish_time.resize(sz, DVECTOR());
+				mppc_all_peaks_Ss.resize(sz, DVECTOR());
+				for (int ch = 0; ch != sz; ++ch) {
+					mppc_peaks_in_S2_area[ch].reserve(single_results.size());
+					mppc_S2_start_time[ch].reserve(single_results.size());
+					mppc_S2_finish_time[ch].reserve(single_results.size());
+				}
+			}
+			for (int ch = 0; ch != sz; ++ch) {
+				mppc_peaks_in_S2_area[ch].push_back(i->mppc_S2_peaks_area[ch]);
+				mppc_S2_start_time[ch].push_back(i->mppc_S2_start_t[ch]);
+				mppc_S2_finish_time[ch].push_back(i->mppc_S2_finish_t[ch]);
+				for (auto peaks = i->mppc_peaks[ch].begin(); peaks != i->mppc_peaks[ch].end(); ++peaks){
+					mppc_all_peaks_Ss[ch].push_back(peaks->S);
+				}
+			}
 		}
 	}
 }
@@ -38,7 +75,7 @@ void AllRunsResults::processAllRuns(std::vector<SingleRunResults> &single_result
 void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man)
 {
 	std::vector<double> xs_before_S1 = xs, ys_before_S1 = ys;
-	SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_time);
+	SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_start_time);
 	DITERATOR x_befS1_max;
 	double noize_amp;
 	SignalOperations::get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
@@ -175,6 +212,35 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		for (auto i = _ys_GEM_sum.begin(), j = with->_ys_GEM_sum.begin(); (i != _ys_GEM_sum.end()) && (j != with->_ys_GEM_sum.end()); ++j, ++i)
 			*i += *j;
 	}
+
+	bool empty = false, valid = true;
+	if (mppc_peaks_in_S2_area.empty())
+		empty = true;
+	if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
+		|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size()))
+		valid = false;
+	if ((with->mppc_peaks_in_S2_area.size() != with->mppc_S2_start_time.size()) || (with->mppc_peaks_in_S2_area.size() != with->mppc_S2_finish_time.size())
+		|| (with->mppc_peaks_in_S2_area.size() != with->mppc_all_peaks_Ss.size()))
+		valid = false;
+	if (!valid) {
+		std::cout << "AllRunsResults contains invalid MPPC data: channels' size mismatches" << std::endl;
+		return;
+	}
+	if (!empty &&(mppc_peaks_in_S2_area.size() != with->mppc_peaks_in_S2_area.size())){
+		std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
+		return;
+	}
+	if (empty) {
+		mppc_peaks_in_S2_area=with->mppc_peaks_in_S2_area;
+		mppc_S2_start_time = with->mppc_S2_start_time;
+		mppc_S2_finish_time = with->mppc_S2_finish_time;
+		mppc_all_peaks_Ss = with->mppc_all_peaks_Ss;
+	} else {
+		mppc_peaks_in_S2_area.insert(mppc_peaks_in_S2_area.end(), with->mppc_peaks_in_S2_area.begin(), with->mppc_peaks_in_S2_area.end());
+		mppc_S2_start_time.insert(mppc_S2_start_time.end(), with->mppc_S2_start_time.begin(), with->mppc_S2_start_time.end());
+		mppc_S2_finish_time.insert(mppc_S2_finish_time.end(), with->mppc_S2_finish_time.begin(), with->mppc_S2_finish_time.end());
+		mppc_all_peaks_Ss.insert(mppc_all_peaks_Ss.end(), with->mppc_all_peaks_Ss.begin(), with->mppc_all_peaks_Ss.end());
+	}
 }
 
 void AllRunsResults::Merged(void)
@@ -252,38 +318,104 @@ void AllRunsResults::Merged(void)
 			//find start GEM time 
 			std::vector<double>::iterator x_start = _xs_GEM_sum.begin();
 			find_GEM_start_time(_xs_GEM_sum, _ys_GEM_sum, x_start, ParameterPile::GEM_N_of_averaging, graph_manager);
-			if (x_start != _xs_GEM_sum.end())
+			if (x_start != _xs_GEM_sum.end()) {
 				dr->AddToDraw_vertical(*x_start, -1, 1, "lc rgb \"#FF0000\"", 0);
-			//find finish GEM time
-			std::vector<double>::iterator x_finish = _xs_GEM_sum.begin();
-			double temp_y_max;
-			DVECTOR temp_xs = _xs_GEM_sum, temp_ys_I = GEM_int;
-			SignalOperations::apply_time_limits(temp_xs, temp_ys_I, *x_start, _xs_GEM_sum.back());
-			SignalOperations::get_max(temp_xs, temp_ys_I, x_finish, temp_y_max, ParameterPile::GEM_N_of_averaging);
-			if (x_finish != temp_xs.end())
-				dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"", 0);
-			std::cout << "Experiment " << area_.experiments.back() << " processed" << std::endl;
-			std::cout << "# of runs " << N_of_runs << std::endl;
-			std::cout << "# of valid runs " << n_valid_runs << std::endl;
-			//std::cout << "# of runs with empty PMT signal" << runs_no_PMT << std::endl;
-			if (x_finish != temp_xs.end() && x_start != _xs_GEM_sum.end()){
-				x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
-				double Integ = *(GEM_int.begin() + (x_finish - _xs_GEM_sum.begin())) - *(GEM_int.begin() + (x_start - _xs_GEM_sum.begin()));
-				std::cout << "GEM integral is " << Integ << std::endl;
-		
-				std::ofstream GEM_results_file;
-				GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS, std::ios_base::app);
-				GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish<<"\t"<<n_valid_runs<<"\t"
-					<<N_of_runs<<"\t"<<S_peaks_cutoff << std::endl;
-				GEM_results_file.close();
-				
-				std::cout << "GEM timelimits are: [" << *x_start << ";" << *x_finish << "]" << std::endl;
+				//find finish GEM time
+				std::vector<double>::iterator x_finish = _xs_GEM_sum.begin();
+				double temp_y_max;
+				DVECTOR temp_xs = _xs_GEM_sum, temp_ys_I = GEM_int;
+				SignalOperations::apply_time_limits(temp_xs, temp_ys_I, *x_start, _xs_GEM_sum.back());
+				SignalOperations::get_max(temp_xs, temp_ys_I, x_finish, temp_y_max, ParameterPile::GEM_N_of_averaging);
+				if (x_finish != temp_xs.end())
+					dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"", 0);
+				std::cout << "Experiment " << area_.experiments.back() << " processed" << std::endl;
+				std::cout << "# of runs " << N_of_runs << std::endl;
+				std::cout << "# of valid runs " << n_valid_runs << std::endl;
+				//std::cout << "# of runs with empty PMT signal" << runs_no_PMT << std::endl;
+				if (x_finish != temp_xs.end() && x_start != _xs_GEM_sum.end()){
+					x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
+					double Integ = *(GEM_int.begin() + (x_finish - _xs_GEM_sum.begin())) - *(GEM_int.begin() + (x_start - _xs_GEM_sum.begin()));
+					std::cout << "GEM integral is " << Integ << std::endl;
+
+					std::ofstream GEM_results_file;
+					GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS, std::ios_base::app);
+					GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish << "\t" << n_valid_runs << "\t"
+						<< N_of_runs << "\t" << S_peaks_cutoff << std::endl;
+					GEM_results_file.close();
+
+					std::cout << "GEM timelimits are: [" << *x_start << ";" << *x_finish << "]" << std::endl;
+				} else {
+					std::cout << "GEM time boundaries are invalid" << std::endl;
+				}
 			} else {
 				std::cout << "GEM time boundaries are invalid" << std::endl;
 			}
 		}
 	}
 #endif
+	bool valid = true;
+	if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
+		|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size()))
+		valid = false;
+	if (valid && !(mppc_peaks_in_S2_area.empty())) {
+		ParameterPile::experiment_area area_ = ParameterPile::areas_to_draw.back().to_point();
+		area_.experiments = _exp.experiments; //TODO: account for MPPC channel
+		if (ParameterPile::draw_required(area_)) {
+			for (int ch = 0; ch < mppc_peaks_in_S2_area.size(); ++ch){
+				DITERATOR V_max = std::max_element(mppc_all_peaks_Ss[ch].begin(), mppc_all_peaks_Ss[ch].end());
+				DITERATOR V_min = std::min_element(mppc_all_peaks_Ss[ch].begin(), mppc_all_peaks_Ss[ch].end());
+				//TODO: Figure out MPPC channel. And add historam creating function
+				TH1D *hist_S = new TH1D(("MPPC#" + std::to_string(ch) + "_S_peaks").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S_peaks").c_str(), 60, *V_min, *V_max);
+				V_max = std::max_element(mppc_peaks_in_S2_area[ch].begin(), mppc_peaks_in_S2_area[ch].end());
+				V_min = std::min_element(mppc_peaks_in_S2_area[ch].begin(), mppc_peaks_in_S2_area[ch].end());
+				TH1D *hist_S2_S = new TH1D(("MPPC#" + std::to_string(ch) + "_S_in_S2_peaks").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S_in_S2_peaks").c_str(), 60, *V_min, *V_max);
+				V_max = std::max_element(mppc_S2_start_time[ch].begin(), mppc_S2_start_time[ch].end());
+				V_min = std::min_element(mppc_S2_start_time[ch].begin(), mppc_S2_start_time[ch].end());
+				TH1D *hist_S2_start_t = new TH1D(("MPPC#" + std::to_string(ch) + "_S2_start_t").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S2_start_t").c_str(), 60, *V_min, *V_max);
+				V_max = std::max_element(mppc_S2_finish_time[ch].begin(), mppc_S2_finish_time[ch].end());
+				V_min = std::min_element(mppc_S2_finish_time[ch].begin(), mppc_S2_finish_time[ch].end());
+				TH1D *hist_S2_finish_t = new TH1D(("MPPC#" + std::to_string(ch) + "_S2_finish_t").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S2_finish_t").c_str(), 60, *V_min, *V_max);
+
+				for (int _n = 0; _n < mppc_all_peaks_Ss[ch].size(); ++_n)
+					hist_S->Fill(mppc_all_peaks_Ss[ch][_n]);
+				for (int _n = 0; _n < mppc_peaks_in_S2_area[ch].size(); ++_n)
+					hist_S2_S->Fill(mppc_peaks_in_S2_area[ch][_n]);
+				for (int _n = 0; _n < mppc_S2_start_time[ch].size(); ++_n)
+					hist_S2_start_t->Fill(mppc_S2_start_time[ch][_n]);
+				for (int _n = 0; _n < mppc_S2_finish_time[ch].size(); ++_n)
+					hist_S2_finish_t->Fill(mppc_S2_finish_time[ch][_n]);
+
+				TCanvas *c1 = new TCanvas(("MPPC#" + std::to_string(ch) + "_S_peaks").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S_peaks").c_str());
+				c1->cd();
+				hist_S->Draw();
+				c1->Update();
+
+				TCanvas *c2 = new TCanvas(("MPPC#" + std::to_string(ch) + "_S_in_S2_peaks").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S_in_S2_peaks").c_str());
+				c2->cd();
+				hist_S2_S->Draw();
+				c2->Update();
+
+				TCanvas *c3 = new TCanvas(("MPPC#" + std::to_string(ch) + "_S2_start_t").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S2_start_t").c_str());
+				c3->cd();
+				hist_S2_start_t->Draw();
+				c3->Update();
+
+				TCanvas *c4 = new TCanvas(("MPPC#" + std::to_string(ch) + "_S2_finish_t").c_str(),
+					("MPPC#" + std::to_string(ch) + "_S2_finish_t").c_str());
+				c4->cd();
+				hist_S2_finish_t->Draw();
+				c4->Update();
+
+			}
+		}
+	}
 	Iteration_N++;
 	graph_manager.Draw();
 }

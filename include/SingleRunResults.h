@@ -22,6 +22,11 @@ protected:
 	std::vector<std::vector<peak>> mppc_peaks; //only for mppc channels
 	std::vector<DVECTOR> mppc_baseline_xs;
 	std::vector<DVECTOR> mppc_baseline_ys;
+	DVECTOR mppc_S2_peaks_area;
+	DVECTOR mppc_S2_start_t;
+	DVECTOR mppc_S2_finish_t;
+	DVECTOR mppc_sum_peaks_area;
+
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
 

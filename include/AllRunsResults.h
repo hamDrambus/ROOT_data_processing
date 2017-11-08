@@ -26,6 +26,11 @@ protected:
 	double N_peaks_cutoff;
 	double S_peaks_max_cutoff;
 
+	std::vector<DVECTOR> mppc_peaks_in_S2_area; //size == mppc channels (depends on experiment area)
+	std::vector<DVECTOR> mppc_S2_start_time; //size == mppc channels (depends on experiment area)
+	std::vector<DVECTOR> mppc_S2_finish_time; //size == mppc channels (depends on experiment area)
+	std::vector<DVECTOR> mppc_all_peaks_Ss; //size == mppc channels (depends on experiment area)
+
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
 	//void find_S_cutoff_v2(void);

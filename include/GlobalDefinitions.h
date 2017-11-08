@@ -42,6 +42,7 @@
 #define _TEMP_CODE
 #define DVECTOR std::vector<double>
 #define DITERATOR std::vector<double>::iterator
+#define D_REV_ITERATOR std::vector<double>::reverse_iterator
 
 #define _PROCESS_GEMS
 
@@ -79,7 +80,11 @@ namespace ParameterPile
 	extern int baseline_search_max_iterations; //depr
 	extern std::vector<double> baseline_approx_value;
 
-	extern double S1_time; //in ms
+	//all times below are approximate
+	extern double S1_start_time; //in ms
+	extern double S1_finish_time; //in ms
+	extern double S2_start_time; //in ms
+	extern double S2_finish_time; //in ms
 
 	extern double GEM_threshold_to_noise;
 	extern int GEM_N_of_averaging; //=== N_trust

@@ -87,7 +87,11 @@ namespace ParameterPile
 	int baseline_search_max_iterations=4;
 	std::vector<double> baseline_approx_value;
 
-	double S1_time = 32; //in ms
+	//these values are approximate, especially S2
+	double S1_start_time = 32; //in ms
+	double S1_finish_time = 35; //in ms
+	double S2_start_time = 45; //in ms
+	double S2_finish_time = 145; //in ms
 
 	double GEM_threshold_to_noise = 1.1;
 	int GEM_N_of_averaging = 30; //=== N_trust
@@ -177,8 +181,8 @@ namespace ParameterPile
 		exp_area.channels.push_back(41);
 		exp_area.channels.push_back(41);
 		
-		exp_area.runs.push_back(3396);
-		exp_area.runs.push_back(3400);
+		exp_area.runs.push_back(2000);
+		exp_area.runs.push_back(5000);
 		
 		exp_area.sub_runs.push_back(1);
 		exp_area.sub_runs.push_back(1);//subruns_per_file-1);
@@ -195,7 +199,7 @@ namespace ParameterPile
 		exp_area.experiments.push_back("14_thmV");
 		exp_area.experiments.push_back("16_thmV");
 		exp_area.experiments.push_back("18_thmV");*/
-		exp_area.experiments.push_back("20_thmV");
+		//exp_area.experiments.push_back("20_thmV");
 
 		//TODO: ? get rid of baseline_approx? 
 		for (int ch = exp_area.channels.get_next_index(); !(ch < 0); ch = exp_area.channels.get_next_index()){

@@ -37,6 +37,18 @@ namespace SignalOperations {
 			return approx + 0.5*(selected_y[ind / 2] + selected_y[1 + (ind / 2)]);
 	}
 
+	double find_baseline_by_integral(double approx, std::vector<double>&xs, std::vector<double>&ys)
+	{
+		if ((xs.size() <= 1) || (xs.size() != ys.size()))
+			return approx;
+		double val = 0;
+		double dx = xs.back()-*(xs.begin());
+		if (0 == dx)
+			return approx;
+		integrate(xs, ys, val,xs.begin(),--xs.end());
+		return val/dx;
+	}
+
 	double find_baseline_by_integral(double approx, std::vector<double>&xs, std::vector<double>&ys, std::vector<peak> &peaks)
 	{
 		std::vector<std::vector<double>> xs_cut, ys_cut;
@@ -156,11 +168,11 @@ namespace SignalOperations {
 		std::vector<double>::iterator iterator_left = xs.begin(), iterator_right = xs.end() - 1;
 		std::vector<double>::iterator iterator_left_y = ys.begin(), iterator_right_y = ys.end() - 1;
 		for (auto ix = xs.begin(), iy = ys.begin(); (ix != xs.end()) && (iy != ys.end()); ix++, iy++){
-			if (!((*ix) > x_left)){
+			if (!((*ix) > x_left)) {
 				iterator_left = ix;
 				iterator_left_y = iy;
 			}
-			if (!((*ix) > x_right)){
+			if (!((*ix) > x_right)) {
 				iterator_right = ix;
 				iterator_right_y = iy;
 			}
@@ -195,7 +207,7 @@ namespace SignalOperations {
 			N_trust = 1;
 			use_fit = false;
 		}
-		int delta = N_trust / 2;
+		int delta = N_trust / 3;
 		y_max = *(ys.begin()+(x_start - xs.begin()));
 		x_max = x_start;
 
@@ -239,13 +251,13 @@ namespace SignalOperations {
 			x_finish = xs.begin();
 			return;
 		}
-		std::vector<double>::iterator minimal_iterator = x_start;
+		DITERATOR minimal_iterator = x_start;
 		bool use_fit = true;
 		if (N_trust < 3) {//2nd order polynom
 			N_trust = 1;
 			use_fit = false;
 		}
-		int delta = N_trust / 2;
+		int delta = N_trust / 3;
 		std::vector<double>::iterator approx_x_left = minimal_iterator;
 		std::vector<double>::iterator approx_x_right = xs.end();
 		bool found_peak = false;
@@ -253,30 +265,46 @@ namespace SignalOperations {
 		if (use_fit) {
 			Polynom2Order fitter;
 			for (auto i = minimal_iterator, j = ys.begin() + (minimal_iterator - xs.begin()); (i != xs.end()) && (j != ys.end());
-				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
+				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())) {
 				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
 				TVectorD coefs;
-				std::vector<double>::iterator x_left = i + shift;
+				DITERATOR x_left = i + shift;
 				fitter(xs, ys, (x_left - xs.begin()), N_trust, coefs, *x_left);
 
+//#ifdef _TEMP_CODE
+//				if ((*i <= 32.49) && (32.49 <= *(i + N_trust - 1))) {
+//					GraphicOutputManager man;
+//					Drawing *dr = man.GetDrawing("Peak find test "+std::to_string(*j), 0, ParameterPile::DrawEngine::Gnuplot);
+//					DVECTOR tmp_x, tmp_y;
+//					for (auto ti = i, tj = j; (ti < (i + N_trust)) && (tj < (j + N_trust)); ++ti, ++tj) {
+//						tmp_x.push_back(*ti);
+//						tmp_y.push_back(*tj);
+//					}
+//					dr->AddToDraw(tmp_x, tmp_y, "peak " + std::to_string(*j));
+//					TVectorD coefs;
+//					fitter.getCoefs(coefs);
+//					double a = coefs[2];
+//					double b = coefs[1]-2**x_left*coefs[2];
+//					double c = coefs[0] - coefs[1] * *x_left + coefs[2] * *x_left * *x_left;
+//					std::stringstream aa, bb, cc;
+//					aa << std::setprecision(12) << a;
+//					bb << std::setprecision(12) << b;
+//					cc << std::setprecision(12) << c;
+//					dr->AddToDraw("a = " + aa.str() + "\nb = " + bb.str() + "\nc = " + cc.str() + "\nf(x) = a*x*x + b*x + c", "f(x)", "fit", "w l", 0);
+//					man.Draw();
+//				}
+//#endif
 				DITERATOR x_inter1, x_inter2;
 				double x_inter_exact1, x_inter_exact2;
 				fitter.FindIntersection(x_inter1, x_inter2, x_inter_exact1, x_inter_exact2, threshold);
-				//if (x_inter1 != xs.end() && x_inter2 != xs.end() && !found_peak) { //narrow peak case, found both point at the same iteration
-				//	if ((fitter.Derivative(x_inter_exact2) >= 0.0) && (fitter.Derivative(x_inter_exact1)) <= 0){
-				//		x_start = x_inter2;
-				//		x_finish = x_inter1;
-				//		return;
-				//	}
-				//}
 				if (x_inter2 != xs.end()){
 					if (found_peak){
-						if (fitter.Derivative(x_inter_exact2) <= 0.0){
+						if (fitter.Derivative(x_inter_exact2) < 0.0){
 							x_finish = x_inter2;
 							return;
 						}
 					} else {
-						if (fitter.Derivative(x_inter_exact2) >= 0.0){
+						if (fitter.Derivative(x_inter_exact2) > 0.0){
 							x_start = x_inter2;
 							found_peak = true;
 						}
@@ -284,12 +312,12 @@ namespace SignalOperations {
 				}
 				if (x_inter1 != xs.end()){
 					if (found_peak){
-						if (fitter.Derivative(x_inter_exact1) <= 0.0){
+						if (fitter.Derivative(x_inter_exact1) < 0.0){
 							x_finish = x_inter1;
 							return;
 						}
 					} else {
-						if (fitter.Derivative(x_inter_exact1) >= 0.0){
+						if (fitter.Derivative(x_inter_exact1) > 0.0){
 							x_start = x_inter1;
 							found_peak = true;
 						}
@@ -331,7 +359,175 @@ namespace SignalOperations {
 					pk.A = -1;
 				peaks.push_back(pk);
 				x_peak_l = x_peak_r;
-				int delta_i = N_trust / 2;
+				int delta_i = std::max(N_trust / 3, 1);
+				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
+			}
+		}
+	}
+
+	//seaches peak from x_start, in difference to find_next peak this one first finds peak by threshold_finder and then finds its edges (wider 
+	//than intersection of threshold and signal) using thresh_edges.
+	void find_next_peak_fine(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, DITERATOR &x_finish, double &Amp,
+		double thresh_finder, double thresh_edges, int N_trust)
+	{
+		if (thresh_edges >= thresh_finder)
+			thresh_edges = 0;
+		x_finish = xs.end();
+		DITERATOR minimal_iterator = x_start;
+		DITERATOR pk_max;
+		if ((xs.size() != ys.size()) || ((xs.end() - x_start)<N_trust))
+			goto bad_return;
+		find_next_peak(xs, ys, x_start, x_finish, thresh_finder, N_trust);
+		if (x_start == xs.end())
+			goto bad_return;
+		SignalOperations::get_max(xs, ys, x_start, x_finish + 1, pk_max, Amp, N_trust);
+		if (pk_max == xs.end())
+			goto bad_return;
+
+		bool use_fit = true;
+		if (N_trust < 3) {//2nd order polynom
+			N_trust = 1;
+			use_fit = false;
+		}
+		int delta = N_trust / 3;
+		if (use_fit){ //now extend edges
+			Polynom2Order fitter;
+			for (auto i = x_finish, j = ys.begin() + (x_finish - xs.begin()); (i != xs.end()) && (j != ys.end());
+				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
+				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
+				TVectorD coefs;
+				DITERATOR x_left = i + shift;
+				fitter(xs, ys, (i - xs.begin()) + shift, N_trust, coefs, *x_left);
+				DITERATOR x_extr;
+				DITERATOR x_intersect1, x_intersect2;
+				DITERATOR x_inter = xs.end(); //of interest
+				double x_extr_exact, y_extr_exact;
+				double x_inter_exact1, x_inter_exact2;
+				fitter.FindExtremum(x_extr, x_extr_exact, y_extr_exact);
+				fitter.FindIntersection(x_intersect1, x_intersect2, x_inter_exact1, x_inter_exact2, thresh_edges);
+				if (x_extr <= x_finish)
+					x_extr = xs.end(); //accidently found extremum as peak maximum (in case x_start==x_finish)
+				if (x_intersect2 != xs.end())
+					if (fitter.Derivative(x_inter_exact2) < 0)
+						x_inter = x_intersect2;
+				if (x_intersect1 != xs.end()&&(x_inter==xs.end()))
+					if (fitter.Derivative(x_inter_exact1) < 0)
+						x_inter = x_intersect1;
+				if (x_extr != xs.end()&&x_inter!=xs.end()){
+					if (y_extr_exact < thresh_edges)
+						x_finish = x_inter;
+					else
+						x_finish = x_extr;
+					break;
+				}
+				if (x_extr != xs.end()){
+					x_finish = x_extr;
+					break;
+				}
+				if (x_inter != xs.end()){
+					x_finish = x_inter;
+					break;
+				}
+			}
+			D_REV_ITERATOR x_left_peak = D_REV_ITERATOR(x_start);
+			D_REV_ITERATOR x_rend = D_REV_ITERATOR(minimal_iterator);
+			for (auto i = x_left_peak, j = ys.rbegin() + (x_left_peak - xs.rbegin()); (i != x_rend) && (j != ys.rend());
+				((delta<(xs.rend() - i)) ? i = i + delta : i = x_rend), ((delta<(ys.rend() - j)) ? j = j + delta : j = ys.rend())){
+				int shift = (int)(xs.size() - (i - xs.rbegin()) - N_trust) < 0 ? (xs.size() - (i - xs.rbegin()) - N_trust) : 0; //accounts for the rend
+				TVectorD coefs;
+				DITERATOR x_left = (i + shift).base();
+				fitter(xs, ys, x_left - xs.begin(), N_trust, coefs, *x_left);
+				DITERATOR x_extr;
+				DITERATOR x_intersect1, x_intersect2;
+				DITERATOR x_inter = xs.end(); //of interest
+				double x_extr_exact, y_extr_exact;
+				double x_inter_exact1, x_inter_exact2;
+				fitter.FindExtremum(x_extr, x_extr_exact, y_extr_exact);
+				fitter.FindIntersection(x_intersect1, x_intersect2, x_inter_exact1, x_inter_exact2, thresh_edges);
+				if (x_extr >= x_start)
+					x_extr = xs.end(); //accidently found extremum as peak maximum (in case x_start==x_finish)
+				if (x_intersect2 != xs.end())
+					if (fitter.Derivative(x_inter_exact2) > 0)
+						x_inter = x_intersect2;
+				if (x_intersect1 != xs.end() && (x_inter == xs.end()))
+					if (fitter.Derivative(x_inter_exact1) > 0)
+						x_inter = x_intersect1;
+				if (x_extr != xs.end() && x_inter != xs.end()){
+					if (y_extr_exact < thresh_edges)
+						x_start = x_inter;
+					else
+						x_start = x_extr;
+					break;
+				}
+				if (x_extr != xs.end()){
+					x_start = x_extr;
+					break;
+				}
+				if (x_inter != xs.end()){
+					x_start = x_inter;
+					break;
+				}
+			}
+			if (x_start < minimal_iterator)
+				x_start = minimal_iterator;
+		} else { //do not use the fit
+			for (auto i = x_finish, j = ys.begin() + (x_finish - xs.begin()); (i != xs.end()) && (j != ys.end()); ++i, ++j){
+				if ((i == xs.begin()) || ((i + 1) == xs.end()))
+					continue;
+				if ((*j - thresh_edges)*(*(j - 1) - thresh_edges) <= 0){ //intersection
+					x_finish = i; //TODO: more exact?
+					break;
+				}
+				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){ //extremum
+					if (*j > thresh_edges)
+						x_finish = i;
+					break;
+				}
+			}
+			D_REV_ITERATOR x_left_peak = D_REV_ITERATOR(x_start);
+			D_REV_ITERATOR x_rend = D_REV_ITERATOR(minimal_iterator);
+			for (auto i = x_left_peak, j = ys.rbegin() + (x_left_peak - xs.rbegin()); (i != x_rend) && (j != ys.rend()); ++i, ++j){
+				if ((i == xs.rbegin()) || ((i + 1) == xs.rend()))
+					continue;
+				if ((*j - thresh_edges)*(*(j - 1) - thresh_edges) <= 0){
+					x_finish = i.base(); //TODO: more exact?
+					break;
+				}
+				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){
+					if (*j > thresh_edges) {
+						x_start = i.base();
+						break;
+					}
+				}
+			}
+			if (x_start < minimal_iterator)
+				x_start = minimal_iterator;
+		}
+		return;
+	bad_return:
+		Amp = -1;
+		x_start = xs.end();
+		x_finish = xs.begin();
+		return;
+	}
+	void find_peaks_fine(DVECTOR &xs, DVECTOR &ys, std::vector<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust)
+	{
+		if (threshold_edges >= threshold)
+			threshold_edges = 0;
+		peaks.clear();
+		DITERATOR x_peak_l = xs.begin(), x_peak_r = xs.begin();
+		while (x_peak_l != xs.end()){
+			double Amp;
+			SignalOperations::find_next_peak_fine(xs, ys, x_peak_l, x_peak_r,Amp, threshold, threshold_edges, N_trust);
+			if (x_peak_l != xs.end()){
+				peak pk;
+				pk.left = *x_peak_l;
+				pk.right = *x_peak_r;
+				pk.A = Amp;
+				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, base_line);
+				peaks.push_back(pk);
+				x_peak_l = x_peak_r;
+				int delta_i = std::max(N_trust / 3, 1);
 				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
 			}
 		}
@@ -344,8 +540,8 @@ namespace SignalOperations {
 			N_trust = 1;
 			use_fit = false;
 		}
-		int delta = N_trust / 2;
-		if (use_fit){
+		int delta = N_trust / 3;
+		if (use_fit) {
 			Polynom2Order fitter;
 			for (auto i = x_start, j = ys.begin()+(x_start - xs.begin()); (i != xs.end()) && (j != ys.end());
 				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
@@ -363,11 +559,11 @@ namespace SignalOperations {
 					return;
 				}
 			}
-		} else{ //do not use the fit
+		} else { //do not use the fit
 			for (auto i = x_start, j = ys.begin() +(x_start-xs.begin()) ; (i != xs.end()) && (j != ys.end()); ++i, ++j){
 				if ((i == xs.begin()) || ((i + 1) == xs.end()))
 					continue;
-				if (!((*i - *(i - 1))*(*(i + 1) - *i) < 0)){
+				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){
 					x_start = i;
 					return;
 				}
@@ -384,8 +580,9 @@ namespace SignalOperations {
 		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp){
 			bool is_first = (pp == peaks.begin());
 			double x_l = is_first ? x_left - 1e-7 : ((pp - 1)->left + (pp - 1)->right) / 2;
-			double x_r = (pp->left + pp->right);
+			double x_r = (pp->left + pp->right)/2;
 			double y_v = is_first ? 0.5*pp->S : 0.5*((pp - 1)->S + pp->S);
+			y_v /= x_r - x_l;
 			xs_out.push_back(x_l + 1e-7);
 			xs_out.push_back(x_r - 1e-7);
 			ys_out.push_back(y_v);
@@ -394,6 +591,46 @@ namespace SignalOperations {
 		double x_l = peaks.empty() ? x_left : 0.5*(peaks.back().left + peaks.back().right);
 		double x_r = x_right;
 		double y_v = peaks.empty() ? 0 : 0.5*(peaks.back().S);
+		y_v /= x_r - x_l;
+		xs_out.push_back(x_l + 1e-7);
+		xs_out.push_back(x_r);
+		ys_out.push_back(y_v);
+		ys_out.push_back(y_v);
+	}
+	//in comparisson to ^ has more smooth result
+	void spread_peaks_v2(double x_left, double x_right, std::vector<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out, double min_dx)
+	{
+		//doesn't check whether peaks are valid (e.g. peak.A<0)
+		xs_out.clear();
+		ys_out.clear();
+		double current_left_x;
+		bool uniting_several_peaks = false;
+		double y_v=0;
+		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp){
+			bool is_first = (pp == peaks.begin());
+			double x_l = uniting_several_peaks ? current_left_x :
+				(is_first ? x_left - 1e-7 : ((pp - 1)->left + (pp - 1)->right) / 2);
+			double x_r = (pp->left + pp->right) / 2;
+			y_v += is_first ? 0.5*pp->S : 0.5*((pp - 1)->S + pp->S);
+			if ((x_r - x_l) < min_dx){
+				uniting_several_peaks = true;
+				current_left_x = x_l;
+				continue;
+			} else {
+				uniting_several_peaks = false;
+			}
+			y_v /= x_r - x_l;
+			xs_out.push_back(x_l + 1e-7);
+			xs_out.push_back(x_r - 1e-7);
+			ys_out.push_back(y_v);
+			ys_out.push_back(y_v);
+			y_v = 0;
+		}
+		double x_l = uniting_several_peaks ? current_left_x : 
+			peaks.empty() ? x_left : 0.5*(peaks.back().left + peaks.back().right);
+		double x_r = x_right;
+		y_v += peaks.empty() ? 0 : 0.5*(peaks.back().S);
+		y_v /= x_r - x_l;
 		xs_out.push_back(x_l + 1e-7);
 		xs_out.push_back(x_r);
 		ys_out.push_back(y_v);
@@ -461,6 +698,27 @@ namespace SignalOperations {
 			ys_out.push_back((*(j + 1) + (*j)) / (*(i + 1) - *i)); //xs are now different.
 			ys_out.push_back((*(j + 1) + (*j)) / (*(i + 1) - *i));
 		}
+	}
+
+	void exclude_peaks(DVECTOR &xs_in, DVECTOR &ys_in, std::vector<peak> &peaks)
+	{
+		DVECTOR x_out, y_out;
+		x_out.reserve(xs_in.size());
+		y_out.reserve(ys_in.size());
+		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != xs_in.end()) && (j != ys_in.end()); ++i, ++j){
+			bool do_account = true;
+			for (auto pp = peaks.begin(); pp != peaks.end(); pp++)
+				if (!(*i<(*pp).left) && !(*i>(*pp).right)) {
+					do_account = false;
+					break;
+				}
+			if (do_account) {
+				x_out.push_back(*i);
+				y_out.push_back(*j);
+			}
+		}
+		xs_in = x_out;
+		ys_in = y_out;
 	}
 
 	void substract_baseline(DVECTOR &ys_in, double base_line)
