@@ -227,6 +227,11 @@ bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, doubl
 SingleRunResults SingleRunData::processSingleRun_Iter_0(const AllRunsResults *all_runs_results)
 {
 	SingleRunResults _result(this);
+//#ifdef _TEMP_CODE
+//	_result._current_status = SingleRunResults::Status::Ok;
+//	_result.setValid(true);
+//	return _result;
+//#endif
 	readOneRun(_result);
 
 	if (!_result.isValid())
@@ -462,6 +467,9 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 	SingleRunResults _result(this);
 	_result.setValid(true);
 	_result._current_status = SingleRunResults::Status::Ok;
+	//#ifdef _TEMP_CODE
+	//return _result;
+	//#endif
 //#ifndef _TEMP_CODE
 	SavitzkyGolayFilter SGfilter(ParameterPile::filter_MPPC_n_points, ParameterPile::filter_MPPC_order, ParameterPile::filter_MPPC_n_iterations);
 //#endif

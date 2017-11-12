@@ -266,11 +266,13 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		mppc_channels = with->mppc_channels;
 		mppc_double_Is = with->mppc_double_Is;
 	} else {
-		mppc_peaks_in_S2_area.insert(mppc_peaks_in_S2_area.end(), with->mppc_peaks_in_S2_area.begin(), with->mppc_peaks_in_S2_area.end());
-		mppc_S2_start_time.insert(mppc_S2_start_time.end(), with->mppc_S2_start_time.begin(), with->mppc_S2_start_time.end());
-		mppc_S2_finish_time.insert(mppc_S2_finish_time.end(), with->mppc_S2_finish_time.begin(), with->mppc_S2_finish_time.end());
-		mppc_all_peaks_Ss.insert(mppc_all_peaks_Ss.end(), with->mppc_all_peaks_Ss.begin(), with->mppc_all_peaks_Ss.end());
-		mppc_double_Is.insert(mppc_double_Is.end(), with->mppc_double_Is.begin(), with->mppc_double_Is.end());
+		for (int ch = 0; ch < mppc_peaks_in_S2_area.size();++ch) {
+			mppc_peaks_in_S2_area[ch].insert(mppc_peaks_in_S2_area[ch].end(), with->mppc_peaks_in_S2_area[ch].begin(), with->mppc_peaks_in_S2_area[ch].end());
+			mppc_S2_start_time[ch].insert(mppc_S2_start_time[ch].end(), with->mppc_S2_start_time[ch].begin(), with->mppc_S2_start_time[ch].end());
+			mppc_S2_finish_time[ch].insert(mppc_S2_finish_time[ch].end(), with->mppc_S2_finish_time[ch].begin(), with->mppc_S2_finish_time[ch].end());
+			mppc_all_peaks_Ss[ch].insert(mppc_all_peaks_Ss[ch].end(), with->mppc_all_peaks_Ss[ch].begin(), with->mppc_all_peaks_Ss[ch].end());
+			mppc_double_Is[ch].insert(mppc_double_Is[ch].end(), with->mppc_double_Is[ch].begin(), with->mppc_double_Is[ch].end());
+		}
 	}
 }
 
@@ -386,7 +388,8 @@ void AllRunsResults::Merged(void)
 #endif
 	bool valid = true;
 	if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
-		|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size()))
+		|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size())||(mppc_peaks_in_S2_area.size()!=mppc_channels.size())
+		|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()))
 		valid = false;
 	if (valid && !(mppc_peaks_in_S2_area.empty())) {
 		ParameterPile::experiment_area area_ = ParameterPile::areas_to_draw.back().to_point();
