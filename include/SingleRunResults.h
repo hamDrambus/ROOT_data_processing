@@ -25,7 +25,7 @@ protected:
 	DVECTOR mppc_S2_peaks_area;
 	DVECTOR mppc_S2_start_t;
 	DVECTOR mppc_S2_finish_t;
-	DVECTOR mppc_sum_peaks_area;
+	//DVECTOR mppc_sum_peaks_area;
 	DVECTOR mppc_double_I;
 	STD_CONT<int> mppc_channels;
 

@@ -77,7 +77,7 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 		DVECTOR().swap(i->mppc_S2_finish_t);
 		DVECTOR().swap(i->mppc_S2_peaks_area);
 		DVECTOR().swap(i->mppc_S2_start_t);
-		DVECTOR().swap(i->mppc_sum_peaks_area);
+		//DVECTOR().swap(i->mppc_sum_peaks_area);
 		DVECTOR().swap(i->mppc_double_I);
 		DVECTOR().swap(i->xs_GEM);
 		DVECTOR().swap(i->ys_GEM);
@@ -89,7 +89,7 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 		i->mppc_S2_finish_t.clear();
 		i->mppc_S2_peaks_area.clear();
 		i->mppc_S2_start_t.clear();
-		i->mppc_sum_peaks_area.clear();
+		//i->mppc_sum_peaks_area.clear();
 		i->mppc_double_I.clear();
 		i->xs_GEM.clear();
 		i->ys_GEM.clear();
@@ -399,7 +399,7 @@ void AllRunsResults::Merged(void)
 			std::ofstream output;
 			open_output_file(fname, output);
 			output << "MPPC#\tS_1pe_avr\tS_1pe_sigma\tS_2pe_avr\tS_2pe_sigma\tS2_S_avr\tS2_S_sigma\ttime_left_avr\ttime_right_avr\tdouble_I_avr\tdouble_I_sigma" << std::endl;
-			for (int ch = 0; ch < mppc_peaks_in_S2_area.size(); ++ch){
+			for (int ch = 0; ch < mppc_peaks_in_S2_area.size(); ++ch) {
 				std::string Ss_name = area_.experiments.back()+"MPPC#" + std::to_string(mppc_channels[ch]) + "_peaks_S";
 				std::string S2_S_name = area_.experiments.back() + "MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_S";
 				std::string S2_start_t_name = area_.experiments.back() + "MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_start_t";

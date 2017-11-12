@@ -504,7 +504,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		_result.mppc_S2_peaks_area.push_back(0);
 		_result.mppc_S2_start_t.push_back(0);
 		_result.mppc_S2_finish_t.push_back(0);
-		_result.mppc_sum_peaks_area.push_back(0);
+		//_result.mppc_sum_peaks_area.push_back(0);
 		_result.mppc_channels.push_back(ch);
 		_result.mppc_double_I.push_back(0);
 		//TODO: add methods get{noise,baseline,threshold,edge_threshold} (ind, mppc_ind);
@@ -701,11 +701,11 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 #ifdef _HOTFIX_CLEAR_MEMORY
 		DVECTOR().swap(_result.mppc_baseline_xs[mppc_ind]);
 		DVECTOR().swap(_result.mppc_baseline_ys[mppc_ind]);
-		STD_CONT<peak>().swap(_result.mppc_peaks[mppc_ind]);
+		//STD_CONT<peak>().swap(_result.mppc_peaks[mppc_ind]); //freed in AllRunsResult->Process, used to get Ss.
 #else
 		_result.mppc_baseline_xs[mppc_ind].clear();
 		_result.mppc_baseline_ys[mppc_ind].clear();
-		_result.mppc_peaks[mppc_ind].clear();
+		//_result.mppc_peaks[mppc_ind].clear();//freed in AllRunsResult->Process, used to get Ss.
 #endif
 		clearOneRunMPPCs(ch);
 #endif //_HOTFIX_DECREASE_MPPC_MEMORY_USAGE
