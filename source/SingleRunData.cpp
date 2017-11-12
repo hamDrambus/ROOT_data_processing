@@ -657,7 +657,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		ParameterPile::experiment_area area = curr_area.to_point();
 		area.channels.erase();
 		area.channels.push_back(ch);
-		if (ParameterPile::draw_required(area)) {
+		//if (ParameterPile::draw_required(area)) {
+		if (false) {
 			std::string plot_name = "";
 			plot_name += curr_area.experiments.back() + "_";
 			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch) + "_sub_" + std::to_string(area.sub_runs.back());

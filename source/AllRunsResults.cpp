@@ -410,8 +410,8 @@ void AllRunsResults::Merged(void)
 				//TODO: ParameterPile
 				TH1D *hist_S = createMPPCHist(mppc_all_peaks_Ss[ch], Ss_name, 0, 4.0, 60);
 				TH1D *hist_S2_S = createMPPCHist(mppc_peaks_in_S2_area[ch], S2_S_name, 0, 4.0, 60);
-				TH1D *hist_S2_start_t = createMPPCHist(mppc_S2_start_time[ch], S2_S_name, ParameterPile::S2_start_time, 4.0, 60);
-				TH1D *hist_S2_finish_t = createMPPCHist(mppc_S2_finish_time[ch], S2_S_name, ParameterPile::S2_start_time, 6.0, 60);
+				TH1D *hist_S2_start_t = createMPPCHist(mppc_S2_start_time[ch], S2_start_t_name, ParameterPile::S2_start_time, 4.0, 60);
+				TH1D *hist_S2_finish_t = createMPPCHist(mppc_S2_finish_time[ch], S2_finish_t_name, ParameterPile::S2_start_time, 6.0, 60);
 				TH1D *hist_double_I = createMPPCHist(mppc_double_Is[ch], double_I_name, 0, 6.0, 60);
 
 				/*TF1 *g1 = new TF1("m1", "gaus", hist_S->GetMinimum(), hist_S->GetMaximum());
@@ -446,7 +446,7 @@ void AllRunsResults::Merged(void)
 				hist_S2_S->Draw();
 				//_S2_S_fit->Draw();
 				c2->Update();
-
+#ifndef _TEMP_CODE
 				TCanvas *c3 = new TCanvas(S2_start_t_name.c_str(), S2_start_t_name.c_str());
 				c3->cd();
 				hist_S2_start_t->Fit(_S2_start_t_fit);
@@ -460,7 +460,7 @@ void AllRunsResults::Merged(void)
 				hist_S2_finish_t->Draw();
 				//_S2_finish_t_fit->Draw();
 				c4->Update();
-
+#endif
 				TCanvas *c5 = new TCanvas(double_I_name.c_str(), double_I_name.c_str());
 				c5->cd();
 				hist_double_I->Fit(_double_I_fit);
