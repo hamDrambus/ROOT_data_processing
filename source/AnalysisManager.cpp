@@ -63,8 +63,8 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 		one_run_results.pop_back();
 		one_run_data.pop_back();
 	} else {
-		/*std::cout<<"processed: "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
-					<< current_under_processing.sub_runs.back() << "_processed" << std::endl;*/
+		std::cout<<"processed: "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
+					<< current_under_processing.sub_runs.back() << std::endl;
 	}
 }
 
@@ -83,8 +83,11 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 		return loopAllRuns_first_iteration(_all_results);
 	auto i = one_run_results.begin();
 	auto j = one_run_data.begin();
-	for (; ((i != one_run_results.end())&&(j!=one_run_data.end())); ++i,++j)
+	for (; ((i != one_run_results.end()) && (j != one_run_data.end())); ++i, ++j){
 		*i = j->processSingleRun(_all_results);
+		std::cout << "processed: " << j->getArea().experiments.back() << "_run_" << j->getArea().runs.back() << "_sub_"
+			<< j->getArea().sub_runs.back() << std::endl;
+	}
 }
 
 void AnalysisManager::processAllRuns(void)
@@ -92,12 +95,17 @@ void AnalysisManager::processAllRuns(void)
 	all_runs_results.push_back(AllRunsResults(current_under_processing));
 	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N){
 		loopAllRuns(&all_runs_results.back());
+		all_runs_results.back().Clear();
 		all_runs_results.back().processAllRuns(one_run_results);
 		all_runs_results.back().Merged();//all in one thread, so it is already joined. Merge == iteration++
 	}
-
+#ifdef _HOTFIX_CLEAR_MEMORY
+	STD_CONT<SingleRunResults>().swap(one_run_results);
+	STD_CONT<SingleRunData>().swap(one_run_data);
+#else
 	one_run_data.clear();
 	one_run_results.clear();
+#endif
 }
 
 void AnalysisManager::processAllExperiments(void)
@@ -129,13 +137,18 @@ void AnalysisManager::proceessAllRunsOneThread(void)
 			nextRun();//skip the rest of experiments if any
 
 	if (ParameterPile::Max_iteration_N == all_runs_results.back().Iteration()) {
+#ifdef _HOTFIX_CLEAR_MEMORY
+		STD_CONT<SingleRunData>().swap(one_run_data);
+		STD_CONT<SingleRunResults>().swap(one_run_results);
+#else
 		one_run_data.clear();
 		one_run_results.clear();
+#endif
 	}
 	//std::cout << "finish_proceessAllRunsOneThread" << std::endl;
 }
 
-std::vector<AllRunsResults>* AnalysisManager::getAllRunsResults(void)
+STD_CONT<AllRunsResults>* AnalysisManager::getAllRunsResults(void)
 {
 	return &all_runs_results;
 }

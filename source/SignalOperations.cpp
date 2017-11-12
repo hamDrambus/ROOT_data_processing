@@ -7,13 +7,13 @@
 
 namespace SignalOperations {
 
-	void invert_y(std::vector<double> &x_in_out, std::vector<double> &y_in_out)
+	void invert_y(DVECTOR &x_in_out, DVECTOR &y_in_out)
 	{
 		for (auto i = y_in_out.begin(); i != y_in_out.end(); i++)
 			*i = -*i;
 	}
 
-	double find_baseline_by_median(double approx, std::vector<double>&xs, std::vector<double>&ys, std::vector<peak> &peaks)
+	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
 	{
 		DVECTOR selected_y;
 		for (auto i = xs.begin(), j = ys.begin(); (i != xs.end()) && (j != ys.end()); ++i, ++j){
@@ -37,7 +37,7 @@ namespace SignalOperations {
 			return approx + 0.5*(selected_y[ind / 2] + selected_y[1 + (ind / 2)]);
 	}
 
-	double find_baseline_by_integral(double approx, std::vector<double>&xs, std::vector<double>&ys)
+	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys)
 	{
 		if ((xs.size() <= 1) || (xs.size() != ys.size()))
 			return approx;
@@ -49,11 +49,11 @@ namespace SignalOperations {
 		return val/dx;
 	}
 
-	double find_baseline_by_integral(double approx, std::vector<double>&xs, std::vector<double>&ys, std::vector<peak> &peaks)
+	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
 	{
-		std::vector<std::vector<double>> xs_cut, ys_cut;
-		xs_cut.push_back(std::vector<double>());
-		ys_cut.push_back(std::vector<double>());
+		STD_CONT<DVECTOR> xs_cut, ys_cut;
+		xs_cut.push_back(DVECTOR());
+		ys_cut.push_back(DVECTOR());
 		bool one_vector = true;
 		for (auto i = xs.begin(), j = ys.begin(); (i != xs.end()) && (j != ys.end()); ++i, ++j){
 			bool do_account = true;
@@ -67,8 +67,8 @@ namespace SignalOperations {
 					xs_cut.pop_back();
 					ys_cut.pop_back();
 				}
-				xs_cut.push_back(std::vector<double>());
-				ys_cut.push_back(std::vector<double>());
+				xs_cut.push_back(DVECTOR());
+				ys_cut.push_back(DVECTOR());
 				one_vector = true;
 			}
 			if (do_account&&one_vector){
@@ -85,7 +85,7 @@ namespace SignalOperations {
 		double Sum_dx = 0, Sum_int = 0;
 		for (auto i = xs_cut.begin(), j = ys_cut.begin(); (i != xs_cut.end()), (j != ys_cut.end()); ++i, ++j){
 			Sum_dx += ((*i).back()) - *(*i).begin();
-			std::vector<double> tmp;
+			DVECTOR tmp;
 			integrate(*i, *j, tmp);
 			Sum_int += tmp.back();
 		}
@@ -96,24 +96,40 @@ namespace SignalOperations {
 
 	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(ys_out);
+#else
 		ys_out.clear();
+#endif
 		TSpectrum *spec = new TSpectrum();
 		float *f_ys = new float[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
 		spec->Background(f_ys, ys.size(), 50, TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+#ifndef _USE_DEQUE
 		ys_out.reserve(ys.size());
+#endif
 		for (int h = 0; h != ys.size(); ++h)
 			ys_out.push_back(f_ys[h]);
 		delete [] f_ys;
 		spec->Delete();
 	}
 
-	void integrate(std::vector<double>&xs, std::vector<double>&ys, std::vector<double> &y_out, double baseline)
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double baseline)
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(y_out);
+#else
 		y_out.clear();
+#endif
+#ifndef _USE_DEQUE
 		y_out.reserve(xs.size());
+#endif
+		if (xs.size() == 1){
+			y_out.push_back(0);
+			return;
+		}
 		for (auto ix = xs.begin(), iy = ys.begin(); (ix != xs.end()) && (iy != ys.end()); ix++, iy++){
 			double prev = y_out.empty() ? 0 : y_out.back();
 			double dx = (ix == (xs.end() - 1)) ? (*ix - *(ix - 1)) :
@@ -122,8 +138,15 @@ namespace SignalOperations {
 		}
 	}
 
-	void integrate(std::vector<double>&xs, std::vector<double>&ys, std::vector<double> &x_out, std::vector<double> &y_out, double left, double right, double baseline)
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double baseline)
 	{
+		if (xs.size() == 1){
+			if ((xs.back() < left) || (xs.back() > right))
+				return;
+			y_out.push_back(0);
+			x_out.push_back(xs.back());
+			return;
+		}
 		for (auto ix = xs.begin(), iy = ys.begin(); (ix != xs.end()) && (iy != ys.end()); ix++, iy++){
 			if (!((*ix) < left) && !((*ix)>right)){
 				double prev = y_out.empty() ? 0 : y_out.back();
@@ -136,12 +159,26 @@ namespace SignalOperations {
 
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, DITERATOR left, DITERATOR right, double baseline)
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(x_out);
+		DVECTOR().swap(y_out);
+#else
 		x_out.clear();
 		y_out.clear();
+#endif
 		if (right == xs.end()||left==xs.end()||(left>right))
 			return;
+#ifndef _USE_DEQUE
 		x_out.reserve(right - left + 1);
 		y_out.reserve(right - left + 1);
+#endif
+		if (xs.size() == 1) {
+			if (left != xs.end()){
+				x_out.push_back(*left);
+				y_out.push_back(0);
+			}
+			return;
+		}
 		DITERATOR x_end = ++right;
 		for (auto ix = left, iy = ys.begin() + (left-xs.begin()); (ix != x_end) && (iy != ys.end()); ++ix, ++iy){
 			double prev = y_out.empty() ? 0 : y_out.back();
@@ -157,16 +194,18 @@ namespace SignalOperations {
 			return;
 		DITERATOR x_end = ++right;
 		y_out = 0;
+		if (xs.size() <= 1)
+			return;
 		for (auto ix = left, iy = ys.begin() + (left - xs.begin()); (ix != x_end) && (iy != ys.end()); ++ix, ++iy){
 			double dx = (ix == (xs.end() - 1)) ? (*ix - *(ix - 1)) : (*(ix + 1) - *ix);
 			y_out+=dx*(*iy - baseline);
 		}
 	}
 
-	void apply_time_limits(std::vector<double>&xs, std::vector<double>&ys, double x_left, double x_right)
+	void apply_time_limits(DVECTOR &xs, DVECTOR &ys, double x_left, double x_right)
 	{
-		std::vector<double>::iterator iterator_left = xs.begin(), iterator_right = xs.end() - 1;
-		std::vector<double>::iterator iterator_left_y = ys.begin(), iterator_right_y = ys.end() - 1;
+		DITERATOR iterator_left = xs.begin(), iterator_right = xs.end() - 1;
+		DITERATOR iterator_left_y = ys.begin(), iterator_right_y = ys.end() - 1;
 		for (auto ix = xs.begin(), iy = ys.begin(); (ix != xs.end()) && (iy != ys.end()); ix++, iy++){
 			if (!((*ix) > x_left)) {
 				iterator_left = ix;
@@ -246,54 +285,55 @@ namespace SignalOperations {
 		//the threshold (slightly means that 2nd order fit would intersect the threshold)
 	{
 		x_finish = xs.end();
-		if ((xs.size() != ys.size())||((xs.end()-x_start)<N_trust)){
+		if ((xs.size() != ys.size()) || ((xs.end() - x_start) < N_trust)){
 			x_start = xs.end();
 			x_finish = xs.begin();
 			return;
 		}
 		DITERATOR minimal_iterator = x_start;
+		x_start = xs.end();
 		bool use_fit = true;
 		if (N_trust < 3) {//2nd order polynom
 			N_trust = 1;
 			use_fit = false;
 		}
 		int delta = N_trust / 3;
-		std::vector<double>::iterator approx_x_left = minimal_iterator;
-		std::vector<double>::iterator approx_x_right = xs.end();
+		DITERATOR approx_x_left = minimal_iterator;
+		DITERATOR approx_x_right = xs.end();
 		bool found_peak = false;
 
 		if (use_fit) {
 			Polynom2Order fitter;
 			for (auto i = minimal_iterator, j = ys.begin() + (minimal_iterator - xs.begin()); (i != xs.end()) && (j != ys.end());
-				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())) {
+				((delta < (xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta < (ys.end() - j)) ? j = j + delta : j = ys.end())) {
 				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
 				TVectorD coefs;
 				DITERATOR x_left = i + shift;
 				fitter(xs, ys, (x_left - xs.begin()), N_trust, coefs, *x_left);
 
-//#ifdef _TEMP_CODE
-//				if ((*i <= 32.49) && (32.49 <= *(i + N_trust - 1))) {
-//					GraphicOutputManager man;
-//					Drawing *dr = man.GetDrawing("Peak find test "+std::to_string(*j), 0, ParameterPile::DrawEngine::Gnuplot);
-//					DVECTOR tmp_x, tmp_y;
-//					for (auto ti = i, tj = j; (ti < (i + N_trust)) && (tj < (j + N_trust)); ++ti, ++tj) {
-//						tmp_x.push_back(*ti);
-//						tmp_y.push_back(*tj);
-//					}
-//					dr->AddToDraw(tmp_x, tmp_y, "peak " + std::to_string(*j));
-//					TVectorD coefs;
-//					fitter.getCoefs(coefs);
-//					double a = coefs[2];
-//					double b = coefs[1]-2**x_left*coefs[2];
-//					double c = coefs[0] - coefs[1] * *x_left + coefs[2] * *x_left * *x_left;
-//					std::stringstream aa, bb, cc;
-//					aa << std::setprecision(12) << a;
-//					bb << std::setprecision(12) << b;
-//					cc << std::setprecision(12) << c;
-//					dr->AddToDraw("a = " + aa.str() + "\nb = " + bb.str() + "\nc = " + cc.str() + "\nf(x) = a*x*x + b*x + c", "f(x)", "fit", "w l", 0);
-//					man.Draw();
-//				}
-//#endif
+				//#ifdef _TEMP_CODE
+				//				if ((*i <= 32.49) && (32.49 <= *(i + N_trust - 1))) {
+				//					GraphicOutputManager man;
+				//					Drawing *dr = man.GetDrawing("Peak find test "+std::to_string(*j), 0, ParameterPile::DrawEngine::Gnuplot);
+				//					DVECTOR tmp_x, tmp_y;
+				//					for (auto ti = i, tj = j; (ti < (i + N_trust)) && (tj < (j + N_trust)); ++ti, ++tj) {
+				//						tmp_x.push_back(*ti);
+				//						tmp_y.push_back(*tj);
+				//					}
+				//					dr->AddToDraw(tmp_x, tmp_y, "peak " + std::to_string(*j));
+				//					TVectorD coefs;
+				//					fitter.getCoefs(coefs);
+				//					double a = coefs[2];
+				//					double b = coefs[1]-2**x_left*coefs[2];
+				//					double c = coefs[0] - coefs[1] * *x_left + coefs[2] * *x_left * *x_left;
+				//					std::stringstream aa, bb, cc;
+				//					aa << std::setprecision(12) << a;
+				//					bb << std::setprecision(12) << b;
+				//					cc << std::setprecision(12) << c;
+				//					dr->AddToDraw("a = " + aa.str() + "\nb = " + bb.str() + "\nc = " + cc.str() + "\nf(x) = a*x*x + b*x + c", "f(x)", "fit", "w l", 0);
+				//					man.Draw();
+				//				}
+				//#endif
 				DITERATOR x_inter1, x_inter2;
 				double x_inter_exact1, x_inter_exact2;
 				fitter.FindIntersection(x_inter1, x_inter2, x_inter_exact1, x_inter_exact2, threshold);
@@ -328,7 +368,7 @@ namespace SignalOperations {
 			for (auto i = minimal_iterator, j = ys.begin() + (minimal_iterator - xs.begin()); (i != xs.end()) && (j != ys.end()); ++i, ++j){
 				if (found_peak){
 					if ((*j) < threshold){
-						x_finish= i - 1; //must be valid
+						x_finish = i - 1; //must be valid
 						return;
 					}
 				} else {
@@ -339,12 +379,20 @@ namespace SignalOperations {
 				}
 			}
 		}
+		if (found_peak&&x_start != xs.end()){
+			x_finish = xs.end() - 1;
+			return;
+		}
 		x_start = xs.end();
 	}
 
-	void find_peaks(DVECTOR &xs, DVECTOR &ys, std::vector<peak> &peaks, double base_line, double threshold, int N_trust)
+	void find_peaks(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double base_line, double threshold, int N_trust)
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		STD_CONT<peak>().swap(peaks);
+#else
 		peaks.clear();
+#endif
 		DITERATOR x_peak_l = xs.begin(), x_peak_r = xs.begin();
 		while (x_peak_l != xs.end()){
 			SignalOperations::find_next_peak(xs, ys, x_peak_l, x_peak_r, threshold, N_trust);
@@ -355,9 +403,8 @@ namespace SignalOperations {
 				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, base_line);
 				DITERATOR pk_max;
 				SignalOperations::get_max(xs, ys, x_peak_l, x_peak_r + 1, pk_max, pk.A, N_trust);
-				if (pk_max == xs.end())
-					pk.A = -1;
-				peaks.push_back(pk);
+				if ((pk_max != xs.end()) && (pk.S > 0) && (pk.right>=pk.left))
+					peaks.push_back(pk);
 				x_peak_l = x_peak_r;
 				int delta_i = std::max(N_trust / 3, 1);
 				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
@@ -510,11 +557,15 @@ namespace SignalOperations {
 		x_finish = xs.begin();
 		return;
 	}
-	void find_peaks_fine(DVECTOR &xs, DVECTOR &ys, std::vector<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust)
+	void find_peaks_fine(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust)
 	{
 		if (threshold_edges >= threshold)
 			threshold_edges = 0;
+#ifdef _HOTFIX_CLEAR_MEMORY
+		STD_CONT<peak>().swap(peaks);
+#else
 		peaks.clear();
+#endif
 		DITERATOR x_peak_l = xs.begin(), x_peak_r = xs.begin();
 		while (x_peak_l != xs.end()){
 			double Amp;
@@ -525,7 +576,8 @@ namespace SignalOperations {
 				pk.right = *x_peak_r;
 				pk.A = Amp;
 				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, base_line);
-				peaks.push_back(pk);
+				if ((pk.S>0) && (pk.A>0)&&(pk.right>=pk.left))
+					peaks.push_back(pk);
 				x_peak_l = x_peak_r;
 				int delta_i = std::max(N_trust / 3, 1);
 				x_peak_l = ((xs.end() - x_peak_l) < delta_i) ? xs.end() : (x_peak_l + delta_i);
@@ -547,7 +599,7 @@ namespace SignalOperations {
 				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
 				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
 				TVectorD coefs;
-				std::vector<double>::iterator x_left = i + shift;
+				DITERATOR x_left = i + shift;
 				fitter(xs, ys, (i - xs.begin()) + shift, N_trust, coefs, *x_left);
 				DITERATOR x_extr;
 				double x_extr_exact, y_extr_exact;
@@ -572,11 +624,16 @@ namespace SignalOperations {
 		x_start = xs.end(); //not found
 	}
 
-	void spread_peaks(double x_left, double x_right, std::vector<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
+	void spread_peaks(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
 		//doesn't check whether peaks are valid (e.g. peak.A<0)
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(xs_out);
+		DVECTOR().swap(ys_out);
+#else
 		xs_out.clear();
 		ys_out.clear();
+#endif
 		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp){
 			bool is_first = (pp == peaks.begin());
 			double x_l = is_first ? x_left - 1e-7 : ((pp - 1)->left + (pp - 1)->right) / 2;
@@ -598,11 +655,16 @@ namespace SignalOperations {
 		ys_out.push_back(y_v);
 	}
 	//in comparisson to ^ has more smooth result
-	void spread_peaks_v2(double x_left, double x_right, std::vector<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out, double min_dx)
+	void spread_peaks_v2(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out, double min_dx)
 	{
 		//doesn't check whether peaks are valid (e.g. peak.A<0)
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(xs_out);
+		DVECTOR().swap(ys_out);
+#else
 		xs_out.clear();
 		ys_out.clear();
+#endif
 		double current_left_x;
 		bool uniting_several_peaks = false;
 		double y_v=0;
@@ -629,18 +691,30 @@ namespace SignalOperations {
 		double x_l = uniting_several_peaks ? current_left_x : 
 			peaks.empty() ? x_left : 0.5*(peaks.back().left + peaks.back().right);
 		double x_r = x_right;
+		double dx = x_r - x_l;
+		if (dx < min_dx) {
+			if (xs_out.size() >= 2)
+				dx = std::max(x_r - *(xs_out.end() - 2), min_dx);
+			else
+				dx = min_dx;
+		}
 		y_v += peaks.empty() ? 0 : 0.5*(peaks.back().S);
-		y_v /= x_r - x_l;
+		y_v /= dx;
 		xs_out.push_back(x_l + 1e-7);
 		xs_out.push_back(x_r);
 		ys_out.push_back(y_v);
 		ys_out.push_back(y_v);
 	}
 
-	void peaks_to_yx(double x_left, double x_right, std::vector<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
+	void peaks_to_yx(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(xs_out);
+		DVECTOR().swap(ys_out);
+#else
 		xs_out.clear();
 		ys_out.clear();
+#endif
 		xs_out.push_back(x_left);
 		ys_out.push_back(0);
 		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp) {
@@ -660,10 +734,17 @@ namespace SignalOperations {
 
 	void spread_peaks(DVECTOR &xs_in, DVECTOR &ys_in, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(xs_out);
+		DVECTOR().swap(ys_out);
+#else
 		xs_out.clear();
 		ys_out.clear();
+#endif
+#ifndef _USE_DEQUE
 		xs_out.reserve(xs_in.size());
 		ys_out.reserve(ys_in.size());
+#endif
 		bool first= true; //eliminating the same xs
 		double x_prev;
 		double y_val;
@@ -690,8 +771,10 @@ namespace SignalOperations {
 
 		if ((xs_in.size() < 2)||ys_in.size()!=xs_in.size())
 			return;
+#ifndef _USE_DEQUE
 		xs_out.reserve(2*xs_in.size());
 		ys_out.reserve(2*ys_in.size());
+#endif
 		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != (xs_in.end() - 1)) && (j != (ys_in.end() - 1)); ++i, ++j){
 			xs_out.push_back(*i);
 			xs_out.push_back(*(i+1)-1e-7); //so I can plot it with gnuplot
@@ -700,11 +783,13 @@ namespace SignalOperations {
 		}
 	}
 
-	void exclude_peaks(DVECTOR &xs_in, DVECTOR &ys_in, std::vector<peak> &peaks)
+	void exclude_peaks(DVECTOR &xs_in, DVECTOR &ys_in, STD_CONT<peak> &peaks)
 	{
 		DVECTOR x_out, y_out;
+#ifndef _USE_DEQUE
 		x_out.reserve(xs_in.size());
 		y_out.reserve(ys_in.size());
+#endif
 		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != xs_in.end()) && (j != ys_in.end()); ++i, ++j){
 			bool do_account = true;
 			for (auto pp = peaks.begin(); pp != peaks.end(); pp++)

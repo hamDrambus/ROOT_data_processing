@@ -1,7 +1,7 @@
 #ifndef SINGLE_RUN_RESULTS_H
 #define SINGLE_RUN_RESULTS_H
 
-#include "GlobalDefinitions.h"
+#include "GlobalParameters.h"
 #include "GraphicOutputManager.h"
 #include "SignalOperations.h"
 #include "SingleRunData.h"
@@ -17,15 +17,17 @@ public:
 protected:
 	Status _current_status;
 	ParameterPile::experiment_area curr_area;
-	std::vector<double> xs_GEM;
-	std::vector<double> ys_GEM;
-	std::vector<std::vector<peak>> mppc_peaks; //only for mppc channels
-	std::vector<DVECTOR> mppc_baseline_xs;
-	std::vector<DVECTOR> mppc_baseline_ys;
+	DVECTOR xs_GEM;
+	DVECTOR ys_GEM;
+	STD_CONT<STD_CONT<peak>> mppc_peaks; //only for mppc channels
+	STD_CONT<DVECTOR> mppc_baseline_xs;
+	STD_CONT<DVECTOR> mppc_baseline_ys;
 	DVECTOR mppc_S2_peaks_area;
 	DVECTOR mppc_S2_start_t;
 	DVECTOR mppc_S2_finish_t;
 	DVECTOR mppc_sum_peaks_area;
+	DVECTOR mppc_double_I;
+	STD_CONT<int> mppc_channels;
 
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;

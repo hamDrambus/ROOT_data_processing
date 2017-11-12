@@ -51,7 +51,7 @@ namespace ParameterPile {
 			_last_returned_index_left = _vec.begin();
 			return _last_returned_index = *_last_returned_index_left;
 		}
-		std::vector<int>::iterator right = _last_returned_index_left + 1;
+		STD_CONT<int>::iterator right = _last_returned_index_left + 1;
 		_last_returned_index++;
 		if (_last_returned_index>*right){
 			_last_returned_index_left = right+1;
@@ -126,9 +126,9 @@ namespace ParameterPile {
 	int &area_vector::front(void)
 	{	return *_vec.begin();}
 
-	std::vector<area_vector> area_vector::split_area(int N)
+	STD_CONT<area_vector> area_vector::split_area(int N)
 	{
-		std::vector <area_vector> out_;
+		STD_CONT <area_vector> out_;
 		for (int h = 0; h < N; h++){
 			out_.push_back(area_vector());
 		}
@@ -219,7 +219,11 @@ namespace ParameterPile {
 	}
 	void area_vector::erase() //clears vector
 	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		STD_CONT<int>().swap(_vec);
+#else
 		_vec.clear();
+#endif
 		reset();
 	}
 	bool area_vector::isValid(void)

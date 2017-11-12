@@ -41,7 +41,7 @@ int Drawing::get_index_of_pad_marker(int pad_index)//before which line enter the
 	return off;
 }
 
-void Drawing::AddToDraw(std::vector<double> xs, std::vector<double> ys, std::string title, std::string extra_txt, int pad_index)
+void Drawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std::string extra_txt, int pad_index)
 {
 	int off = get_index_of_pad_marker(pad_index);
 	if (off < 0)
@@ -84,13 +84,13 @@ void Drawing::AddToDraw(std::string definition_lines, std::string f_name, std::s
 	int off = get_index_of_pad_marker(pad_index);
 	if (off < 0)
 		return;
-	std::vector<std::string> new_lines;
+	STD_CONT<std::string> new_lines;
 	new_lines.push_back(definition_lines);
 	new_lines.push_back("plot "+f_name+" title '"+title+"' "+extra_txt);
 	_script_lines.insert(_script_lines.begin() + off, new_lines.begin(), new_lines.end());
 }
 
-void Drawing::DrawData(std::vector<double> xs, std::vector<double> ys, std::string title, std::string extra_txt)//draws only this vector
+void Drawing::DrawData(DVECTOR &xs, DVECTOR &ys, std::string title, std::string extra_txt)//draws only this vector
 {
 	if (xs.size() != ys.size()){
 		std::cout << "Drawing::DrawData::input data size mismatch" << std::endl;
@@ -176,7 +176,7 @@ void Drawing::DrawData(void)
 				if (!is_empty){
 					pads_off--;
 					if (0 == pads_off){
-						std::vector<std::string> pad_lines;
+						STD_CONT<std::string> pad_lines;
 						pad_lines.push_back("unset arrow");
 						pad_lines.push_back("set origin 0,"+std::to_string(set_pads*(1.0/N_pads)));
 						pad_lines.push_back("set size 1," + std::to_string(1.0 / N_pads));
@@ -241,5 +241,9 @@ void GraphicOutputManager::Draw(void)
 
 void GraphicOutputManager::Clear(void)
 {
+#ifdef _HOTFIX_CLEAR_MEMORY
+	STD_CONT<Drawing>().swap(_graphs);
+#else
 	_graphs.clear();
+#endif
 }

@@ -51,7 +51,7 @@ void MTAnalysisManager::processAllRuns(void)
 	std::vector<TCondition*> conditions;
 	
 	ParameterPile::experiment_area actual_area = refine_exp_area(current_under_processing);
-	std::vector<ParameterPile::experiment_area> areas = split_exp_area(actual_area, ParameterPile::threads_number);
+	STD_CONT<ParameterPile::experiment_area> areas = split_exp_area(actual_area, ParameterPile::threads_number);
 	all_runs_results.push_back(AllRunsResults(actual_area));
 	for (int n =0;n<ParameterPile::threads_number; ++n) {
 		mutexes.push_back(new TMutex());
@@ -71,13 +71,13 @@ void MTAnalysisManager::processAllRuns(void)
 		}
 		//TThread::Ps();
 		all_runs_results.back().Clear();
-		for (int n = 0; n<ParameterPile::threads_number; ++n){
+		for (int n = 0; n<ParameterPile::threads_number; ++n) {
 			if (0 != thread_mutexes[n]->TryLock()){ //thread is already executed, so no wait required
 			} else {
 				conditions[n]->Wait();
 			}
 			thread_mutexes[n]->UnLock();
-			std::vector<AllRunsResults> *res = _submanagers[n]->getAllRunsResults();
+			STD_CONT<AllRunsResults> *res = _submanagers[n]->getAllRunsResults();
 			if (!res->empty())
 				all_runs_results.back().Merge(&res->back());
 		}
@@ -166,10 +166,10 @@ ParameterPile::experiment_area MTAnalysisManager::refine_exp_area(ParameterPile:
 	return out_area;
 }
 
-std::vector<ParameterPile::experiment_area> MTAnalysisManager::split_exp_area(ParameterPile::experiment_area area_to_split, int N)
+STD_CONT<ParameterPile::experiment_area> MTAnalysisManager::split_exp_area(ParameterPile::experiment_area area_to_split, int N)
 {
-	std::vector <ParameterPile::experiment_area> out_;
-	std::vector<ParameterPile::area_vector> Runs = area_to_split.runs.split_area(N);
+	STD_CONT <ParameterPile::experiment_area> out_;
+	STD_CONT<ParameterPile::area_vector> Runs = area_to_split.runs.split_area(N);
 	for (int h = 0; h < N; h++){
 		out_.push_back(area_to_split);
 		out_[h].runs = Runs[h];

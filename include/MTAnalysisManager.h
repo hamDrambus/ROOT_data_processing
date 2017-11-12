@@ -19,7 +19,7 @@ protected:
 	ParameterPile::experiment_area refine_exp_area(ParameterPile::experiment_area area);//looks up the existing runs in data directory 
 	//and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally
 	//TODO: maybe move to the AnalysisManager
-	std::vector<ParameterPile::experiment_area> split_exp_area (ParameterPile::experiment_area area_to_split, int N);
+	STD_CONT<ParameterPile::experiment_area> split_exp_area(ParameterPile::experiment_area area_to_split, int N);
 public:
 	MTAnalysisManager(ParameterPile::experiment_area area);
 

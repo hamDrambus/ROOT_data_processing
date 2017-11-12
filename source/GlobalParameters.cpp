@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <direct.h>
-#include "GlobalDefinitions.h"
+
+#include "GlobalParameters.h"
 #include "AnalysisManager.h"
 
 #include <windows.h>
@@ -69,12 +70,12 @@ void DrawFileData(std::string name, std::vector<double> xs, std::vector<double> 
 
 namespace ParameterPile
 {
-	std::vector <experiment_area> areas_to_draw;
+	STD_CONT <experiment_area> areas_to_draw;
 	std::string this_path;
 	int subruns_per_file = 10;
 	bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 1; //obv. must be >=1
+	int threads_number = 6; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
@@ -83,9 +84,10 @@ namespace ParameterPile
 	int filter_PMT_order = 8;
 	int filter_PMT_n_iterations = 1;
 
+	//TODO: depr
 	std::pair<double, double> baseline_search_limits(-0.1, 0.1);// = std::pair<double, double>(-0.05, 0.05);
 	int baseline_search_max_iterations=4;
-	std::vector<double> baseline_approx_value;
+	DVECTOR baseline_approx_value;
 
 	//these values are approximate, especially S2
 	double S1_start_time = 32; //in ms
@@ -119,7 +121,7 @@ namespace ParameterPile
 	//|_| |     |_	  | _|   |   |     |      S					|   |__     |  |        |    |    |       |
 	//+-----------+----+------+-+------+------>					+------+----+--+--------+---------------------->
 	//TODO: add illustrative pictures to the project for algotithms
-	double PMT_right_cutoff_from_RMS = 4;
+	double PMT_right_cutoff_from_RMS = 4.5;
 	double PMT_left_cutoff_from_RMS = 2;
 
 	int Max_iteration_N = 1;
@@ -169,7 +171,7 @@ namespace ParameterPile
 		//areas_to_draw.back().channels.push_back(0);
 		//areas_to_draw.back().channels.push_back(2);
 		//areas_to_draw.back().channels.push_back(2);
-		areas_to_draw.back().channels.push_back(40);
+		areas_to_draw.back().channels.push_back(38);
 		areas_to_draw.back().channels.push_back(41);
 		areas_to_draw.back().sub_runs.push_back(1);
 		areas_to_draw.back().sub_runs.push_back(1);
@@ -178,14 +180,14 @@ namespace ParameterPile
 		exp_area.channels.push_back(0);
 		exp_area.channels.push_back(2);
 		exp_area.channels.push_back(2);
-		exp_area.channels.push_back(41);
-		exp_area.channels.push_back(41);
+		exp_area.channels.push_back(32);
+		exp_area.channels.push_back(63);
 		
 		exp_area.runs.push_back(2000);
 		exp_area.runs.push_back(5000);
 		
-		exp_area.sub_runs.push_back(1);
-		exp_area.sub_runs.push_back(1);//subruns_per_file-1);
+		exp_area.sub_runs.push_back(0);
+		exp_area.sub_runs.push_back(2);//subruns_per_file-1);
 
 		exp_area.experiments.push_back("4_thmV");
 		/*exp_area.experiments.push_back("5_thmV");

@@ -1,4 +1,4 @@
-#include "GlobalDefinitions.h"
+#include "GlobalParameters.h"
 #include "MTAnalysisManager.h"
 
 //done TODO: 0 add constructor of experiment_area point

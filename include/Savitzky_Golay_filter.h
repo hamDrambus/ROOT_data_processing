@@ -1,7 +1,7 @@
 #ifndef SAVITZKY_GOLAY_FILTER_H
 #define SAVITZKY_GOLAY_FILTER_H
 
-#include "GlobalDefinitions.h"
+#include "GlobalParameters.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "PolynomialFit.h"
@@ -25,8 +25,8 @@ public:
 	int getNIter(void) const;
 	void getPars(int &n_points, int &order, int &n_iterations) const;
 
-	void operator ()(const std::vector<double> &xs_in, const std::vector<double> &ys_in,
-		std::vector<double> &xs_out, std::vector<double> &ys_out) const;
+	void operator ()(const DVECTOR &xs_in, const DVECTOR &ys_in,
+		DVECTOR &xs_out, DVECTOR &ys_out) const;
 };
 
 #endif

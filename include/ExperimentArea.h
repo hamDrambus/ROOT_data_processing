@@ -2,7 +2,9 @@
 #define EXPERIMENT_AREA_H
 
 #include <vector>
+#include <deque>
 #include <string.h>
+#include "GlobalDefinitions.h"
 
 namespace ParameterPile {
 
@@ -10,9 +12,9 @@ namespace ParameterPile {
 	{
 	protected:
 		bool _is_valid;
-		std::vector<int> _vec;
+		STD_CONT<int> _vec;
 		int _last_returned_index;
-		std::vector<int>::iterator _last_returned_index_left;
+		STD_CONT<int>::iterator _last_returned_index_left;
 	public:
 		area_vector(void);
 		int get_order_index_by_index(int ind);
@@ -26,7 +28,7 @@ namespace ParameterPile {
 		bool isValid(void);
 		int &back(void);
 		int &front(void);
-		std::vector<area_vector> split_area(int N);
+		STD_CONT<area_vector> split_area(int N);
 		area_vector intersect(area_vector with);
 		void reset(); //clears _last_returned_index etc.
 		void erase(); //clears vector
@@ -43,7 +45,7 @@ namespace ParameterPile {
 		experiment_area(Type type = Type::Area);
 		experiment_area to_point(void);
 
-		std::vector<std::string> experiments;
+		STD_CONT<std::string> experiments;
 		area_vector runs; //contains pairs [from, to]
 		area_vector channels; //contains pairs [from, to]
 		area_vector sub_runs; //contains pairs [from, to]
