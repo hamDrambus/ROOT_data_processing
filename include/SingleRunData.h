@@ -43,7 +43,7 @@ protected:
 	void file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, int index);
 	bool test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, SingleRunResults &results); //returns false if the PMT signal is empty
 	void find_time_limits(void);//TODO: this is much more complicated operation, the most difficult part of this analysis actually
-
+	double find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, DVECTOR &y_peaks_spreaded, double &apr_threshold);
 	//bool is_valid;
 	//SingleRunResults * _results;
 	GraphicOutputManager graph_manager;

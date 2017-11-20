@@ -185,28 +185,32 @@ namespace ParameterPile {
 				bool even = true;
 				int left, right;
 				bool has_this_area = false;
+				double temp_left_out, temp_right_out;
 				for (auto h = with._vec.begin(); h != with._vec.end(); ++h, even = !even){
 					if (even){
+						if (has_this_area)
+							out.push_pair(temp_left_out, temp_right_out);
+						temp_left_out = left_out;
+						temp_right_out = right_out;
+						has_this_area = false;
 						left = *h;
 					} else {
 						right = *h;
 						if ((right_out > right) && (left_out <= right)){
-							*g = right;
+							temp_right_out = right;
 							has_this_area = true;
 						}
 						if ((left_out < left) && (right_out >= left)){
-							*(g - 1) = left;
+							temp_left_out = left;
 							has_this_area = true;
 						}
 						if ((left <= left_out) && (right >= right_out)){
 							has_this_area = true;
 						}
-						left_out = *(g - 1);
-						right_out = *(g);
 					}
 				}
-				if (has_this_area){
-					out.push_pair(left_out, right_out);
+				if (has_this_area) {
+					out.push_pair(temp_left_out, temp_right_out);
 				}
 			}
 		}
@@ -255,12 +259,23 @@ namespace ParameterPile {
 	{
 		if ((what._type != Type::Point) || Type::Area != _type)
 			return false; //not implemented intersection of two areas
-		if (!what.isValid() || !isValid())
+		if (!isValid())
 			return false;
-		if (sub_runs.contains(what.sub_runs.back()) && runs.contains(what.runs.back()) && channels.contains(what.channels.back()))
-			for (auto exp = experiments.begin(); exp != experiments.end(); exp++)
-				if ((*exp) == what.experiments.back())
+		for (auto exp = experiments.begin(); exp != experiments.end(); exp++) {
+			if ((*exp) == what.experiments.back()) {
+				if (what.runs.empty())
 					return true;
+				else {
+					if (runs.contains(what.runs.back())){
+						if (what.channels.empty() && what.sub_runs.empty())
+							return true;
+						if (!what.channels.empty() && !what.sub_runs.empty())
+							if (channels.contains(what.channels.back()) && sub_runs.contains(what.sub_runs.back()))
+								return true;
+					}
+				}
+			}
+		}
 		return false;
 	}
 

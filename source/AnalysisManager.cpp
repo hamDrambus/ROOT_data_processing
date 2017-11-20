@@ -57,8 +57,8 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 	one_run_results.push_back(one_run_data.back().processSingleRun(_all_results));
 	if (!one_run_results.back().isValid()){
 		/*std::cout << "invalid: " << current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
-			<< current_under_processing.sub_runs.back() << "_processed" << std::endl;*/
-		//std::cout << "reason: " << one_run_results.back().getStatus()<<std::endl;
+			<< current_under_processing.sub_runs.back() << "_processed" << std::endl;
+		std::cout << "reason: " << one_run_results.back().getStatus()<<std::endl;*/
 		//std::cout << "S=" << one_run_results.back().PMT3_summed_peaks_area << "| N = " << one_run_results.back().PMT3_n_peaks << std::endl;
 		one_run_results.pop_back();
 		one_run_data.pop_back();
@@ -85,7 +85,7 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 	auto j = one_run_data.begin();
 	for (; ((i != one_run_results.end()) && (j != one_run_data.end())); ++i, ++j){
 		*i = j->processSingleRun(_all_results);
-		std::cout << "processed: " << j->getArea().experiments.back() << "_run_" << j->getArea().runs.back() << "_sub_"
+		std::cout << "processed: " << j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
 			<< j->getArea().sub_runs.back() << std::endl;
 	}
 }

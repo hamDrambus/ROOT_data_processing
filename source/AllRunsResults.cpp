@@ -305,6 +305,9 @@ void AllRunsResults::Merged(void)
 		cutoff->SetLineColor(kRed);
 		cutoff->Draw();
 		c1->Update();
+		std::string pmt_filename = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR)
+			+"GEM_S_peaks_selection,ThreshToNoise=2.5\\" + _exp.experiments.back() + ".png";
+		c1->SaveAs(pmt_filename.c_str(), "png");
 		/*TCanvas *c2 = new TCanvas(("n_peaks_distribution " + _exp.experiments.back()).c_str(),
 		("n_peaks_distribution " + _exp.experiments.back()).c_str());
 		c2->cd();
@@ -392,19 +395,19 @@ void AllRunsResults::Merged(void)
 		|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()))
 		valid = false;
 	if (valid && !(mppc_peaks_in_S2_area.empty())) {
-		ParameterPile::experiment_area area_ = ParameterPile::areas_to_draw.back().to_point();
-		area_.experiments = _exp.experiments; //TODO: account for MPPC channel
+		ParameterPile::experiment_area area_(ParameterPile::experiment_area::Type::Point);
+		area_.experiments.push_back(_exp.experiments.back()); //done: TODO: account for MPPC channel
 		if (ParameterPile::draw_required(area_)) {
-			std::string fname = std::string(OUTPUT_DIR) + OUTPUT_MPPCS + area_.experiments.back();
+			std::string fname = std::string(OUTPUT_DIR) + OUTPUT_MPPCS + area_.experiments.back()+".dat";
 			std::ofstream output;
 			open_output_file(fname, output);
 			output << "MPPC#\tS_1pe_avr\tS_1pe_sigma\tS_2pe_avr\tS_2pe_sigma\tS2_S_avr\tS2_S_sigma\ttime_left_avr\ttime_right_avr\tdouble_I_avr\tdouble_I_sigma" << std::endl;
 			for (int ch = 0; ch < mppc_peaks_in_S2_area.size(); ++ch) {
-				std::string Ss_name = area_.experiments.back()+"MPPC#" + std::to_string(mppc_channels[ch]) + "_peaks_S";
-				std::string S2_S_name = area_.experiments.back() + "MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_S";
-				std::string S2_start_t_name = area_.experiments.back() + "MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_start_t";
-				std::string S2_finish_t_name = area_.experiments.back() + "MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_finish_t";
-				std::string double_I_name = area_.experiments.back() + "MPPC#" + std::to_string(mppc_channels[ch]) + "_double_I";
+				std::string Ss_name = area_.experiments.back()+"_MPPC#" + std::to_string(mppc_channels[ch]) + "_peaks_S";
+				std::string S2_S_name = area_.experiments.back() + "_MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_S";
+				std::string S2_start_t_name = area_.experiments.back() + "_MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_start_t";
+				std::string S2_finish_t_name = area_.experiments.back() + "_MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_finish_t";
+				std::string double_I_name = area_.experiments.back() + "_MPPC#" + std::to_string(mppc_channels[ch]) + "_double_I";
 				
 				//done: TODO: Figure out MPPC channel. And add historam creating function
 				//TODO: ParameterPile
@@ -412,62 +415,104 @@ void AllRunsResults::Merged(void)
 				TH1D *hist_S2_S = createMPPCHist(mppc_peaks_in_S2_area[ch], S2_S_name, 0, 4.0, 60);
 				TH1D *hist_S2_start_t = createMPPCHist(mppc_S2_start_time[ch], S2_start_t_name, ParameterPile::S2_start_time, 4.0, 60);
 				TH1D *hist_S2_finish_t = createMPPCHist(mppc_S2_finish_time[ch], S2_finish_t_name, ParameterPile::S2_start_time, 6.0, 60);
-				TH1D *hist_double_I = createMPPCHist(mppc_double_Is[ch], double_I_name, 0, 6.0, 60);
+				TH1D *hist_double_I = createMPPCHist(mppc_double_Is[ch], double_I_name, -1, 6.0, 60);
 
 				/*TF1 *g1 = new TF1("m1", "gaus", hist_S->GetMinimum(), hist_S->GetMaximum());
 				TF1 *g2 = new TF1("m2", "gaus", hist_S->GetMinimum(), hist_S->GetMaximum());*/
-				TF1 *_S_fit = new TF1(Ss_name.c_str(), "gaus(0)+gaus(3)", hist_S->GetXaxis()->GetXmin(), hist_S->GetXaxis()->GetXmax());
-				_S_fit->SetParLimits(0, 0, hist_S->GetMaximum()*1.2);//TODO: ParameterPile
-				_S_fit->SetParLimits(1, hist_S->GetXaxis()->GetXmin(), hist_S->GetXaxis()->GetXmax());
-				_S_fit->SetParLimits(3, 0, hist_S->GetMaximum()*1);//TODO: ? ParameterPile
-				_S_fit->SetParLimits(4, hist_S->GetBinCenter(hist_S->GetMaximumBin()), hist_S->GetXaxis()->GetXmax());
-				
-				_S_fit->SetParameter(1, hist_S->GetBinCenter(hist_S->GetMaximumBin()));
-				_S_fit->SetParameter(2, hist_S->GetBinWidth(0));
-				_S_fit->SetParameter(4, 2*hist_S->GetBinCenter(hist_S->GetMaximumBin())); //'2*' because 2 photoelectron peak
-				_S_fit->SetParameter(5, hist_S->GetBinWidth(0));
+				TF1 *_S_fit = new TF1(Ss_name.c_str(), "gaus(0)+gaus(3)", hist_S ? hist_S->GetXaxis()->GetXmin() : -1,
+					hist_S ? hist_S->GetXaxis()->GetXmax() : 1);
+				if (NULL != hist_S){
+					_S_fit->SetParLimits(0, 0, hist_S->GetMaximum()*1.2);//TODO: ParameterPile
+					_S_fit->SetParLimits(1, hist_S->GetXaxis()->GetXmin(), hist_S->GetXaxis()->GetXmax());
+					_S_fit->SetParLimits(3, 0, hist_S->GetMaximum() * 1);//TODO: ? ParameterPile
+					_S_fit->SetParLimits(4, hist_S->GetBinCenter(hist_S->GetMaximumBin()), hist_S->GetXaxis()->GetXmax());
 
+					_S_fit->SetParameter(1, hist_S->GetBinCenter(hist_S->GetMaximumBin()));
+					_S_fit->SetParameter(2, hist_S->GetBinWidth(0));
+					_S_fit->SetParameter(4, 2 * hist_S->GetBinCenter(hist_S->GetMaximumBin())); //'2*' because 2 photoelectron peak
+					_S_fit->SetParameter(5, hist_S->GetBinWidth(0));
+				}
 				TF1 *_S2_S_fit = createMPPCFitFunc(hist_S2_S, S2_S_name);
 				TF1 *_S2_start_t_fit = createMPPCFitFunc(hist_S2_start_t, S2_start_t_name);
 				TF1 *_S2_finish_t_fit = createMPPCFitFunc(hist_S2_finish_t, S2_finish_t_name);
 				TF1 *_double_I_fit = createMPPCFitFunc(hist_double_I, double_I_name);
 
+#ifdef _TEMP_CODE
+				if (hist_S2_start_t)
+					hist_S2_start_t->Fit(_S2_start_t_fit, "Q"); //affects the name of the previous to this code fit in canvas, So not rendered fits
+				//should be placed before all of the canvaces
+				if (hist_S2_finish_t)
+					hist_S2_finish_t->Fit(_S2_finish_t_fit, "Q");
+#endif
+
+				gStyle->SetOptFit(102);
 				TCanvas *c1 = new TCanvas(Ss_name.c_str(), Ss_name.c_str());
 				c1->cd();
-				hist_S->Fit(_S_fit);
+				c1->SetTitle(Ss_name.c_str());
+				if (hist_S){
+					hist_S->Fit(_S_fit, "Q");
+					hist_S->Draw();
+				}
 				std::cout << "GaussSum pars: " << _S_fit->GetParameter(0) << "; "<<_S_fit->GetParameter(1) << "; "<<_S_fit->GetParameter(2) << std::endl;
-				hist_S->Draw();
 				//_S_fit->Draw();
 				c1->Update();
 
 				TCanvas *c2 = new TCanvas(S2_S_name.c_str(), S2_S_name.c_str());
 				c2->cd();
-				hist_S2_S->Fit(_S2_S_fit);
-				hist_S2_S->Draw();
+				c2->SetTitle(S2_S_name.c_str());
+				if (hist_S2_S) {
+					hist_S2_S->Fit(_S2_S_fit, "Q");
+					hist_S2_S->Draw();
+				}
 				//_S2_S_fit->Draw();
 				c2->Update();
+
 #ifndef _TEMP_CODE
 				TCanvas *c3 = new TCanvas(S2_start_t_name.c_str(), S2_start_t_name.c_str());
 				c3->cd();
-				hist_S2_start_t->Fit(_S2_start_t_fit);
-				hist_S2_start_t->Draw();
+				c3->SetTitle(S2_start_t_name.c_str());
+				if (hist_S2_start_t) {
+					hist_S2_start_t->Fit(_S2_start_t_fit,"Q");
+					hist_S2_start_t->Draw();
+				}
 				//_S2_start_t_fit->Draw();
 				c3->Update();
 
 				TCanvas *c4 = new TCanvas(S2_finish_t_name.c_str(), S2_finish_t_name.c_str());
 				c4->cd();
-				hist_S2_finish_t->Fit(_S2_finish_t_fit);
-				hist_S2_finish_t->Draw();
+				c4->SetTitle(S2_finish_t_name.c_str());
+				if (hist_S2_finish_t) {
+					hist_S2_finish_t->Fit(_S2_finish_t_fit,"Q");
+					hist_S2_finish_t->Draw();
+				}
 				//_S2_finish_t_fit->Draw();
-				c4->Update();
+				c4->Update();		
 #endif
 				TCanvas *c5 = new TCanvas(double_I_name.c_str(), double_I_name.c_str());
 				c5->cd();
-				hist_double_I->Fit(_double_I_fit);
-				hist_double_I->Draw();
+				c5->SetTitle(double_I_name.c_str());
+				if (hist_double_I) {
+					hist_double_I->Fit(_double_I_fit,"Q");
+					hist_double_I->Draw();
+				}
 				//_S2_finish_t_fit->Draw();
 				c5->Update();
-
+#ifdef OUTPUT_MPPCS_PICS
+				std::string output_prefix =std::string(ParameterPile::this_path)+"\\"+ std::string(OUTPUT_DIR) + OUTPUT_MPPCS_PICS + area_.experiments.back() 
+					+ "\\" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "\\" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "_";
+				vector_to_file(mppc_all_peaks_Ss[ch], output_prefix + "Ss.dat");
+				vector_to_file(mppc_peaks_in_S2_area[ch], output_prefix + "S2_S.dat");
+				vector_to_file(mppc_S2_start_time[ch], output_prefix + "S2_start_t.dat");
+				vector_to_file(mppc_S2_finish_time[ch], output_prefix + "S2_finish_t.dat");
+				vector_to_file(mppc_double_Is[ch], output_prefix + "double_I.dat");
+				c1->SaveAs((output_prefix + "Ss.png").c_str(),"png");
+				c2->SaveAs((output_prefix + "S2_S.png").c_str(),"png");
+#ifndef _TEMP_CODE
+				c3->SaveAs((output_prefix + "S2_stat_t.png").c_str(),"png");
+				c4->SaveAs((output_prefix + "S2_finish_t.png").c_str(),"png");
+#endif
+				c5->SaveAs((output_prefix + "double_I.png").c_str(),"png");
+#endif
 				//output << "MPPC#\tS_1pe_avr\tS_1pe_sigma\tS_2pe_avr\tS_2pe_sigma\tS2_S_avr\tS2_S_sigma\ttime_left_avr\ttime_right_avr\tdouble_I_avr\tdouble_I_sigma" << std::endl;
 				output << mppc_channels[ch] << "\t" << _S_fit->GetParameter(1) << "\t" << _S_fit->GetParameter(2)
 					<< "\t" << _S_fit->GetParameter(4) << "\t" << _S_fit->GetParameter(5) << "\t" << _S2_S_fit->GetParameter(1)
@@ -484,13 +529,25 @@ void AllRunsResults::Merged(void)
 	graph_manager.Draw();
 }
 
+void AllRunsResults::vector_to_file(DVECTOR &what, std::string fname)
+{
+	std::ofstream str;
+	open_output_file(fname, str);
+	for (auto i = what.begin(); i != what.end(); ++i)
+		str << *i << std::endl;
+	str.close();
+}
+
 TF1* AllRunsResults::createMPPCFitFunc(TH1D* hist, std::string name)
 {
-	TF1 *out = new TF1(name.c_str(), "gaus", hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
-	out->SetParLimits(0, 0, hist->GetMaximum()*1.1);//TODO: ParameterPile
-	out->SetParLimits(1, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
-	out->SetParLimits(2, hist->GetBinWidth(0), hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin());
-	out->SetParameter(2, 2 * hist->GetBinWidth(0));
+	TF1 *out = new TF1(name.c_str(), "gaus",hist? hist->GetXaxis()->GetXmin():-1, hist? hist->GetXaxis()->GetXmax():1);
+	out->SetTitle(name.c_str());
+	if (NULL!=hist) {
+		out->SetParLimits(0, 0, hist->GetMaximum()*1.1);//TODO: ParameterPile
+		out->SetParLimits(1, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+		out->SetParLimits(2, hist->GetBinWidth(0), hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin());
+		out->SetParameter(2, 2 * hist->GetBinWidth(0));
+	}
 	return out;
 }
 
@@ -499,7 +556,13 @@ TH1D* AllRunsResults::createMPPCHist(DVECTOR &what, std::string name, double lef
 	if (what.empty())
 		return NULL;
 	DITERATOR V_max = std::max_element(what.begin(), what.end());
-	DITERATOR V_min = std::min_element(what.begin(), what.end());
+	DITERATOR V_min = std::min_element(what.begin(), what.end(), [left_cutoff](double a, double b) {
+		if (a <= left_cutoff)
+			return false;
+		if (b <= left_cutoff)
+			return true;
+		return a < b;
+	});
 	//TODO: Figure out MPPC channel. And add historam creating function
 	double V_mean = TMath::Mean(what.begin(), what.end());
 	double V_RMS = TMath::RMS(what.begin(), what.end());
@@ -509,14 +572,15 @@ TH1D* AllRunsResults::createMPPCHist(DVECTOR &what, std::string name, double lef
 	if (N_bins <= 0) {
 		N_bins = 0;
 		for (int _n = 0; _n < what.size(); ++_n)
-			if ((what[_n]>V_left_cutoff) && (V_right_cutoff > what[_n]))
+			if ((what[_n]>=V_left_cutoff) && (V_right_cutoff > what[_n]))
 				N_bins++;
 		if (N_bins <= 0)
 			N_bins = 1;
 		N_bins = std::sqrt(N_bins);
 	}
 	TH1D *hist = new TH1D(name.c_str(), name.c_str(), N_bins, V_left_cutoff, V_right_cutoff);
-	
+	hist->SetTitle(name.c_str());
+
 	for (int _n = 0; _n < what.size(); ++_n)
 		if ((what[_n]>V_left_cutoff)&&(V_right_cutoff>what[_n]))
 			hist->Fill(what[_n]);

@@ -24,10 +24,6 @@ namespace ParameterPile
 	extern int filter_PMT_order;
 	extern int filter_PMT_n_iterations;
 
-	extern std::pair<double, double> baseline_search_limits;//depricated
-	extern int baseline_search_max_iterations; //depr
-	extern DVECTOR baseline_approx_value;
-
 	//all times below are approximate
 	extern double S1_start_time; //in ms
 	extern double S1_finish_time; //in ms
@@ -46,6 +42,8 @@ namespace ParameterPile
 	extern double PMT_mean_above_cutoff_acceptance;
 	extern double PMT_right_cutoff_from_RMS;
 	extern double PMT_left_cutoff_from_RMS;
+
+	extern double MPPC_peaks_smoothing_time;
 
 	extern int Max_iteration_N;
 

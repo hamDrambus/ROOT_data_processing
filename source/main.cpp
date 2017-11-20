@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		MTAnalysisManager man(ParameterPile::exp_area);
 		man.processAllExperiments();
 	}
-	std::cout << "Finished" << std::endl;
+	std::cout<<std::endl<<"========================================="<<std::endl << "Finished" << std::endl;
 
 	app->Run();
 	delete app;

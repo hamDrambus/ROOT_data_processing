@@ -236,7 +236,7 @@ namespace SignalOperations {
 	}
 	void get_max(DVECTOR &xs, DVECTOR &ys, DITERATOR x_start, DITERATOR x_finish, DITERATOR &x_max, double &y_max, int N_trust)
 	{
-		N_trust = std::min(x_finish - x_start, N_trust); //other funtions return invalid results in this case
+		N_trust = std::min((int)(x_finish - x_start), N_trust); //other funtions return invalid results in this case
 		if (xs.size() != ys.size()){
 			x_max = xs.end();
 			return;
@@ -692,12 +692,10 @@ namespace SignalOperations {
 			peaks.empty() ? x_left : 0.5*(peaks.back().left + peaks.back().right);
 		double x_r = x_right;
 		double dx = x_r - x_l;
-		if (dx < min_dx) {
-			if (xs_out.size() >= 2)
-				dx = std::max(x_r - *(xs_out.end() - 2), min_dx);
-			else
-				dx = min_dx;
-		}
+		if (xs_out.size() >= 2)
+			dx = std::max(x_r - *(xs_out.end() - 2), std::max(min_dx,dx));
+		else
+			dx = std::max(min_dx,dx);
 		y_v += peaks.empty() ? 0 : 0.5*(peaks.back().S);
 		y_v /= dx;
 		xs_out.push_back(x_l + 1e-7);
@@ -745,7 +743,7 @@ namespace SignalOperations {
 		xs_out.reserve(xs_in.size());
 		ys_out.reserve(ys_in.size());
 #endif
-		bool first= true; //eliminating the same xs
+		bool first = true; //eliminating the same xs
 		double x_prev;
 		double y_val;
 		for (auto i = xs_in.begin(), j = ys_in.begin(); (i != xs_in.end()) && (j != ys_in.end()); ++i, ++j) {

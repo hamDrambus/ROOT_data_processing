@@ -39,6 +39,7 @@
 #define OUTPUT_DIR "results\\"
 #define OUTPUT_GEMS "GEMs.txt"
 #define OUTPUT_MPPCS "MPPC_"
+#define OUTPUT_MPPCS_PICS "MPPCs_v2\\MPPCs_"
 #define _TEMP_CODE
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
@@ -55,7 +56,7 @@
 #define DITERATOR DVECTOR::iterator
 #define D_REV_ITERATOR DVECTOR::reverse_iterator
 
-#define _PROCESS_GEMS
+//#define _PROCESS_GEMS
 
 void open_output_file(std::string name, std::ofstream &str);
 

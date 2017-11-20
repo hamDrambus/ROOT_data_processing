@@ -11,7 +11,7 @@ SingleRunData::SingleRunData(ParameterPile::experiment_area area)
 
 	//curr_area.channels.clear(); - not really required unless break is used in the cycle with following for(;;)
 	for (int ch = curr_area.channels.get_next_index(); !(ch<0);ch = curr_area.channels.get_next_index()){
-		found_base_lines.push_back(ParameterPile::baseline_approx_value[curr_area.channels.get_order_index_by_index(ch)]);
+		found_base_lines.push_back(0);
 	}
 	PMT3_summed_peaks_area = 0;
 	PMT3_n_peaks = 0;
@@ -253,204 +253,16 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(const AllRunsResults *al
 #ifndef _TEMP_CODE
 	add_draw_data("filtered_",graph_manager);
 #endif
-
-//#ifdef _TEMP_CODE
-//	for (int ch = 32; ch < 64; ch++){
-//		int ind = curr_area.channels.get_order_index_by_index(ch);
-//		if (ind >= 0)
-//			SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
-//	} // invert MPPCs
-//	//add_draw_data("in_",graph_manager);
-//	for (int ch = 32; ch < 64; ch++){
-//		int ind = curr_area.channels.get_order_index_by_index(ch);
-//		if (ind < 0)
-//			continue;
-//		std::vector<double> xs, ys;
-//		SGfilter(xs_channels[ind], ys_channels[ind], xs, ys);
-//		xs_channels[ind] = xs;
-//		ys_channels[ind] = ys;
-//		_result.mppc_baseline_xs.push_back(xs_channels[ind]);
-//		_result.mppc_baseline_ys.push_back(DVECTOR());
-//	}
-//	add_draw_data("filtered_", graph_manager);
-//#endif
-//	for (int ch = 32, mppc_ind = 0; ch < 64; ch++){
-//		int ind = curr_area.channels.get_order_index_by_index(ch);
-//		if (ind < 0)
-//			continue;
-//		_result.mppc_peaks.push_back(std::vector<peak>());
-//		_result.mppc_S2_peaks_area.push_back(0);
-//		_result.mppc_S2_start_t.push_back(0);
-//		_result.mppc_S2_finish_t.push_back(0);
-//		_result.mppc_sum_peaks_area.push_back(0);
-//		_result.mppc_channels.push_back(ch);
-//		//TODO: add methods get{noise,baseline,threshold,edge_threshold} (ind, mppc_ind);
-//		DVECTOR before_S1_x = xs_channels[ind];
-//		DVECTOR before_S1_y = ys_channels[ind];
-//		SignalOperations::apply_time_limits(before_S1_x, before_S1_y, *before_S1_x.begin(), ParameterPile::S1_start_time);
-//		found_base_lines[ind] = SignalOperations::find_baseline_by_integral(found_base_lines[ind], before_S1_x, before_S1_y);
-//		//^not many peaks expected, so integral is used, not a median
-//		SignalOperations::substract_baseline(before_S1_y, found_base_lines[ind]);
-//		SignalOperations::substract_baseline(ys_channels[ind], found_base_lines[ind]);
-//		double approx_noise = TMath::RMS(before_S1_y.begin(), before_S1_y.end());
-//		double approx_thresh_beforeS1 = approx_noise * 5.5;	//TODO: ParameterPile
-//		double approx_edge_thresh = approx_noise*0.5;
-//		std::vector<peak> before_S1_peaks;
-//		//TODO: ParameterPile N_trust;
-//		SignalOperations::find_peaks_fine(before_S1_x, before_S1_y, before_S1_peaks,
-//			0, approx_thresh_beforeS1, approx_edge_thresh, 10);
-//		/*exact*/found_base_lines[ind] = SignalOperations::find_baseline_by_integral(0, before_S1_x, before_S1_y, before_S1_peaks);
-//		SignalOperations::exclude_peaks(before_S1_x, before_S1_y, before_S1_peaks);
-//		double exact_noise = TMath::RMS(before_S1_y.begin(), before_S1_y.end());
-//		double global_threshold = exact_noise * 5.5;//global means for all times, not for all channels and runs //TODO: ParameterPile
-//		//double global_ROOT_threshold = exact_noise * 3.5;	//TODO: ParameterPile. ROOT's baseline is significantly lower that the actual one
-//		double edge_threshold = exact_noise*0;	//TODO: ParameterPile
-//
-//		SignalOperations::substract_baseline(ys_channels[ind], found_base_lines[ind]);
-//		found_base_lines[ind] = 0;
-//
-//		SignalOperations::find_baseline_by_ROOT(xs_channels[ind], ys_channels[ind], _result.mppc_baseline_ys[mppc_ind]);
-//		before_S1_x = xs_channels[ind];
-//		before_S1_y = _result.mppc_baseline_ys[mppc_ind];
-//		SignalOperations::apply_time_limits(before_S1_x, before_S1_y, *before_S1_x.begin(), ParameterPile::S1_start_time);
-//		found_base_lines[ind] = SignalOperations::find_baseline_by_integral(0, before_S1_x, before_S1_y, before_S1_peaks);
-//		//now accounting for ROOT's baseline shift
-//		SignalOperations::substract_baseline(_result.mppc_baseline_ys[mppc_ind], found_base_lines[ind]);
-//		found_base_lines[ind] = 0;
-//		SignalOperations::substract_baseline(ys_channels[ind], _result.mppc_baseline_ys[mppc_ind]);//both functions have baseline at 0 for the first 32us
-//
-//
-//		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.mppc_peaks.back(), 0, global_threshold, edge_threshold, 10);
-//		//^TODO: ParameterPile
-//		DVECTOR x_peaks, y_peaks;
-//		SignalOperations::peaks_to_yx(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(), x_peaks, y_peaks);
-//		DVECTOR x_peaks_spreaded, y_peaks_spreaded;
-//		DVECTOR x_peaks_spreaded_v2, y_peaks_spreaded_v2;
-//		SignalOperations::spread_peaks(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(),x_peaks_spreaded, y_peaks_spreaded);
-//		SignalOperations::spread_peaks_v2(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(), x_peaks_spreaded_v2, y_peaks_spreaded_v2,5);
-//		
-//		//TODO: actually at first I have to remove peaks and recalculate baseline by averaging over dt. Then peaks again.
-//		//And this is only valid for small fields. At first I'll reproduce previous reseachers' results and only the will try to
-//		//predict baseline behaviour at large field.
-//		//At low field and for at least some first histograms I'll just use ROOT's baseline.
-//		//Also TODO: dynamic determination of how strongly baseline is shifted at S2 region and how close MPPC peaks to each other in
-//		//order to classify experiments on the run. Classification is: {LowField, MediumField, LargeField};
-//		//Criterions:	1) how strongly min of (ROOT's) baseline is shifted
-//		//				2) min is in S2 region (approx), or cheaply calculated or even ParameterPile
-//		//				3) maybe also Summed Peaks in S2 (approximate ones, which should be cheap to calculate)
-//		//The main problem some experiments may turn out to be 50/50 (every run is different).
-//		//I must see how it actually is, but maybe I'll split 50/50 experiments in two subexperiments in AllRunsResult (and later in AllExperimentsResults)
-//		//"MediumField" is exactly for this purpose. If, say, 10% of runs fall into LargeField, use whole experiment as 'LowField' anyway.
-//
-//		//TODO: move code below to separate method as well
-//		//variant0: appprox_thresh===(max+min)/2 -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
-//		//variant1: appprox_thresh===meidan -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
-//		//variant2: spereaded peaks threshold === median //I think it's bad choice
-//		double sp_max, sp_min;
-//		sp_max = *std::max_element(y_peaks_spreaded_v2.begin(), y_peaks_spreaded_v2.end());
-//		sp_min = *std::min_element(y_peaks_spreaded_v2.begin(), y_peaks_spreaded_v2.end());
-//		double sp_approx_thr_average = (sp_max + sp_min) / 2;
-//		double sp_approx_thr = SignalOperations::find_baseline_by_median(0,x_peaks_spreaded_v2,y_peaks_spreaded_v2,std::vector<peak>());
-//		double n_below=0, n_above=0;
-//		double mean_below=0, mean_above=0;
-//		for (auto i = y_peaks_spreaded_v2.begin(); i != y_peaks_spreaded_v2.end(); ++i) {
-//			if (*i < sp_approx_thr){
-//				n_below++;
-//				mean_below += *i;
-//			} else {
-//				n_above++;
-//				mean_above += *i;
-//			}
-//		}
-//		if ((n_below == 0) || (n_above == 0)) {
-//			continue;
-//		}
-//		mean_above /= n_above;
-//		mean_below /= n_below;
-//		double RMS_below = 0, RMS_above = 0;
-//		for (auto i = y_peaks_spreaded_v2.begin(); i != y_peaks_spreaded_v2.end(); ++i)
-//			if (*i < sp_approx_thr)
-//				RMS_below += (*i - mean_below)*(*i - mean_below);
-//			else
-//				RMS_above += (*i - mean_above)*(*i - mean_above);
-//		RMS_below = sqrt(RMS_below) / n_below; //maybe sqrt(RMS_below/(n_below*(n_below-1))); not that is matters much
-//		RMS_above = sqrt(RMS_above) / n_above;
-//		
-//		//TODO: maybe use this threshold only for S2 finish time and some other for S2 start time
-//		//TODO: try other weightings.
-//		double sp_threshold = (mean_above*RMS_below + mean_below * RMS_above) / (RMS_above + RMS_below);
-//		std::vector<peak> sp_peaks;
-//		//no fine required here
-//		SignalOperations::find_peaks(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_peaks, sp_min, sp_threshold, 1);
-//		//TODO: don't forget to test this^ place
-//		if (sp_peaks.empty())
-//			continue;
-//		std::vector<peak>::iterator max_intersection; //search for largest cluster which is above treshold. In 99% if not 100% I 
-//		//suspect there will be only single sp_peaks i.e. intersection, but just in case.
-//		max_intersection = std::max_element(sp_peaks.begin(), sp_peaks.end(), [](peak a, peak b){return a.S < b.S; });
-//		double S2_finish_t_v2 = std::min(max_intersection->right, ParameterPile::S2_finish_time);
-//		double S2_start_t_v2 = std::max(max_intersection->left, ParameterPile::S2_start_time);
-//		//TODO: ParameterPile
-//		double S2_finish_t = std::min(max_intersection->right + 5, ParameterPile::S2_finish_time);
-//		double S2_start_t = std::max(max_intersection->left - 5, ParameterPile::S2_start_time);
-//		if (S2_finish_t < S2_start_t) {
-//			S2_finish_t = 0;
-//			S2_start_t = 0;
-//		}
-//		_result.mppc_S2_finish_t.back() = S2_finish_t;
-//		_result.mppc_S2_start_t.back() = S2_start_t;
-//		//TODO: decide whether this is required. ParameterPile
-//		for (auto pp = _result.mppc_peaks.back().begin(); pp != _result.mppc_peaks.back().end(); ++pp){
-//			if ((pp->left >= S2_start_t) && (pp->right <= S2_finish_t)){
-//				_result.mppc_S2_peaks_area.back() += pp->S;
-//			}
-//		}
-//
-//
-//#ifdef _TEMP_CODE
-//		ParameterPile::experiment_area area = curr_area.to_point();
-//		area.channels.erase();
-//		area.channels.push_back(ch);
-//		if (ParameterPile::draw_required(area)){
-//			std::string plot_name = "";
-//			plot_name += curr_area.experiments.back() + "_";
-//			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch) + "_sub_" + std::to_string(area.sub_runs.back());
-//			int ind = curr_area.channels.get_order_index_by_index(ch);
-//
-//			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, ParameterPile::DrawEngine::Gnuplot);
-//			if (NULL != dr) {
-//				dr->AddToDraw(_result.mppc_baseline_xs[mppc_ind], _result.mppc_baseline_ys[mppc_ind], "ROOT baseline", "w l", 0);
-//				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline "+std::to_string(curr_area.runs.back()), "with points pt 1", 0);
-//				dr->AddToDraw_baseline(global_threshold, "threshold");
-//				dr->AddToDraw_baseline(edge_threshold, "threshold\\_edges");
-//				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");
-//				dr->AddToDraw_vertical(S2_finish_t, -1, 1, "lc rgb \"#FF0000\"");
-//			}
-//			dr = graph_manager.GetDrawing(plot_name + "peaks", ch + 100, ParameterPile::DrawEngine::Gnuplot);
-//			if (NULL != dr) {
-//				dr->AddToDraw(x_peaks, y_peaks, "peaks I = " + std::to_string(_result.mppc_S2_peaks_area.back()), "w l", 0);
-//				//dr->AddToDraw(x_peaks_spreaded, y_peaks_spreaded, "peaks spereaded " + std::to_string(curr_area.runs.back()), "w l", 0);
-//				dr->AddToDraw(x_peaks_spreaded_v2, y_peaks_spreaded_v2, "peaks spereaded v2 I = " + std::to_string(_result.mppc_S2_peaks_area.back()), "w l", 0);
-//				dr->AddToDraw_baseline(sp_approx_thr, "approx\\_threshold (median)", "w l");
-//				dr->AddToDraw_baseline(sp_approx_thr_average, "approx\\_threshold (max/2)", "w l");
-//				dr->AddToDraw_baseline(sp_threshold, "exact\\_threshold", "w l");
-//				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");
-//				dr->AddToDraw_vertical(S2_finish_t, -1, 1, "lc rgb \"#FF0000\"");
-//				dr->AddToDraw_vertical(S2_start_t_v2, -1, 1, "lc rgb \"#EE82EE\"");
-//				dr->AddToDraw_vertical(S2_finish_t_v2, -1, 1, "lc rgb \"#EE82EE\"");
-//			}
-//		}
-//#endif
-//		mppc_ind++;
-//	}
-	//int ind = curr_area.channels.get_order_index_by_index(0);
-	//if (!(ind < 0)){ //find baseline only for the sum of PMTs for the first run
-	//	std::vector<peak> no_peaks;
-	//	found_base_lines[ind] = SignalOperations::find_baseline_by_median(found_base_lines[ind],
-	//		xs_channels[ind], ys_channels[ind], no_peaks);
-	//}
-	//add_draw_baselines("base filtered", graph_manager);
-
+	int ind = curr_area.channels.get_index_by_order_index(0);
+	if (ind >= 0) {
+		STD_CONT<peak> ppeaks;
+		peak pk;
+		pk.left = ParameterPile::S1_start_time;
+		pk.right = xs_channels[ind].back();
+		ppeaks.push_back(pk);
+		found_base_lines[ind] = SignalOperations::find_baseline_by_median(found_base_lines[ind], xs_channels[ind], ys_channels[ind], ppeaks);
+	}
+	//find PMT baseline
 	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff, _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
@@ -497,8 +309,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		ys_channels[ind] = ys;
 		_result.mppc_baseline_xs.push_back(xs_channels[ind]);
 		_result.mppc_baseline_ys.push_back(DVECTOR());
-		add_draw_data("filtered_"+curr_area.experiments.back()+"\\_"+std::to_string(curr_area.runs.back()) +"\\_sub\\_"+
-			std::to_string(curr_area.sub_runs.back())+"\\_ch\\_"+std::to_string(ch), graph_manager, ParameterPile::DrawEngine::Gnuplot, ch);
+		add_draw_data("filtered_"+curr_area.experiments.back()+"\\_"+std::to_string(curr_area.runs.back()) +"\\_sub"+
+			std::to_string(curr_area.sub_runs.back())+"\\_ch"+std::to_string(ch), graph_manager, ParameterPile::DrawEngine::Gnuplot, ch);
 		
 		_result.mppc_peaks.push_back(STD_CONT<peak>());
 		_result.mppc_S2_peaks_area.push_back(0);
@@ -506,7 +318,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		_result.mppc_S2_finish_t.push_back(0);
 		//_result.mppc_sum_peaks_area.push_back(0);
 		_result.mppc_channels.push_back(ch);
-		_result.mppc_double_I.push_back(0);
+		_result.mppc_double_I.push_back(-1);
 		//TODO: add methods get{noise,baseline,threshold,edge_threshold} (ind, mppc_ind);
 		DVECTOR before_S1_x = xs_channels[ind];
 		DVECTOR before_S1_y = ys_channels[ind];
@@ -541,18 +353,18 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		found_base_lines[ind] = SignalOperations::find_baseline_by_integral(0, before_S1_x, before_S1_y, before_S1_peaks);
 		//now accounting for ROOT's baseline shift
 		SignalOperations::substract_baseline(_result.mppc_baseline_ys[mppc_ind], found_base_lines[ind]);
-		found_base_lines[ind] = 0;
 		SignalOperations::substract_baseline(ys_channels[ind], _result.mppc_baseline_ys[mppc_ind]);//both functions have baseline at 0 for the first 32us
+		SignalOperations::substract_baseline(_result.mppc_baseline_ys[mppc_ind], -found_base_lines[ind]);//shift back
+		found_base_lines[ind] = 0;
 
 
 		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.mppc_peaks.back(), 0, global_threshold, edge_threshold, 10);
 		//^TODO: ParameterPile
 		DVECTOR x_peaks, y_peaks;
 		SignalOperations::peaks_to_yx(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(), x_peaks, y_peaks);
-		DVECTOR x_peaks_spreaded, y_peaks_spreaded;
 		DVECTOR x_peaks_spreaded_v2, y_peaks_spreaded_v2;
-		SignalOperations::spread_peaks(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(), x_peaks_spreaded, y_peaks_spreaded);
-		SignalOperations::spread_peaks_v2(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(), x_peaks_spreaded_v2, y_peaks_spreaded_v2, 5);
+		SignalOperations::spread_peaks_v2(*(xs_channels[ind].begin()), xs_channels[ind].back(), _result.mppc_peaks.back(),
+			x_peaks_spreaded_v2, y_peaks_spreaded_v2, ParameterPile::MPPC_peaks_smoothing_time);
 
 		//TODO: actually at first I have to remove peaks and recalculate baseline by averaging over dt. Then peaks again.
 		//And this is only valid for small fields. At first I'll reproduce previous reseachers' results and only the will try to
@@ -566,46 +378,13 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		//The main problem some experiments may turn out to be 50/50 (every run is different).
 		//I must see how it actually is, but maybe I'll split 50/50 experiments in two subexperiments in AllRunsResult (and later in AllExperimentsResults)
 		//"MediumField" is exactly for this purpose. If, say, 10% of runs fall into LargeField, use whole experiment as 'LowField' anyway.
-
-		//TODO: move code below to separate method as well
-		//variant0: appprox_thresh===(max+min)/2 -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
-		//variant1: appprox_thresh===meidan -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
-		//variant2: spereaded peaks threshold === median //I think it's bad choice
-		double sp_max, sp_min;
-		sp_max = *std::max_element(y_peaks_spreaded_v2.begin(), y_peaks_spreaded_v2.end());
+		double sp_min;
 		sp_min = *std::min_element(y_peaks_spreaded_v2.begin(), y_peaks_spreaded_v2.end());
-		double sp_approx_thr_average = (sp_max + sp_min) / 2;
-		double sp_approx_thr = SignalOperations::find_baseline_by_median(0, x_peaks_spreaded_v2, y_peaks_spreaded_v2, STD_CONT<peak>());
-		double n_below = 0, n_above = 0;
-		double mean_below = 0, mean_above = 0;
-		for (auto i = y_peaks_spreaded_v2.begin(); i != y_peaks_spreaded_v2.end(); ++i) {
-			if (*i < sp_approx_thr){
-				n_below++;
-				mean_below += *i;
-			} else {
-				n_above++;
-				mean_above += *i;
-			}
-		}
-		if ((n_below == 0) || (n_above == 0)) {
+		double sp_approx_thr;
+		double sp_threshold = find_spreaded_peaks_threshold(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_approx_thr);
+		if (sp_threshold < 0)
 			continue;
-		}
-		mean_above /= n_above;
-		mean_below /= n_below;
-		double RMS_below = 0, RMS_above = 0;
-		for (auto i = y_peaks_spreaded_v2.begin(); i != y_peaks_spreaded_v2.end(); ++i)
-			if (*i <= sp_approx_thr) //its better to use <= than <
-				RMS_below += (*i - mean_below)*(*i - mean_below);
-			else
-				RMS_above += (*i - mean_above)*(*i - mean_above);
-		RMS_below = sqrt(RMS_below) / n_below; //maybe sqrt(RMS_below/(n_below*(n_below-1))); not that is matters much
-		RMS_above = sqrt(RMS_above) / n_above;
 
-		double above_weight = RMS_below / n_below;//no real explanation for this, just figuring out algorithm by trieal and error.
-		double below_weight = RMS_above/ n_above; //But in the case when statistics (n of points) is small, the dispersion is forcebly increased
-		//TODO: maybe use this threshold only for S2 finish time and some other for S2 start time
-		//TODO: try other weightings.
-		double sp_threshold = (mean_above*above_weight + mean_below * below_weight) / (above_weight + below_weight);
 		STD_CONT<peak> sp_peaks;
 		//no fine required here
 		SignalOperations::find_peaks(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_peaks, sp_min, sp_threshold, 1);
@@ -625,8 +404,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 		double S2_finish_t_v2 = std::min(max_intersection->right, ParameterPile::S2_finish_time);
 		double S2_start_t_v2 = std::max(max_intersection->left, ParameterPile::S2_start_time);
 		//TODO: ParameterPile
-		double S2_finish_t = std::min(max_intersection->right + 5, ParameterPile::S2_finish_time);
-		double S2_start_t = std::max(max_intersection->left - 5, ParameterPile::S2_start_time);
+		double S2_finish_t = std::min(max_intersection->right + ParameterPile::MPPC_peaks_smoothing_time, ParameterPile::S2_finish_time);
+		double S2_start_t = std::max(max_intersection->left - ParameterPile::MPPC_peaks_smoothing_time, ParameterPile::S2_start_time);
 		if (S2_finish_t < S2_start_t) {
 			S2_finish_t = 0;
 			S2_start_t = 0;
@@ -651,17 +430,19 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 			//TODO: ParameterPile
 			SignalOperations::get_max(xs_raw, ys_raw_ii, x_ii_max, y_ii_max, 8);
 			y_ii_min = ys_raw_ii.front();
-			_result.mppc_double_I.back() = std::max(0.0, y_ii_max - y_ii_min);
+			if (x_ii_max == xs_raw.begin())
+				_result.mppc_double_I.back() = ys_raw_ii.back() - y_ii_min;
+			else
+				_result.mppc_double_I.back() = y_ii_max - y_ii_min;
 		}
 
 		ParameterPile::experiment_area area = curr_area.to_point();
 		area.channels.erase();
 		area.channels.push_back(ch);
-		//if (ParameterPile::draw_required(area)) {
-		if (false) {
+		if (ParameterPile::draw_required(area)) {
 			std::string plot_name = "";
 			plot_name += curr_area.experiments.back() + "_";
-			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(ch) + "_sub_" + std::to_string(area.sub_runs.back());
+			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(ch) + "_sub" + std::to_string(area.sub_runs.back());
 			int ind = curr_area.channels.get_order_index_by_index(ch);
 
 			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, ParameterPile::DrawEngine::Gnuplot);
@@ -677,10 +458,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 			if (NULL != dr) {
 				dr->AddToDraw(x_peaks, y_peaks, "peaks "+ curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back())
 					+ "\\_sub\\_" + std::to_string(curr_area.sub_runs.back()) + "\\_ch\\_" + std::to_string(ch), "w l", 0);
-				//dr->AddToDraw(x_peaks_spreaded, y_peaks_spreaded, "peaks spereaded " + std::to_string(curr_area.runs.back()), "w l", 0);
 				dr->AddToDraw(x_peaks_spreaded_v2, y_peaks_spreaded_v2, "peaks spereaded v2 I = " + std::to_string(_result.mppc_S2_peaks_area.back()), "w l", 0);
 				dr->AddToDraw_baseline(sp_approx_thr, "approx\\_threshold (median)", "w l");
-				dr->AddToDraw_baseline(sp_approx_thr_average, "approx\\_threshold (max/2)", "w l");
 				dr->AddToDraw_baseline(sp_threshold, "exact\\_threshold", "w l lc rgb \"#FF0000\"");
 				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");
 				dr->AddToDraw_vertical(S2_finish_t, -1, 1, "lc rgb \"#FF0000\"");
@@ -759,6 +538,46 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(const AllRunsResults *al
 end_proc:
 	runProcessedProc();
 	return _result;
+}
+
+double SingleRunData::find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, DVECTOR &y_peaks_spreaded, double &apr_thresh)
+{
+	//TODO: move code below to separate method as well
+	//variant0: appprox_thresh===(max+min)/2 -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
+	//variant1: appprox_thresh===meidan -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
+	//variant2: spereaded peaks threshold === median //I think it's bad choice
+	double sp_approx_thr = SignalOperations::find_baseline_by_median(0, x_peaks_spreaded, y_peaks_spreaded, STD_CONT<peak>());
+	apr_thresh = sp_approx_thr;
+	double n_below = 0, n_above = 0;
+	double mean_below = 0, mean_above = 0;
+	for (auto i = y_peaks_spreaded.begin(); i != y_peaks_spreaded.end(); ++i) {
+		if (*i < sp_approx_thr){
+			n_below++;
+			mean_below += *i;
+		} else {
+			n_above++;
+			mean_above += *i;
+		}
+	}
+	if ((n_below == 0) || (n_above == 0)) {
+		return -1;
+	}
+	mean_above /= n_above;
+	mean_below /= n_below;
+	double RMS_below = 0, RMS_above = 0;
+	for (auto i = y_peaks_spreaded.begin(); i != y_peaks_spreaded.end(); ++i)
+		if (*i <= sp_approx_thr) //its better to use <= than <
+			RMS_below += (*i - mean_below)*(*i - mean_below);
+		else
+			RMS_above += (*i - mean_above)*(*i - mean_above);
+	RMS_below = sqrt(RMS_below) / n_below; //maybe sqrt(RMS_below/(n_below*(n_below-1))); not that is matters much
+	RMS_above = sqrt(RMS_above) / n_above;
+
+	double above_weight = std::sqrt(RMS_below) / std::pow(n_below,1.5);//no real explanation for this, just figuring out algorithm by trieal and error.
+	double below_weight = std::sqrt(RMS_above) / std::pow(n_above,1.5); //But in the case when statistics (n of points) is small, the dispersion is forcebly increased
+	//TODO: maybe use this threshold only for S2 finish time and some other for S2 start time
+	//TODO: try other weightings.
+	return (mean_above*above_weight + mean_below * below_weight) / (above_weight + below_weight);
 }
 
 SingleRunResults SingleRunData::processSingleRun(const AllRunsResults *all_runs_results)
