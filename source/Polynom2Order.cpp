@@ -68,6 +68,44 @@ void Polynom2Order::FindMaximum(DVECTOR::const_iterator &x_max, double &x_max_ex
 		}
 	}
 }
+void Polynom2Order::FindMinimum(DVECTOR::const_iterator &x_min, double &x_min_exact, double &y_min_exact)
+{
+	x_min = _xs_last->end();
+	if (_last_coefs[2] <= 0){ //min at the ends of the range
+		y_min_exact = Value(_x_left);
+		if (y_min_exact < Value(_x_right)){
+			x_min_exact = _x_left;
+			x_min = _x_start;
+			return;
+		} else {
+			x_min_exact = _x_right;
+			x_min = (_x_finish - 1);
+			y_min_exact = Value(_x_right);
+			return;
+		}
+	} else { //max is inside the range
+		double x_extr = -_last_coefs[1] / (2 * _last_coefs[2]);
+		x_extr += _x0_in;//mind that x_extr is calculated in the shifted X values
+		if (!(x_extr<_x_left) && !(x_extr>_x_right)){ //extremum inside the range
+			y_min_exact = Value(x_extr + _x0_in);
+			x_min = find_x_iterator_by_value(x_extr);
+			x_min_exact = x_extr;
+			return;
+		} else { //extremum is outside of the range
+			y_min_exact = Value(_x_left);
+			if (y_min_exact < Value(_x_right)){
+				x_min_exact = _x_left;
+				x_min = _x_start;
+				return;
+			} else {
+				x_min_exact = _x_right;
+				x_min = (_x_finish - 1);
+				y_min_exact = Value(_x_right);
+				return;
+			}
+		}
+	}
+}
 
 void Polynom2Order::FindIntersection(DVECTOR::const_iterator &x_inter, DVECTOR::const_iterator &x_inter2, double &x_inter_exact, double &x_inter_exact2,
 	double threshold) //if not found, returns x_iter=xs.end();

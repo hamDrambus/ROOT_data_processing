@@ -3,6 +3,18 @@
 
 #include "GlobalDefinitions.h"
 #include "ExperimentArea.h"
+#ifdef _USE_TIME_STATISTICS
+#include <chrono>
+#endif
+
+#define ROOT_BL_CALL_V0 spec->Background(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V2 spec->Background(f_ys, ys.size(), 25,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V3 spec->Background(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V4 spec->Background(f_ys, ys.size(), 50,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V5 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V6 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V7 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
+#define ROOT_BL_CALL_V8 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
 
 namespace ParameterPile
 {
@@ -13,7 +25,7 @@ namespace ParameterPile
 	extern STD_CONT <experiment_area> areas_to_draw;
 	extern std::string this_path;
 	extern int subruns_per_file;
-	extern bool override_analysis;
+	//extern bool override_analysis;
 	extern experiment_area exp_area;
 	extern int threads_number;
 
@@ -44,6 +56,11 @@ namespace ParameterPile
 	extern double PMT_left_cutoff_from_RMS;
 
 	extern double MPPC_peaks_smoothing_time;
+	extern int MPPC_N_trust;
+	extern double MPPC_ROOTs_bl_from_max_left;
+	extern double MPPC_ROOTs_bl_from_max_right;
+	extern double MPPC_ROOTs_bl_left_offset; //for baseline's baseline
+	extern double MPPC_ROOTs_bl_right_offset; //for baseline's baseline
 
 	extern int Max_iteration_N;
 

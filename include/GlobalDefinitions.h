@@ -39,10 +39,13 @@
 #define OUTPUT_DIR "results\\"
 #define OUTPUT_GEMS "GEMs.txt"
 #define OUTPUT_MPPCS "MPPC_"
-#define OUTPUT_MPPCS_PICS "MPPCs_v2\\MPPCs_"
+#define OUTPUT_MPPCS_PICS "MPPCs_v3\\MPPCs_"
 #define _TEMP_CODE
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
+#define _NO_PMT_SELECTION
+#define _USE_TIME_STATISTICS
+//#define _DRAW_CLUSTER_FINDING
 
 #define STD_CONT std::deque
 

@@ -5,6 +5,7 @@
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
+//parameters are [0]+[1]*x+[2]*x^2+...
 class PolynomialFit {
 protected:
 	int _order;

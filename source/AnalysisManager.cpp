@@ -94,9 +94,19 @@ void AnalysisManager::processAllRuns(void)
 {
 	all_runs_results.push_back(AllRunsResults(current_under_processing));
 	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N){
+#ifdef _USE_TIME_STATISTICS
+		time_t runs_start_timer;
+		time_t runs_end_timer;
+		time(&runs_start_timer);
+#endif
 		loopAllRuns(&all_runs_results.back());
 		all_runs_results.back().Clear();
 		all_runs_results.back().processAllRuns(one_run_results);
+#ifdef _USE_TIME_STATISTICS
+		time(&runs_end_timer);
+		all_runs_results.back().time_stat.n_RUN_proc = all_runs_results.back().N_of_runs;
+		all_runs_results.back().time_stat.t_RUN_proc += difftime(runs_end_timer, runs_start_timer);
+#endif
 		all_runs_results.back().Merged();//all in one thread, so it is already joined. Merge == iteration++
 	}
 #ifdef _HOTFIX_CLEAR_MEMORY
@@ -120,6 +130,11 @@ void AnalysisManager::processAllExperiments(void)
 
 void AnalysisManager::proceessAllRunsOneThread(void)
 {
+#ifdef _USE_TIME_STATISTICS
+	time_t runs_start_timer;
+	time_t runs_end_timer;
+	time(&runs_start_timer);
+#endif
 	if (all_runs_results.empty()){
 		nextRun();
 		all_runs_results.push_back(AllRunsResults(current_under_processing)); //actually MultiThreadManager must set it before call of this method
@@ -145,6 +160,11 @@ void AnalysisManager::proceessAllRunsOneThread(void)
 		one_run_results.clear();
 #endif
 	}
+#ifdef _USE_TIME_STATISTICS
+	time(&runs_end_timer);
+	all_runs_results.back().time_stat.n_RUN_proc_single_iter = all_runs_results.back().N_of_runs;
+	all_runs_results.back().time_stat.t_RUN_proc_single_iter = difftime(runs_end_timer,runs_start_timer);
+#endif
 	//std::cout << "finish_proceessAllRunsOneThread" << std::endl;
 }
 

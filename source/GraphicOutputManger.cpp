@@ -11,6 +11,7 @@ _name(name), _id_index(id_index)
 	_script_lines.push_back("set multiplot");
 	_script_lines.push_back("set ytics nomirror");
 	_script_lines.push_back("set y2tics");
+	_script_lines.push_back("set key top rmargin");
 	_script_lines.push_back("###");
 	_script_lines.push_back("###");
 	_script_lines.push_back("unset multiplot");

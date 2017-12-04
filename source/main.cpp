@@ -36,6 +36,9 @@ int main(int argc, char *argv[])
 	TF1 *func = new TF1("test_func", "sin(x)+3*x", 0, 10);
 	func->Draw();
 	
+#ifdef _USE_TIME_STATISTICS
+	auto timer_start = std::chrono::high_resolution_clock::now();
+#endif
 	if (1 >= ParameterPile::threads_number) {
 		AnalysisManager man(ParameterPile::exp_area);
 		man.processAllExperiments();
@@ -44,6 +47,10 @@ int main(int argc, char *argv[])
 		man.processAllExperiments();
 	}
 	std::cout<<std::endl<<"========================================="<<std::endl << "Finished" << std::endl;
+#ifdef _USE_TIME_STATISTICS
+	auto timer_finish = std::chrono::high_resolution_clock::now();
+	std::cout << "Time elapsed [s]: " << std::chrono::duration_cast<std::chrono::seconds>(timer_finish - timer_start).count();
+#endif
 
 	app->Run();
 	delete app;

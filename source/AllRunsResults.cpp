@@ -8,6 +8,60 @@ AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 	N_peaks_cutoff = ParameterPile::PMT_N_peaks_acceptance;
 	N_of_runs = 0;
 	Iteration_N = 0;
+#ifdef _USE_TIME_STATISTICS
+	time_stat.t_PMT_proc=0;//0st iteration
+	time_stat.n_PMT_proc=0;
+	time_stat.t_PMT_baseline=0;//0st iteration
+	time_stat.n_PMT_baseline=0;
+	time_stat.t_PMT_peaks=0;//0st iteration
+	time_stat.n_PMT_peaks=0;
+	time_stat.t_PMT_file_reading=0;//0st
+	time_stat.n_PMT_file_reading=0;
+	time_stat.t_PMT_filtering = 0;//0st
+	time_stat.n_PMT_filtering = 0;
+	//====================================
+	time_stat.t_MPPC_proc=0; //all till ==...= is the 1st iteration
+	time_stat.n_MPPC_proc=0;
+	time_stat.t_MPPC_file_reading=0;
+	time_stat.n_MPPC_file_reading=0;
+	time_stat.t_MPPC_filtering = 0;
+	time_stat.n_MPPC_filtering = 0;
+	time_stat.t_MPPC_threshold_and_first_baseline=0;
+	time_stat.n_MPPC_threshold_and_first_baseline=0;
+	//time_stat.t_MPPC_threshold_and_first_baseline_peaks=0;
+	//time_stat.n_MPPC_threshold_and_first_baseline_peaks=0;
+	time_stat.t_MPPC_curved_baseline=0;
+	time_stat.n_MPPC_curved_baseline=0;
+	time_stat.t_MPPC_curved_baseline_v2 = 0;
+	time_stat.n_MPPC_curved_baseline_v2 = 0;
+	time_stat.t_MPPC_curved_baseline_v3 = 0;
+	time_stat.n_MPPC_curved_baseline_v3 = 0;
+	time_stat.t_MPPC_curved_baseline_v4 = 0;
+	time_stat.n_MPPC_curved_baseline_v4 = 0;
+	time_stat.t_MPPC_curved_baseline_v5 = 0;
+	time_stat.n_MPPC_curved_baseline_v5 = 0;
+	time_stat.t_MPPC_curved_baseline_v6 = 0;
+	time_stat.n_MPPC_curved_baseline_v6 = 0;
+	time_stat.t_MPPC_curved_baseline_v7 = 0;
+	time_stat.n_MPPC_curved_baseline_v7 = 0;
+	time_stat.t_MPPC_curved_baseline_v8 = 0;
+	time_stat.n_MPPC_curved_baseline_v8 = 0;
+	time_stat.t_MPPC_curved_baseline_baseline=0;
+	time_stat.n_MPPC_curved_baseline_baseline=0;
+	time_stat.t_MPPC_baseline_substraction=0;
+	time_stat.n_MPPC_baseline_substraction=0;
+	time_stat.t_MPPC_peaks_finding=0;
+	time_stat.n_MPPC_peaks_finding=0;
+	time_stat.t_MPPC_peaks_processing=0;
+	time_stat.n_MPPC_peaks_processing=0;
+	time_stat.t_MPPC_double_I = 0;
+	time_stat.n_MPPC_double_I = 0;
+	//====================================
+	time_stat.t_RUN_proc=0;  //both iterations, must be set at merge() proc
+	time_stat.n_RUN_proc=0;
+	time_stat.t_RUN_proc_single_iter = 0;//both iterations, used at merge() proc, set in analysis Manager, must be cleared
+	time_stat.n_RUN_proc_single_iter = 0;
+#endif
 }
 
 void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
@@ -206,6 +260,10 @@ void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and mb tes
 		if ((i_cutoff - i_mean) >= N_above_global_mean_acceptable)
 			cutoff = G_mean;//or set to S_peaks_cutoff ?
 	S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
+#ifdef _NO_PMT_SELECTION
+	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
+	S_peaks_max_cutoff = S_peaks_cutoff - 1;
+#endif
 }
 
 //void AllRunsResults::find_S_cutoff_v2(void)
@@ -225,55 +283,115 @@ void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and mb tes
 
 void AllRunsResults::Merge(AllRunsResults* with)
 {
-	_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
-	_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
+	if (0 == Iteration_N) {
+		_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
+		_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
+	}
 	N_peaks_cutoff = with->N_peaks_cutoff;
 	S_peaks_cutoff = with->S_peaks_cutoff;
 	N_of_runs += with->N_of_runs;
 	//Iteration_N = with->Iteration_N;
-	if (_xs_GEM_sum.empty()) {
-		_xs_GEM_sum = with->_xs_GEM_sum;
-		_ys_GEM_sum = with->_ys_GEM_sum;
-	} else {
-		for (auto i = _ys_GEM_sum.begin(), j = with->_ys_GEM_sum.begin(); (i != _ys_GEM_sum.end()) && (j != with->_ys_GEM_sum.end()); ++j, ++i)
-			*i += *j;
-	}
+	if (1 == Iteration_N) {
+		if (_xs_GEM_sum.empty()) {
+			_xs_GEM_sum = with->_xs_GEM_sum;
+			_ys_GEM_sum = with->_ys_GEM_sum;
+		} else {
+			for (auto i = _ys_GEM_sum.begin(), j = with->_ys_GEM_sum.begin(); (i != _ys_GEM_sum.end()) && (j != with->_ys_GEM_sum.end()); ++j, ++i)
+				*i += *j;
+		}
 
-	bool empty = false, valid = true;
-	if (mppc_peaks_in_S2_area.empty())
-		empty = true;
-	if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
-		|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size()) || (mppc_peaks_in_S2_area.size() != mppc_channels.size())
-		|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()))
-		valid = false;
-	if ((with->mppc_peaks_in_S2_area.size() != with->mppc_S2_start_time.size()) || (with->mppc_peaks_in_S2_area.size() != with->mppc_S2_finish_time.size())
-		|| (with->mppc_peaks_in_S2_area.size() != with->mppc_all_peaks_Ss.size()) || (with->mppc_peaks_in_S2_area.size() != with->mppc_channels.size())
-		|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()))
-		valid = false;
-	if (!valid) {
-		std::cout << "AllRunsResults contains invalid MPPC data: channels' size mismatches" << std::endl;
-		return;
-	}
-	if (!empty &&(mppc_peaks_in_S2_area.size() != with->mppc_peaks_in_S2_area.size())){
-		std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
-		return;
-	}
-	if (empty) {
-		mppc_peaks_in_S2_area=with->mppc_peaks_in_S2_area;
-		mppc_S2_start_time = with->mppc_S2_start_time;
-		mppc_S2_finish_time = with->mppc_S2_finish_time;
-		mppc_all_peaks_Ss = with->mppc_all_peaks_Ss;
-		mppc_channels = with->mppc_channels;
-		mppc_double_Is = with->mppc_double_Is;
-	} else {
-		for (int ch = 0; ch < mppc_peaks_in_S2_area.size();++ch) {
-			mppc_peaks_in_S2_area[ch].insert(mppc_peaks_in_S2_area[ch].end(), with->mppc_peaks_in_S2_area[ch].begin(), with->mppc_peaks_in_S2_area[ch].end());
-			mppc_S2_start_time[ch].insert(mppc_S2_start_time[ch].end(), with->mppc_S2_start_time[ch].begin(), with->mppc_S2_start_time[ch].end());
-			mppc_S2_finish_time[ch].insert(mppc_S2_finish_time[ch].end(), with->mppc_S2_finish_time[ch].begin(), with->mppc_S2_finish_time[ch].end());
-			mppc_all_peaks_Ss[ch].insert(mppc_all_peaks_Ss[ch].end(), with->mppc_all_peaks_Ss[ch].begin(), with->mppc_all_peaks_Ss[ch].end());
-			mppc_double_Is[ch].insert(mppc_double_Is[ch].end(), with->mppc_double_Is[ch].begin(), with->mppc_double_Is[ch].end());
+		bool empty = false, valid = true;
+		if (mppc_peaks_in_S2_area.empty())
+			empty = true;
+		if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
+			|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size()) || (mppc_peaks_in_S2_area.size() != mppc_channels.size())
+			|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()))
+			valid = false;
+		if ((with->mppc_peaks_in_S2_area.size() != with->mppc_S2_start_time.size()) || (with->mppc_peaks_in_S2_area.size() != with->mppc_S2_finish_time.size())
+			|| (with->mppc_peaks_in_S2_area.size() != with->mppc_all_peaks_Ss.size()) || (with->mppc_peaks_in_S2_area.size() != with->mppc_channels.size())
+			|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()))
+			valid = false;
+		if (!valid) {
+			std::cout << "AllRunsResults contains invalid MPPC data: channels' size mismatches" << std::endl;
+			return;
+		}
+		if (!empty && (mppc_peaks_in_S2_area.size() != with->mppc_peaks_in_S2_area.size())){
+			std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
+			return;
+		}
+		if (empty) {
+			mppc_peaks_in_S2_area = with->mppc_peaks_in_S2_area;
+			mppc_S2_start_time = with->mppc_S2_start_time;
+			mppc_S2_finish_time = with->mppc_S2_finish_time;
+			mppc_all_peaks_Ss = with->mppc_all_peaks_Ss;
+			mppc_channels = with->mppc_channels;
+			mppc_double_Is = with->mppc_double_Is;
+		} else {
+			for (int ch = 0; ch < mppc_peaks_in_S2_area.size(); ++ch) {
+				mppc_peaks_in_S2_area[ch].insert(mppc_peaks_in_S2_area[ch].end(), with->mppc_peaks_in_S2_area[ch].begin(), with->mppc_peaks_in_S2_area[ch].end());
+				mppc_S2_start_time[ch].insert(mppc_S2_start_time[ch].end(), with->mppc_S2_start_time[ch].begin(), with->mppc_S2_start_time[ch].end());
+				mppc_S2_finish_time[ch].insert(mppc_S2_finish_time[ch].end(), with->mppc_S2_finish_time[ch].begin(), with->mppc_S2_finish_time[ch].end());
+				mppc_all_peaks_Ss[ch].insert(mppc_all_peaks_Ss[ch].end(), with->mppc_all_peaks_Ss[ch].begin(), with->mppc_all_peaks_Ss[ch].end());
+				mppc_double_Is[ch].insert(mppc_double_Is[ch].end(), with->mppc_double_Is[ch].begin(), with->mppc_double_Is[ch].end());
+			}
 		}
 	}
+#ifdef _USE_TIME_STATISTICS
+	time_stat.t_RUN_proc_single_iter += with->time_stat.t_RUN_proc_single_iter;
+	time_stat.n_RUN_proc_single_iter += with->time_stat.n_RUN_proc_single_iter;
+	
+	if (0 == Iteration_N) {
+		time_stat.t_PMT_proc += with->time_stat.t_PMT_proc;//0st iteration
+		time_stat.n_PMT_proc += with->time_stat.n_PMT_proc;
+		time_stat.t_PMT_baseline += with->time_stat.t_PMT_baseline;//0st iteration
+		time_stat.n_PMT_baseline += with->time_stat.n_PMT_baseline;
+		time_stat.t_PMT_peaks += with->time_stat.t_PMT_peaks;//0st iteration
+		time_stat.n_PMT_peaks += with->time_stat.n_PMT_peaks;
+		time_stat.t_PMT_file_reading += with->time_stat.t_PMT_file_reading;//0st
+		time_stat.n_PMT_file_reading += with->time_stat.n_PMT_file_reading;
+		time_stat.t_PMT_filtering += with->time_stat.t_PMT_filtering;//0st
+		time_stat.n_PMT_filtering += with->time_stat.n_PMT_filtering;
+	}
+	//====================================
+	if (1 == Iteration_N) {
+		time_stat.t_MPPC_proc += with->time_stat.t_MPPC_proc; //all till ==...= is the 1st iteration
+		time_stat.n_MPPC_proc += with->time_stat.n_MPPC_proc;
+		time_stat.t_MPPC_file_reading += with->time_stat.t_MPPC_file_reading;
+		time_stat.n_MPPC_file_reading += with->time_stat.n_MPPC_file_reading;
+		time_stat.t_MPPC_filtering += with->time_stat.t_MPPC_filtering;
+		time_stat.n_MPPC_filtering += with->time_stat.n_MPPC_filtering;
+		time_stat.t_MPPC_threshold_and_first_baseline += with->time_stat.t_MPPC_threshold_and_first_baseline;
+		time_stat.n_MPPC_threshold_and_first_baseline += with->time_stat.n_MPPC_threshold_and_first_baseline;
+		//time_stat.t_MPPC_threshold_and_first_baseline_peaks += with->time_stat.t_MPPC_threshold_and_first_baseline_peaks;
+		//time_stat.n_MPPC_threshold_and_first_baseline_peaks += with->time_stat.n_MPPC_threshold_and_first_baseline_peaks;
+		time_stat.t_MPPC_curved_baseline += with->time_stat.t_MPPC_curved_baseline;
+		time_stat.n_MPPC_curved_baseline += with->time_stat.n_MPPC_curved_baseline;
+		time_stat.t_MPPC_curved_baseline_v2 += with->time_stat.t_MPPC_curved_baseline_v2;
+		time_stat.n_MPPC_curved_baseline_v2 += with->time_stat.n_MPPC_curved_baseline_v2;
+		time_stat.t_MPPC_curved_baseline_v3 += with->time_stat.t_MPPC_curved_baseline_v3;
+		time_stat.n_MPPC_curved_baseline_v3 += with->time_stat.n_MPPC_curved_baseline_v3;
+		time_stat.t_MPPC_curved_baseline_v4 += with->time_stat.t_MPPC_curved_baseline_v4;
+		time_stat.n_MPPC_curved_baseline_v4 += with->time_stat.n_MPPC_curved_baseline_v4;
+		time_stat.t_MPPC_curved_baseline_v5 += with->time_stat.t_MPPC_curved_baseline_v5;
+		time_stat.n_MPPC_curved_baseline_v5 += with->time_stat.n_MPPC_curved_baseline_v5;
+		time_stat.t_MPPC_curved_baseline_v6 += with->time_stat.t_MPPC_curved_baseline_v6;
+		time_stat.n_MPPC_curved_baseline_v6 += with->time_stat.n_MPPC_curved_baseline_v6;
+		time_stat.t_MPPC_curved_baseline_v7 += with->time_stat.t_MPPC_curved_baseline_v7;
+		time_stat.n_MPPC_curved_baseline_v7 += with->time_stat.n_MPPC_curved_baseline_v7;
+		time_stat.t_MPPC_curved_baseline_v8 += with->time_stat.t_MPPC_curved_baseline_v8;
+		time_stat.n_MPPC_curved_baseline_v8 += with->time_stat.n_MPPC_curved_baseline_v8;
+		time_stat.t_MPPC_curved_baseline_baseline += with->time_stat.t_MPPC_curved_baseline_baseline;
+		time_stat.n_MPPC_curved_baseline_baseline += with->time_stat.n_MPPC_curved_baseline_baseline;
+		time_stat.t_MPPC_baseline_substraction += with->time_stat.t_MPPC_baseline_substraction;
+		time_stat.n_MPPC_baseline_substraction += with->time_stat.n_MPPC_baseline_substraction;
+		time_stat.t_MPPC_peaks_finding += with->time_stat.t_MPPC_peaks_finding;
+		time_stat.n_MPPC_peaks_finding += with->time_stat.n_MPPC_peaks_finding;
+		time_stat.t_MPPC_peaks_processing += with->time_stat.t_MPPC_peaks_processing;
+		time_stat.n_MPPC_peaks_processing += with->time_stat.n_MPPC_peaks_processing;
+		time_stat.t_MPPC_double_I += with->time_stat.t_MPPC_double_I;
+		time_stat.n_MPPC_double_I += with->time_stat.n_MPPC_double_I;
+	}
+#endif
 }
 
 void AllRunsResults::Merged(void)
@@ -401,7 +519,7 @@ void AllRunsResults::Merged(void)
 			std::string fname = std::string(OUTPUT_DIR) + OUTPUT_MPPCS + area_.experiments.back()+".dat";
 			std::ofstream output;
 			open_output_file(fname, output);
-			output << "MPPC#\tS_1pe_avr\tS_1pe_sigma\tS_2pe_avr\tS_2pe_sigma\tS2_S_avr\tS2_S_sigma\ttime_left_avr\ttime_right_avr\tdouble_I_avr\tdouble_I_sigma" << std::endl;
+			output << "MPPC#\tS_1pe_avr\tS_2pe_avr\tS2_S_avr\tdouble_I_avr\tS_1pe_sigma\tS_2pe_sigma\tS2_S_sigma\tdouble_I_sigma\ttime_left_avr\ttime_right_avr" << std::endl;
 			for (int ch = 0; ch < mppc_peaks_in_S2_area.size(); ++ch) {
 				std::string Ss_name = area_.experiments.back()+"_MPPC#" + std::to_string(mppc_channels[ch]) + "_peaks_S";
 				std::string S2_S_name = area_.experiments.back() + "_MPPC#" + std::to_string(mppc_channels[ch]) + "_S2_S";
@@ -513,11 +631,12 @@ void AllRunsResults::Merged(void)
 #endif
 				c5->SaveAs((output_prefix + "double_I.png").c_str(),"png");
 #endif
-				//output << "MPPC#\tS_1pe_avr\tS_1pe_sigma\tS_2pe_avr\tS_2pe_sigma\tS2_S_avr\tS2_S_sigma\ttime_left_avr\ttime_right_avr\tdouble_I_avr\tdouble_I_sigma" << std::endl;
-				output << mppc_channels[ch] << "\t" << _S_fit->GetParameter(1) << "\t" << _S_fit->GetParameter(2)
-					<< "\t" << _S_fit->GetParameter(4) << "\t" << _S_fit->GetParameter(5) << "\t" << _S2_S_fit->GetParameter(1)
-					<< "\t" << _S2_S_fit->GetParameter(2) << "\t" << _S2_start_t_fit->GetParameter(1) << "\t" << _S2_finish_t_fit->GetParameter(1)
-					<<"\t"<<_double_I_fit->GetParameter(1)<<"\t"<<_double_I_fit->GetParameter(2)<< std::endl;
+				//output << "MPPC#\tS_1pe_avr\tS_2pe_avr\tS2_S_avr\tdouble_I_avr\tS_1pe_sigma\tS_2pe_sigma\tS2_S_sigma\tdouble_I_sigma\ttime_left_avr\ttime_right_avr" << std::endl;
+				output << mppc_channels[ch] << "\t" << _S_fit->GetParameter(1) << "\t" << _S_fit->GetParameter(4)
+					<< "\t" << _S2_S_fit->GetParameter(1) << "\t" << _double_I_fit->GetParameter(1)
+					<< "\t" << _S_fit->GetParameter(2) << "\t" << _S_fit->GetParameter(5) << "\t" << _S2_S_fit->GetParameter(2)
+					<< "\t" << _double_I_fit->GetParameter(2) << "\t" << _S2_start_t_fit->GetParameter(1)
+					<< "\t" << _S2_finish_t_fit->GetParameter(1) << std::endl;
 				std::cout << "MPPC " << area_.experiments.back() << " processed" << std::endl;
 				std::cout << "# of runs " << N_of_runs << std::endl;
 				std::cout << "# of valid runs " << n_valid_runs << std::endl;
@@ -525,6 +644,13 @@ void AllRunsResults::Merged(void)
 			output.close();
 		}
 	}
+#ifdef _USE_TIME_STATISTICS
+	time_stat.t_RUN_proc += time_stat.t_RUN_proc_single_iter;
+	if (0==Iteration_N)
+		time_stat.n_RUN_proc = time_stat.n_RUN_proc_single_iter;
+	if (ParameterPile::Max_iteration_N == Iteration_N)
+		report_time_statistics();
+#endif
 	Iteration_N++;
 	graph_manager.Draw();
 }
@@ -626,4 +752,135 @@ void AllRunsResults::Clear(void)
 	//S_peaks_cutoff preserve
 	N_of_runs = 0;
 	//Iteration_N preserve;
+#ifdef _USE_TIME_STATISTICS
+	time_stat.t_RUN_proc_single_iter=0;
+	time_stat.n_RUN_proc_single_iter=0;
+#endif
 }
+
+#ifdef _USE_TIME_STATISTICS
+void AllRunsResults::report_time_statistics()
+{
+	double coeff = 1e-6;//to milliseconds
+	std::cout << "________________________________________________" << std::endl;
+	std::cout << "RUN TIMES:" << std::endl;
+	std::cout << "Experiment: " << _exp.experiments.back()<<std::endl;
+	std::cout << "All times are in milliseconds" << std::endl;
+	std::cout << "Number of runs: " << N_of_runs<<std::endl;
+	std::cout << "T:" << (double)time_stat.t_RUN_proc*coeff << "\tN: "
+		<< time_stat.n_RUN_proc << "\tAvr: " << ((double)time_stat.t_RUN_proc*coeff) / time_stat.n_RUN_proc << std::endl;
+	std::cout << "|" << std::endl;
+	std::cout << "|____" << "PMT processing:" << std::endl;
+	std::cout << "   | " << "T: " << (double)time_stat.t_PMT_proc*coeff << "\tN: "
+		<< time_stat.n_PMT_proc << "\tAvr: " << ((double)time_stat.t_PMT_proc*coeff) / time_stat.n_PMT_proc << std::endl;
+	std::cout << "   | " << "  |" << std::endl;
+	std::cout << "   | " << "  |____" << "Reading:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_file_reading*coeff << "\tN: "
+		<< time_stat.n_PMT_file_reading << "\tAvr: " << ((double)time_stat.t_PMT_file_reading*coeff) / time_stat.n_PMT_file_reading << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Filtering:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_filtering*coeff << "\tN: "
+		<< time_stat.n_PMT_filtering << "\tAvr: " << ((double)time_stat.t_PMT_filtering*coeff) / time_stat.n_PMT_filtering << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Baseline:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_baseline*coeff << "\tN: "
+		<< time_stat.n_PMT_baseline << "\tAvr: " << ((double)time_stat.t_PMT_baseline*coeff) / time_stat.n_PMT_baseline << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Peaks:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_peaks*coeff << "\tN: "
+		<< time_stat.n_PMT_peaks << "\tAvr: " << ((double)time_stat.t_PMT_peaks*coeff) / time_stat.n_PMT_peaks << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Residual time:" << std::endl;
+	std::cout << "   | " << "     | " << coeff*(double)(time_stat.t_PMT_proc
+		- time_stat.t_PMT_file_reading - time_stat.t_PMT_filtering - time_stat.t_PMT_baseline - time_stat.t_PMT_peaks) << std::endl;
+	std::cout << "   | " << std::endl;
+	std::cout << "   | " << std::endl;
+	std::cout << "   |_" << "MPPC processing:" << std::endl;
+	std::cout << "   | " << "T: " << (double)time_stat.t_MPPC_proc*coeff << "\tN: "
+		<< time_stat.n_MPPC_proc << "\tAvr: " << ((double)time_stat.t_MPPC_proc*coeff) / time_stat.n_MPPC_proc << std::endl;
+	std::cout << "   | " << "  |" << std::endl;
+	std::cout << "   | " << "  |____" << "Reading:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_file_reading*coeff << "\tN: "
+		<< time_stat.n_MPPC_file_reading << "\tAvr: " << ((double)time_stat.t_MPPC_file_reading*coeff) / time_stat.n_MPPC_file_reading << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Filtering:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_filtering*coeff << "\tN: "
+		<< time_stat.n_MPPC_filtering << "\tAvr: " << ((double)time_stat.t_MPPC_filtering*coeff) / time_stat.n_MPPC_filtering << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Threshold and first baseline:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_threshold_and_first_baseline*coeff << "\tN: "
+		<< time_stat.n_MPPC_threshold_and_first_baseline << "\tAvr: " <<
+		((double)time_stat.t_MPPC_threshold_and_first_baseline*coeff) / time_stat.n_MPPC_threshold_and_first_baseline << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline*coeff) / time_stat.n_MPPC_curved_baseline << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	/*std::cout << "   | " << "     |_" << "Curved baseline v2:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v2*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v2 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v2*coeff) / time_stat.n_MPPC_curved_baseline_v2 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline v3:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v3*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v3 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v3*coeff) / time_stat.n_MPPC_curved_baseline_v3 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline v4:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v4*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v4 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v4*coeff) / time_stat.n_MPPC_curved_baseline_v4 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline v5:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v5*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v5 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v5*coeff) / time_stat.n_MPPC_curved_baseline_v5 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline v6:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v6*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v6 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v6*coeff) / time_stat.n_MPPC_curved_baseline_v6 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline v7:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v7*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v7 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v7*coeff) / time_stat.n_MPPC_curved_baseline_v7 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Curved baseline v8:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v8*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_v8 << "\tAvr: " <<
+		((double)time_stat.t_MPPC_curved_baseline_v8*coeff) / time_stat.n_MPPC_curved_baseline_v8 << std::endl;
+	std::cout << "   | " << "     |" << std::endl;*/
+	std::cout << "   | " << "     |_" << "Curved baseline's baseline:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_baseline*coeff << "\tN: "
+		<< time_stat.n_MPPC_curved_baseline_baseline << "\tAvr: " << 
+		((double)time_stat.t_MPPC_curved_baseline_baseline*coeff) / time_stat.n_MPPC_curved_baseline_baseline << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Baseline's substraction:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_baseline_substraction*coeff << "\tN: "
+		<< time_stat.n_MPPC_baseline_substraction << "\tAvr: " << 
+		((double)time_stat.t_MPPC_baseline_substraction*coeff) / time_stat.n_MPPC_baseline_substraction << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Peaks finding:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_peaks_finding*coeff << "\tN: "
+		<< time_stat.n_MPPC_peaks_finding << "\tAvr: " <<
+		((double)time_stat.t_MPPC_peaks_finding*coeff) / time_stat.n_MPPC_peaks_finding << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Peaks processing:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_peaks_processing*coeff << "\tN: "
+		<< time_stat.n_MPPC_peaks_processing << "\tAvr: " <<
+		((double)time_stat.t_MPPC_peaks_processing*coeff) / time_stat.n_MPPC_peaks_processing << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Double integral:" << std::endl;
+	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_double_I*coeff << "\tN: "
+		<< time_stat.n_MPPC_double_I << "\tAvr: " << ((double)time_stat.t_MPPC_double_I*coeff) / time_stat.n_MPPC_double_I << std::endl;
+	std::cout << "   | " << "     |" << std::endl;
+	std::cout << "   | " << "     |_" << "Residual time:" << std::endl;
+	std::cout << "   | " << "     | " << coeff*(double)(time_stat.t_MPPC_proc
+		- time_stat.t_MPPC_file_reading - time_stat.t_MPPC_filtering - time_stat.t_MPPC_threshold_and_first_baseline
+		- time_stat.t_MPPC_curved_baseline - time_stat.t_MPPC_curved_baseline_baseline - time_stat.t_MPPC_baseline_substraction
+		- time_stat.t_MPPC_peaks_finding - time_stat.t_MPPC_peaks_processing - time_stat.t_MPPC_double_I) << std::endl;
+	std::cout << "________________________________________________" << std::endl;
+}
+#endif

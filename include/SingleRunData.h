@@ -52,11 +52,12 @@ protected:
 	void readOneRunMPPCs(SingleRunResults &results, int channel);
 	void clearOneRunMPPCs(int channel);
 #endif
+	void calculate_MPPC_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline,STD_CONT<peak> &peaks_before_S1);
 public:
 	SingleRunData(ParameterPile::experiment_area area);
-	SingleRunResults processSingleRun_Iter_0(const AllRunsResults *all_runs_results);
-	SingleRunResults processSingleRun_Iter_1(const AllRunsResults *all_runs_results);
-	SingleRunResults processSingleRun(const AllRunsResults *all_runs_results);
+	SingleRunResults processSingleRun_Iter_0(AllRunsResults *all_runs_results);
+	SingleRunResults processSingleRun_Iter_1(AllRunsResults *all_runs_results);
+	SingleRunResults processSingleRun(AllRunsResults *all_runs_results);
 	//^ must be called only if the previous SingleRunResults was valid
 	void runProcessedProc(void);
 	void clear_memory(void); //clears only 'input' data, preserves processing results

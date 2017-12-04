@@ -94,6 +94,45 @@ namespace SignalOperations {
 		return (Sum_int / Sum_dx) + approx;
 	}
 
+	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		ys_out.clear();
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V0
+#ifndef _USE_DEQUE
+			ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+
+		DITERATOR x_min;
+		double y_min;
+		SignalOperations::get_min(xs, ys_out, xs.begin(), xs.end(), x_min, y_min, 1);
+		if (x_min == xs.end())
+			return;
+		D_REV_ITERATOR x_prev_min(x_min);
+		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5); //TODO: N_trust and ParameterPile
+		if (x_prev_min == xs.rend())
+			return;
+		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
+		if (x_prev_min == xs.rend())
+			return;
+		DITERATOR x_cut_from = x_prev_min.base();
+		double y_cut_from = ys_out[x_cut_from - xs.begin()];
+		for (auto xx = x_cut_from; xx != x_min; ++xx)
+			ys_out[xx - xs.begin()] = y_cut_from + (*xx-*x_cut_from)*(y_min - y_cut_from)/(*x_min-*x_cut_from);//line
+	}
 	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
 	{
 #ifdef _HOTFIX_CLEAR_MEMORY
@@ -106,13 +145,203 @@ namespace SignalOperations {
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
-		spec->Background(f_ys, ys.size(), 50, TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+		ROOT_BL_CALL_V0
 #ifndef _USE_DEQUE
 		ys_out.reserve(ys.size());
 #endif
 		for (int h = 0; h != ys.size(); ++h)
 			ys_out.push_back(f_ys[h]);
 		delete [] f_ys;
+		spec->Delete();
+	}
+
+	void find_baseline_by_ROOT_v2(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		ys_out.clear();
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V2
+#ifndef _USE_DEQUE
+			ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+
+		DITERATOR x_min;
+		double y_min;
+		SignalOperations::get_min(xs, ys_out, xs.begin(), xs.end(), x_min, y_min, 1);
+		if (x_min == xs.end())
+			return;
+		D_REV_ITERATOR x_prev_min(x_min);
+		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
+		if (x_prev_min == xs.rend())
+			return;
+		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
+		if (x_prev_min == xs.rend())
+			return;
+		DITERATOR x_cut_from = x_prev_min.base();
+		double y_cut_from = ys_out[x_cut_from - xs.begin()];
+		for (auto xx = x_cut_from; xx != x_min; ++xx)
+			ys_out[xx - xs.begin()] = y_cut_from + (*xx - *x_cut_from)*(y_min - y_cut_from) / (*x_min - *x_cut_from);//line
+	}
+
+	void find_baseline_by_ROOT_v3(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V3
+#ifndef _USE_DEQUE
+		ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+	}
+
+	void find_baseline_by_ROOT_v4(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V4
+#ifndef _USE_DEQUE
+		ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+	}
+
+	void find_baseline_by_ROOT_v5(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V5
+#ifndef _USE_DEQUE
+		ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+	}
+
+	void find_baseline_by_ROOT_v6(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		ys_out.clear();
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V6
+#ifndef _USE_DEQUE
+			ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+
+		DITERATOR x_min;
+		double y_min;
+		SignalOperations::get_min(xs, ys_out, xs.begin(), xs.end(), x_min, y_min, 1);
+		if (x_min == xs.end())
+			return;
+		D_REV_ITERATOR x_prev_min(x_min);
+		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
+		if (x_prev_min == xs.rend())
+			return;
+		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
+		if (x_prev_min == xs.rend())
+			return;
+		DITERATOR x_cut_from = x_prev_min.base();
+		double y_cut_from = ys_out[x_cut_from - xs.begin()];
+		for (auto xx = x_cut_from; xx != x_min; ++xx)
+			ys_out[xx - xs.begin()] = y_cut_from + (*xx - *x_cut_from)*(y_min - y_cut_from) / (*x_min - *x_cut_from);//line
+	}
+
+	void find_baseline_by_ROOT_v7(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V7
+#ifndef _USE_DEQUE
+			ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
+		spec->Delete();
+	}
+
+	void find_baseline_by_ROOT_v8(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+#ifdef _HOTFIX_CLEAR_MEMORY
+		DVECTOR().swap(ys_out);
+#else
+		ys_out.clear();
+#endif
+		TSpectrum *spec = new TSpectrum();
+		float *f_ys = new float[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V8
+#ifndef _USE_DEQUE
+			ys_out.reserve(ys.size());
+#endif
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out.push_back(f_ys[h]);
+		delete[] f_ys;
 		spec->Delete();
 	}
 
@@ -273,6 +502,48 @@ namespace SignalOperations {
 				if (*j > y_max){
 					x_max = i;
 					y_max = *j;
+				}
+			}
+	}
+	void get_min(DVECTOR &xs, DVECTOR &ys, DITERATOR x_start, DITERATOR x_finish, DITERATOR &x_min, double &y_min, int N_trust)
+	{
+		N_trust = std::min((int)(x_finish - x_start), N_trust); //other funtions return invalid results in this case
+		if (xs.size() != ys.size()){
+			x_min = xs.end();
+			return;
+		}
+		bool use_fit = true;
+		if (N_trust < 3) {//2nd order polynom
+			N_trust = 1;
+			use_fit = false;
+		}
+		int delta = N_trust / 3;
+		y_min = *(ys.begin() + (x_start - xs.begin()));
+		x_min = x_start;
+
+		if (use_fit){
+			Polynom2Order fitter;
+			for (auto i = x_start, j = ys.begin() + (x_start - xs.begin()); (i != xs.end()) && (j != ys.end()) && (i<x_finish);
+				((delta<(xs.end() - i)) ? i = i + delta : i = xs.end()), ((delta<(ys.end() - j)) ? j = j + delta : j = ys.end())){
+				int shift = (int)(xs.size() - (i - xs.begin()) - N_trust) < 0 ? (xs.size() - (i - xs.begin()) - N_trust) : 0; //accounts for the end
+
+				TVectorD coefs;
+				DITERATOR x_left = i + shift;
+				fitter(xs, ys, x_left - xs.begin(), N_trust, coefs, *x_left);
+
+				double y_max_exact, x_max_exact;
+				DITERATOR x_max_here;
+				fitter.FindMinimum(x_max_here, x_max_exact, y_max_exact);
+				if (y_min > y_max_exact){
+					y_min = y_max_exact;
+					x_min = x_max_here;
+				}
+			}
+		} else //do not use the fit
+			for (auto i = x_start, j = ys.begin() + (x_start - xs.begin()); (i != xs.end()) && (j != ys.end()) && (i<x_finish); ++i, ++j){
+				if (*j < y_min){
+					x_min = i;
+					y_min = *j;
 				}
 			}
 	}
@@ -525,11 +796,11 @@ namespace SignalOperations {
 					x_finish = i; //TODO: more exact?
 					break;
 				}
-				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){ //extremum
-					if (*j > thresh_edges)
-						x_finish = i;
-					break;
-				}
+				//if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){ //extremum - too unstable for N_trust==1 and pretty much useless
+				//	if (*j > thresh_edges)
+				//		x_finish = i;
+				//	break;
+				//}
 			}
 			D_REV_ITERATOR x_left_peak = D_REV_ITERATOR(x_start);
 			D_REV_ITERATOR x_rend = D_REV_ITERATOR(minimal_iterator);
@@ -585,6 +856,60 @@ namespace SignalOperations {
 		}
 	}
 
+	void find_next_extremum_faster(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust)
+	{	
+		int delta = std::max(N_trust / 2, 1);
+		if (xs.end() - x_start < (2 * delta + 1)){
+			x_start = xs.end(); //not found
+			return;
+		}
+		for (auto i = x_start, j = ys.begin() + (x_start - xs.begin()); (i != xs.end()) && (j != ys.end()); ++i, ++j){
+			if ((i <= x_start + delta) || (i >= (xs.end() - delta - 1)))
+				continue;
+			bool min = true, max = true;
+			for (auto jj = j - delta; jj <= (j + delta); ++jj){
+				if (*jj < *j) //if this extremum corresponds to minimum then all elements in [-delta,+delta] must be >=*j
+					min = false;
+				if (*jj > *j)
+					max = false;
+				if (!min&&!max)
+					break;
+			}
+			if (min || max){
+				x_start = i;
+				return;
+			}
+		}
+		x_start = xs.end(); //not found
+	}
+
+	void find_previous_extremum_faster(DVECTOR &xs, DVECTOR &ys, D_REV_ITERATOR &x_start, int N_trust)
+	{
+		int delta = std::max(N_trust / 2, 1);
+		if (xs.rend() - x_start < (2 * delta + 1)){
+			x_start = xs.rend(); //not found
+			return;
+		}
+		for (auto i = x_start, j = ys.rbegin() + (x_start - xs.rbegin()); (i != xs.rend()) && (j != ys.rend()); ++i, ++j){
+			if ((i <= (x_start + delta)) || (i >= (xs.rend() - delta-1)))
+				continue;
+			bool min = true, max = true;
+			for (auto jj = j - delta; jj <= (j + delta); ++jj) {
+				if (*jj < *j) //if this extremum corresponds to minimum then all elements in [-delta,+delta] must be >=*j
+					min = false;
+				if (*jj > *j)
+					max = false;
+				if (!min&&!max)
+					break;
+			}
+			if (min || max){
+				x_start = i;
+				return;
+			}
+		}
+		x_start = xs.rend(); //not found
+	}
+
 	void find_next_extremum(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust)
 	{
 		bool use_fit = true;
@@ -613,7 +938,7 @@ namespace SignalOperations {
 			}
 		} else { //do not use the fit
 			for (auto i = x_start, j = ys.begin() +(x_start-xs.begin()) ; (i != xs.end()) && (j != ys.end()); ++i, ++j){
-				if ((i == xs.begin()) || ((i + 1) == xs.end()))
+				if ((i == xs.begin()) || ((i + 1) == xs.end())||x_start==i)
 					continue;
 				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){
 					x_start = i;
@@ -622,6 +947,45 @@ namespace SignalOperations {
 			}
 		}
 		x_start = xs.end(); //not found
+	}
+
+	void find_previous_extremum(DVECTOR &xs, DVECTOR &ys, D_REV_ITERATOR &x_start, int N_trust)
+	{
+		bool use_fit = true;
+		if (N_trust < 3) {//2nd order polynom
+			N_trust = 1;
+			use_fit = false;
+		}
+		int delta = N_trust / 3;
+		if (use_fit) {
+			Polynom2Order fitter;
+			for (auto i = x_start, j = ys.rbegin() + (x_start - xs.rbegin()); (i != xs.rend()) && (j != ys.rend());
+				((delta<(xs.rend() - i)) ? i = i + delta : i = xs.rend()), ((delta<(ys.rend() - j)) ? j = j + delta : j = ys.rend())){
+				int shift = (int)(xs.size() - (i - xs.rbegin()) - N_trust) < 0 ? (xs.size() - (i - xs.rbegin()) - N_trust) : 0; //accounts for the end
+				TVectorD coefs;
+				D_REV_ITERATOR x_left = i + shift;
+				fitter(xs, ys, (i.base() - xs.begin()) + shift, N_trust, coefs, *x_left);
+				DITERATOR x_extr;
+				double x_extr_exact, y_extr_exact;
+				fitter.FindExtremum(x_extr, x_extr_exact, y_extr_exact);
+				if (x_extr != xs.end()) {
+					if (x_extr >= x_start.base())
+						continue; //accidently found previous extremum
+					x_start = D_REV_ITERATOR(x_extr);
+					return;
+				}
+			}
+		} else { //do not use the fit
+			for (auto i = x_start, j = ys.rbegin() + (x_start - xs.rbegin()); (i != xs.rend()) && (j != ys.rend()); ++i, ++j){
+				if ((i == xs.rbegin()) || ((i + 1) == xs.rend())||i==x_start)
+					continue;
+				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){
+					x_start = i;
+					return;
+				}
+			}
+		}
+		x_start = xs.rend(); //not found
 	}
 
 	void spread_peaks(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
@@ -815,6 +1179,37 @@ namespace SignalOperations {
 			return;
 		for (auto i = ys_in.begin(), j = base_ys.begin(); (i != ys_in.end())&&(j!=base_ys.end()); ++i, ++j)
 			*i -= *j;
+	}
+
+	//required for substracting ROOT's baseline which is calculated only for some range
+	void substract_baseline(DVECTOR& xs_in, DVECTOR &ys_in, DVECTOR &base_xs, DVECTOR &base_ys, double baseline_baseline)
+	{
+		if ((xs_in.size() != ys_in.size()) || (base_xs.size() != base_ys.size()))
+			return;
+		auto x = xs_in.begin();
+		auto x_base = base_xs.begin();
+		auto y = ys_in.begin();
+		auto y_base = base_ys.begin();
+		while (x != xs_in.end() && x_base != base_xs.end()) {
+			if (*x == *x_base){
+				*y -= (*y_base - baseline_baseline);
+				++x;
+				++x_base;
+				++y;
+				++y_base;
+				continue;
+			}
+			if (*x < *x_base){
+				++x;
+				++y;
+				continue;
+			}
+			if (*x > *x_base){
+				++x_base;
+				++y_base;
+				continue;
+			}
+		}
 	}
 
 };

@@ -73,15 +73,15 @@ namespace ParameterPile
 	STD_CONT <experiment_area> areas_to_draw;
 	std::string this_path;
 	int subruns_per_file = 10;
-	bool override_analysis = true;
+	//bool override_analysis = true;
 	experiment_area exp_area;
 	int threads_number = 6; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
 	int filter_MPPC_n_iterations = 1;
-	int filter_PMT_n_points = 50;
-	int filter_PMT_order = 8;
+	int filter_PMT_n_points = 50;//50
+	int filter_PMT_order = 8;//8
 	int filter_PMT_n_iterations = 1;
 
 	//TODO: depr
@@ -99,7 +99,7 @@ namespace ParameterPile
 	
 	double PMT_run_acceptance_threshold_to_noize = 2;//~ 2-3
 	int PMT_N_of_averaging = 1; //=== N_trust. PMT signal is already smoothed by filter
-	int PMT_N_peaks_acceptance = 1;//1 //condition is >1, not >=1
+	int PMT_N_peaks_acceptance = 0;//1 //condition is >=1, not >1
 	double PMT_SArea_peaks_acceptance = 0.0; //V*ms 
 	//done - for every runs S_acceptance is obtained from S distribution histogram
 	//TODO: figure out the appropriate
@@ -124,12 +124,17 @@ namespace ParameterPile
 	double PMT_left_cutoff_from_RMS = 2.5;//2
 
 	double MPPC_peaks_smoothing_time = 5; //us
+	int MPPC_N_trust = 1;
+	double MPPC_ROOTs_bl_from_max_left = 20;
+	double MPPC_ROOTs_bl_from_max_right = 40;
+	double MPPC_ROOTs_bl_left_offset = 5; //for baseline's baseline
+	double MPPC_ROOTs_bl_right_offset = 12; //for baseline's baseline
 
 	int Max_iteration_N = 1;
 
 	int gnuplot_pad_size = 400;
 	int gnuplot_max_size = 1600;
-	int gnuplot_width = 900; //default for gnuplot is 640
+	int gnuplot_width = 1400; //default for gnuplot is 640
 
 	bool draw_required(ParameterPile::experiment_area what)
 	{
@@ -153,30 +158,37 @@ namespace ParameterPile
 		TThread::Initialize();
 		
 		areas_to_draw.push_back(experiment_area());
-		areas_to_draw.back().experiments.push_back("4_thmV");
-		areas_to_draw.back().experiments.push_back("5_thmV");
-		areas_to_draw.back().experiments.push_back("6_thmV");
-		areas_to_draw.back().experiments.push_back("7_thmV");
-		areas_to_draw.back().experiments.push_back("8_thmV");
-		areas_to_draw.back().experiments.push_back("9_thmV");
-		areas_to_draw.back().experiments.push_back("10_thmV");
-		areas_to_draw.back().experiments.push_back("10_thmV_recalib");
-		areas_to_draw.back().experiments.push_back("12_thmV");
+		//areas_to_draw.back().experiments.push_back("4_thmV");
+		//areas_to_draw.back().experiments.push_back("5_thmV");
+		//areas_to_draw.back().experiments.push_back("6_thmV");
+		//areas_to_draw.back().experiments.push_back("7_thmV");
+		//areas_to_draw.back().experiments.push_back("8_thmV");
+		//areas_to_draw.back().experiments.push_back("9_thmV");
+		//areas_to_draw.back().experiments.push_back("10_thmV");
+		//areas_to_draw.back().experiments.push_back("10_thmV_recalib");
+		//areas_to_draw.back().experiments.push_back("12_thmV");
 		areas_to_draw.back().experiments.push_back("14_thmV");
-		areas_to_draw.back().experiments.push_back("16_thmV");
-		areas_to_draw.back().experiments.push_back("18_thmV");
-		areas_to_draw.back().experiments.push_back("20_thmV");
-		areas_to_draw.back().runs.push_pair(0, 0);
-		areas_to_draw.back().channels.push_pair(38, 39);
+		//areas_to_draw.back().experiments.push_back("16_thmV");
+		//areas_to_draw.back().experiments.push_back("18_thmV");
+		//areas_to_draw.back().experiments.push_back("20_thmV");
+		areas_to_draw.back().runs.push_pair(0, 0);//(2855, 2855);
+		//areas_to_draw.back().channels.push_pair(0, 0);
+		areas_to_draw.back().channels.push_pair(34, 34);
+		areas_to_draw.back().channels.push_pair(36, 36);
+		areas_to_draw.back().channels.push_pair(38, 38);
+		areas_to_draw.back().channels.push_pair(44, 44);
+		areas_to_draw.back().channels.push_pair(53, 53);
 		areas_to_draw.back().sub_runs.push_pair(0, 1);
 		
 		/*areas_to_draw.push_back(areas_to_draw.back());
 		areas_to_draw.back().runs.erase();
-		areas_to_draw.back().runs.push_pair(3203, 3206);
-		areas_to_draw.back().experiments.clear();
-		areas_to_draw.back().experiments.push_back("7_thmV");
+		areas_to_draw.back().runs.push_pair(2856, 2858);
+		areas_to_draw.back().channels.erase();
+		areas_to_draw.back().channels.push_pair(0,0);
+		areas_to_draw.back().sub_runs.erase();
+		areas_to_draw.back().sub_runs.push_pair(0, 0);*/
 
-		areas_to_draw.push_back(areas_to_draw.back());
+		/*areas_to_draw.push_back(areas_to_draw.back());
 		areas_to_draw.back().runs.erase();
 		areas_to_draw.back().runs.push_pair(2915, 2918);
 		areas_to_draw.back().experiments.clear();
@@ -189,23 +201,30 @@ namespace ParameterPile
 		areas_to_draw.back().experiments.push_back("20_thmV");*/
 
 		exp_area.runs.push_pair(2000, 5000);
-		exp_area.channels.push_pair(0, 0);
+		//exp_area.channels.push_pair(0, 0);
 		//exp_area.channels.push_pair(2, 2);
-		exp_area.channels.push_pair(38, 39);
-		exp_area.sub_runs.push_pair(0,9); //subruns_per_file-1);
+		/*exp_area.channels.push_pair(34, 34);
+		exp_area.channels.push_pair(36, 36);
+		exp_area.channels.push_pair(38, 38);
+		exp_area.channels.push_pair(44, 44);
+		exp_area.channels.push_pair(53, 53);*/
+		exp_area.channels.push_pair(32, 44); //13
+		exp_area.channels.push_pair(48, 55); //8	
+		exp_area.channels.push_pair(57, 59); //3 =>24
+		exp_area.sub_runs.push_pair(0,2); //subruns_per_file-1);
 
-		exp_area.experiments.push_back("4_thmV");
-		exp_area.experiments.push_back("5_thmV");
-		exp_area.experiments.push_back("6_thmV");
-		exp_area.experiments.push_back("7_thmV");
-		exp_area.experiments.push_back("8_thmV");
-		exp_area.experiments.push_back("9_thmV");
-		exp_area.experiments.push_back("10_thmV");
-		exp_area.experiments.push_back("10_thmV_recalib");
-		exp_area.experiments.push_back("12_thmV");
+		//exp_area.experiments.push_back("4_thmV");
+		//exp_area.experiments.push_back("5_thmV");
+		//exp_area.experiments.push_back("6_thmV");
+		//exp_area.experiments.push_back("7_thmV");
+		//exp_area.experiments.push_back("8_thmV");
+		//exp_area.experiments.push_back("9_thmV");
+		//exp_area.experiments.push_back("10_thmV");
+		//exp_area.experiments.push_back("10_thmV_recalib");
+		//exp_area.experiments.push_back("12_thmV");
 		exp_area.experiments.push_back("14_thmV");
-		exp_area.experiments.push_back("16_thmV");
-		exp_area.experiments.push_back("18_thmV");
-		exp_area.experiments.push_back("20_thmV");
+		//exp_area.experiments.push_back("16_thmV");
+		//exp_area.experiments.push_back("18_thmV");
+		//exp_area.experiments.push_back("20_thmV");
 	}
 };
