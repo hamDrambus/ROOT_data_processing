@@ -199,28 +199,6 @@ bool SingleRunData::test_PMT_signal(int _N_threshold, double _S_threshold, doubl
 	if (ind < 0)
 		return true; //can't test, so assuming the PMT signal is correct
 	
-	if (!PMT_peaks_analysed){ //if threshold is constant, then there is no need to recalculate this code
-		DVECTOR xs_before_S1 = xs_channels[ind], ys_before_S1 = ys_channels[ind];
-		SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs_before_S1.begin()), ParameterPile::S1_start_time);
-		double noise_amp;
-		double PMT_baseline = found_base_lines[ind];
-		DITERATOR x_max_noise;
-		SignalOperations::get_max(xs_before_S1, ys_before_S1, x_max_noise, noise_amp, ParameterPile::PMT_N_of_averaging);
-		noise_amp -= PMT_baseline;
-		double threshold = noise_amp*ParameterPile::PMT_run_acceptance_threshold_to_noize;
-		threshold += PMT_baseline;
-
-		STD_CONT<peak> peaks;
-		SignalOperations::find_peaks(xs_channels[ind], ys_channels[ind], peaks, PMT_baseline, threshold, ParameterPile::PMT_N_of_averaging);
-		double S_sum = 0;
-		for (auto i = peaks.begin(); i != peaks.end(); ++i)
-			S_sum += (*i).S;
-		results.PMT3_summed_peaks_area = S_sum;
-		results.PMT3_n_peaks = peaks.size();
-		PMT3_summed_peaks_area = S_sum;
-		PMT3_n_peaks = peaks.size();
-		PMT_peaks_analysed = true;
-	}
 #ifdef _NO_PMT_SELECTION
 	return true;
 #endif
@@ -296,6 +274,15 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 		ppeaks.push_back(pk);
 		found_base_lines[ind] = SignalOperations::find_baseline_by_median(found_base_lines[ind], xs_channels[ind], ys_channels[ind], ppeaks);
 	}
+	ind = curr_area.channels.get_order_index_by_index(1);
+	if (ind >= 0) {
+		STD_CONT<peak> ppeaks;
+		peak pk;
+		pk.left = ParameterPile::S1_start_time;
+		pk.right = xs_channels[ind].back();
+		ppeaks.push_back(pk);
+		found_base_lines[ind] = SignalOperations::find_baseline_by_median(found_base_lines[ind], xs_channels[ind], ys_channels[ind], ppeaks);
+	}
 	//find PMT baseline
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_baseline_end_timer = std::chrono::high_resolution_clock::now();
@@ -306,10 +293,92 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_peaks_start_timer = std::chrono::high_resolution_clock::now();
 #endif
+	ind = curr_area.channels.get_order_index_by_index(0);
+	if (ind >= 0){
+		DVECTOR xs_before_S1 = xs_channels[ind], ys_before_S1 = ys_channels[ind];
+		SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs_before_S1.begin()), ParameterPile::S1_start_time);
+		double noise_amp;
+		double PMT_baseline = found_base_lines[ind];
+		DITERATOR x_max_noise;
+		SignalOperations::get_max(xs_before_S1, ys_before_S1, x_max_noise, noise_amp, ParameterPile::PMT_N_of_averaging);
+		noise_amp -= PMT_baseline;
+		double threshold = noise_amp*ParameterPile::PMT_run_acceptance_threshold_to_noize;
+		if (threshold < ParameterPile::PMT_minimum_thresh)
+			threshold = ParameterPile::PMT_minimum_thresh;
+		if (threshold > ParameterPile::PMT_maximum_thresh)
+			threshold = ParameterPile::PMT_maximum_thresh;
+		threshold += PMT_baseline;
+
+		//STD_CONT<peak> peaks;
+		SignalOperations::find_peaks(xs_channels[ind], ys_channels[ind], _result.PMT3_peaks, PMT_baseline, threshold, ParameterPile::PMT_N_of_averaging);
+		double S_sum = 0;
+		for (auto i = _result.PMT3_peaks.begin(), _end_ = _result.PMT3_peaks.end(); i !=_end_ ; ++i)
+			S_sum += (*i).S;
+		_result.PMT3_summed_peaks_area = S_sum;
+		_result.PMT3_n_peaks = _result.PMT3_peaks.size();
+		PMT3_summed_peaks_area = S_sum;
+		PMT3_n_peaks = _result.PMT3_peaks.size();
+//=========================================================================
+		ParameterPile::experiment_area area = curr_area.to_point();
+		area.channels.erase();
+		area.channels.push_back(0);
+		std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
+			"\\_ch" + std::to_string(0) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
+		if (ParameterPile::draw_required(area)) {
+			std::string plot_name = "";
+			plot_name += curr_area.experiments.back() + "_";
+			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(0) + "_sub" + std::to_string(area.sub_runs.back());
+			Drawing *dr = graph_manager.GetDrawing(plot_name, 0, ParameterPile::DrawEngine::Gnuplot);
+			if (NULL != dr) {
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered" + plot_title, "with points pt 1", 0);
+				dr->AddToDraw_baseline(threshold, "threshold");
+				dr->AddToDraw_baseline(PMT_baseline, "baseline", "w l lc rgb \"#0000FF\"");
+			}
+		}
+	}
+	ind = curr_area.channels.get_order_index_by_index(1);
+	if (ind >= 0){
+		DVECTOR xs_before_S1 = xs_channels[ind], ys_before_S1 = ys_channels[ind];
+		SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs_before_S1.begin()), ParameterPile::S1_start_time);
+		double noise_amp;
+		double PMT_baseline = found_base_lines[ind];
+		DITERATOR x_max_noise;
+		SignalOperations::get_max(xs_before_S1, ys_before_S1, x_max_noise, noise_amp, ParameterPile::PMT_N_of_averaging);
+		noise_amp -= PMT_baseline;
+		double threshold = noise_amp*ParameterPile::PMT_run_acceptance_threshold_to_noize;
+		if (threshold < ParameterPile::PMT1_minimum_thresh)
+			threshold = ParameterPile::PMT1_minimum_thresh;
+		if (threshold > ParameterPile::PMT1_maximum_thresh)
+			threshold = ParameterPile::PMT1_maximum_thresh;
+		threshold += PMT_baseline;
+
+		SignalOperations::find_peaks(xs_channels[ind], ys_channels[ind], _result.PMT1_peaks, PMT_baseline, threshold, ParameterPile::PMT_N_of_averaging);
+		//=========================================================================
+		ParameterPile::experiment_area area = curr_area.to_point();
+		area.channels.erase();
+		area.channels.push_back(1);
+		std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
+			"\\_ch" + std::to_string(1) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
+		if (ParameterPile::draw_required(area)) {
+			std::string plot_name = "";
+			plot_name += curr_area.experiments.back() + "_";
+			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(1) + "_sub" + std::to_string(area.sub_runs.back());
+			Drawing *dr = graph_manager.GetDrawing(plot_name, 1, ParameterPile::DrawEngine::Gnuplot);
+			if (NULL != dr) {
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered" + plot_title, "with points pt 1", 0);
+				dr->AddToDraw_baseline(threshold, "threshold");
+				dr->AddToDraw_baseline(PMT_baseline, "baseline", "w l lc rgb \"#0000FF\"");
+			}
+		}
+	}
+	PMT_peaks_analysed = true;
+
 	if (!test_PMT_signal(all_runs_results->N_peaks_cutoff, all_runs_results->S_peaks_cutoff, all_runs_results->S_peaks_max_cutoff, _result)) {
 		_result._current_status = SingleRunResults::Status::NoPMTsignal;
 		_result.setValid(false);
 	}
+//=============================================================================
+
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_peaks_end_timer = std::chrono::high_resolution_clock::now();
 	all_runs_results->time_stat.n_PMT_peaks++;
@@ -318,6 +387,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 #endif
 #ifdef _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 	clearOneRunMPPCs(0);
+	clearOneRunMPPCs(1);
 #endif
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_end_timer = std::chrono::high_resolution_clock::now();
@@ -350,11 +420,12 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 	}
 //#ifndef _TEMP_CODE
 #ifdef _TEMP_CODE
-	int mppc_ind = 0;
+	int mppc_ind = -1;
 	for (int ch = 32; ch < 64; ch++){
 		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if (ind < 0)
 			continue;
+		++mppc_ind;
 #ifdef _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #ifdef _USE_TIME_STATISTICS
 		auto MPPC_read_start_timer = std::chrono::high_resolution_clock::now();
@@ -367,7 +438,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 			std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_read_end_timer - MPPC_read_start_timer).count();
 #endif
 #endif
-		_result.mppc_baseline_xs.push_back(xs_channels[ind]);
+		_result.mppc_baseline_xs.push_back(xs_channels[ind]); //TODO: remove, make x_start, x_finish and dx or Nx.
 		_result.mppc_baseline_ys.push_back(DVECTOR());
 		_result.mppc_peaks.push_back(STD_CONT<peak>());
 		_result.mppc_S2_peaks_area.push_back(0);
@@ -382,7 +453,6 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 //==========================================================================
 		// invert MPPCs
 		SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
-		//add_draw_data("in_",graph_manager, ParameterPile::DrawEngine::Gnuplot, ch);
 #ifdef _USE_TIME_STATISTICS
 		//auto MPPC_filter_start_timer = std::chrono::high_resolution_clock::now();
 #endif
@@ -399,7 +469,6 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 #endif
 		DVECTOR xs_raw = xs_channels[ind];
 		DVECTOR ys_raw = ys_channels[ind];
-		/*add_draw_data("filtered_"+plot_title, graph_manager, ParameterPile::DrawEngine::Gnuplot, ch);*/
 
 //================================================================================
 		//TODO: add methods get{noise,baseline,threshold,edge_threshold} (ind, mppc_ind);
@@ -423,16 +492,18 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		auto MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
 		auto MPPC_filter_start_timer = std::chrono::high_resolution_clock::now();
 #endif
+		double delta_x = *(_result.mppc_baseline_xs[mppc_ind].begin() + 1) - *(_result.mppc_baseline_xs[mppc_ind].begin());
 		DITERATOR S2_start_i = SignalOperations::find_x_iterator_by_value(_result.mppc_baseline_xs[mppc_ind].begin(),
-			(_result.mppc_baseline_xs[mppc_ind].end() - 1), ParameterPile::S2_start_time);
+			(_result.mppc_baseline_xs[mppc_ind].end() - 1), ParameterPile::S2_start_time, delta_x);
 		DITERATOR S2_finish_i = SignalOperations::find_x_iterator_by_value(S2_start_i,
-			(_result.mppc_baseline_xs[mppc_ind].end() - 1), ParameterPile::S2_finish_time);
+			(_result.mppc_baseline_xs[mppc_ind].end() - 1), ParameterPile::S2_finish_time, delta_x);
 		DITERATOR max_signal_pos;
 		double max_sgnal_val;
+		//TODO: ParameterPile
 		SignalOperations::get_max(_result.mppc_baseline_xs[mppc_ind], ys_cut, S2_start_i, (S2_finish_i + 1), max_signal_pos, max_sgnal_val, 1);
 		double root_start_t = *max_signal_pos - ParameterPile::MPPC_ROOTs_bl_from_max_left;
 		double root_finish_t = *max_signal_pos + ParameterPile::MPPC_ROOTs_bl_from_max_right;
-		SignalOperations::apply_time_limits(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_start_t, root_finish_t);
+		SignalOperations::apply_time_limits(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_start_t, root_finish_t,delta_x);
 		auto MPPC_filter_end_timer = std::chrono::high_resolution_clock::now();
 		all_runs_results->time_stat.n_MPPC_filtering++;
 		all_runs_results->time_stat.t_MPPC_filtering +=
@@ -440,54 +511,54 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 #else //do not use optimal x region
 		double root_start_t = ParameterPile::S2_start_time;
 		double root_finish_t = ParameterPile::S2_finish_time;
-		SignalOperations::apply_time_limits(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_start_t, root_finish_t);
+		SignalOperations::apply_time_limits(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_start_t, root_finish_t, delta_x);
 #ifdef _USE_TIME_STATISTICS
 		auto MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 #endif
 
 #ifdef _USE_TIME_STATISTICS
-		//DVECTOR root_baseline_v2;
-		//DVECTOR root_baseline_v3;
-		//DVECTOR root_baseline_v4;
+		/*DVECTOR root_baseline_v2;
+		DVECTOR root_baseline_v3;
+		DVECTOR root_baseline_v4;*/
 		//DVECTOR root_baseline_v5;
 		//DVECTOR root_baseline_v6;
 		//DVECTOR root_baseline_v7;
 		//DVECTOR root_baseline_v8;
-		for (int a = 0; a < 10; a++) {
+		//for (int a = 0; a < 10; a++) {
 #endif
 			SignalOperations::find_baseline_by_ROOT(_result.mppc_baseline_xs[mppc_ind], ys_cut, _result.mppc_baseline_ys[mppc_ind]);
 #ifdef _USE_TIME_STATISTICS
-		}
+		//}
 		auto MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
 		all_runs_results->time_stat.n_MPPC_curved_baseline++;
 		all_runs_results->time_stat.t_MPPC_curved_baseline +=
 			std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();
 
-		//MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
-		//for (int a = 0; a < 10; a++) {
-		//	SignalOperations::find_baseline_by_ROOT_v2(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v2);
-		//}
-		//MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
-		//all_runs_results->time_stat.n_MPPC_curved_baseline_v2++;
-		//all_runs_results->time_stat.t_MPPC_curved_baseline_v2 +=
-		//	std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();
-		//MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
-		//for (int a = 0; a < 10; a++) {
-		//	SignalOperations::find_baseline_by_ROOT_v3(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v3);
-		//}
-		//MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
-		//all_runs_results->time_stat.n_MPPC_curved_baseline_v3++;
-		//all_runs_results->time_stat.t_MPPC_curved_baseline_v3 +=
-		//	std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();
-		//MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
-		//for (int a = 0; a < 10; a++) {
-		//	SignalOperations::find_baseline_by_ROOT_v4(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v4);
-		//}
-		//MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
-		//all_runs_results->time_stat.n_MPPC_curved_baseline_v4++;
-		//all_runs_results->time_stat.t_MPPC_curved_baseline_v4 +=
-		//	std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();
+		/*MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
+		for (int a = 0; a < 10; a++) {
+			SignalOperations::find_baseline_by_ROOT_v2(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v2);
+		}
+		MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
+		all_runs_results->time_stat.n_MPPC_curved_baseline_v2++;
+		all_runs_results->time_stat.t_MPPC_curved_baseline_v2 +=
+			std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();
+		MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
+		for (int a = 0; a < 10; a++) {
+			SignalOperations::find_baseline_by_ROOT_v3(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v3);
+		}
+		MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
+		all_runs_results->time_stat.n_MPPC_curved_baseline_v3++;
+		all_runs_results->time_stat.t_MPPC_curved_baseline_v3 +=
+			std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();
+		MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
+		for (int a = 0; a < 10; a++) {
+			SignalOperations::find_baseline_by_ROOT_v4(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v4);
+		}
+		MPPC_curved_baseline_end_timer = std::chrono::high_resolution_clock::now();
+		all_runs_results->time_stat.n_MPPC_curved_baseline_v4++;
+		all_runs_results->time_stat.t_MPPC_curved_baseline_v4 +=
+			std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_curved_baseline_end_timer - MPPC_curved_baseline_start_timer).count();*/
 		//MPPC_curved_baseline_start_timer = std::chrono::high_resolution_clock::now();
 		//for (int a = 0; a < 10; a++) {
 		//	SignalOperations::find_baseline_by_ROOT_v5(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_baseline_v5);
@@ -550,6 +621,8 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		DVECTOR ys_raw_0bl = ys_channels[ind];//I need this one for double integral.
 		SignalOperations::substract_baseline(xs_channels[ind], ys_channels[ind], _result.mppc_baseline_xs[mppc_ind], 
 			_result.mppc_baseline_ys[mppc_ind], ROOTs_baseline_baseline); //handles that 2 signals have different x spans
+		//TODO: optimize this function, using the fact that the ROOT's baseline has definite x points [from, to] (- [xs.begin(),xs.end())
+		//and rework _result.mppc_baseline_xs[mppc_ind]
 		found_base_lines[ind] = 0;
 #ifdef _USE_TIME_STATISTICS
 		auto MPPC_substruction_end_timer = std::chrono::high_resolution_clock::now();
@@ -597,7 +670,6 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		double sp_threshold = find_spreaded_peaks_threshold(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_approx_thr);
 		if (sp_threshold < 0)
 			continue;
-
 		STD_CONT<peak> sp_peaks;
 		//no fine required here
 		SignalOperations::find_peaks(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_peaks, sp_min, sp_threshold, 1);
@@ -643,15 +715,15 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 #ifdef _USE_TIME_STATISTICS
 		auto MPPC_double_I_start_timer = std::chrono::high_resolution_clock::now();
 #endif
-		SignalOperations::apply_time_limits(xs_raw_0bl, ys_raw_0bl, S2_start_t, S2_finish_t);
+		SignalOperations::apply_time_limits(xs_raw_0bl, ys_raw_0bl, S2_start_t, S2_finish_t, delta_x);
 		DVECTOR ys_raw_i, ys_raw_ii;
 		DITERATOR x_ii_max = xs_raw_0bl.end();
 		double y_ii_max, y_ii_min;
-		if (!xs_raw_0bl.empty()){
-			SignalOperations::integrate(xs_raw_0bl, ys_raw_0bl, ys_raw_i);
-			SignalOperations::integrate(xs_raw_0bl, ys_raw_i, ys_raw_ii);
+		if (!xs_raw_0bl.empty()) {
+			SignalOperations::integrate(xs_raw_0bl, ys_raw_0bl, ys_raw_i, delta_x, 0);
+			SignalOperations::integrate(xs_raw_0bl, ys_raw_i, ys_raw_ii, delta_x, 0);
 			//TODO: ParameterPile
-			SignalOperations::get_max(xs_raw_0bl, ys_raw_ii, x_ii_max, y_ii_max, 8);
+			SignalOperations::get_max(xs_raw_0bl, ys_raw_ii, x_ii_max, y_ii_max, ParameterPile::MPPC_double_I_N_trust);
 			y_ii_min = ys_raw_ii.front();
 			if (x_ii_max == xs_raw_0bl.begin())
 				_result.mppc_double_I.back() = ys_raw_ii.back() - y_ii_min;
@@ -687,7 +759,7 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 				//dr->AddToDraw(_result.mppc_baseline_xs[mppc_ind], root_baseline_v7, "ROOT baseline V7", "w l lw 2", 0);
 				//dr->AddToDraw(_result.mppc_baseline_xs[mppc_ind], root_baseline_v8, "ROOT baseline V8", "w l lw 2", 0);
 #endif
-				//dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with points pt 1", 0);
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with points pt 1", 0);
 				dr->AddToDraw_baseline(global_threshold, "threshold");
 				dr->AddToDraw_baseline(ROOTs_baseline_baseline, "ROOTs baseline", "w l lc rgb \"#0000FF\"");
 				dr->AddToDraw_baseline(0/*edge_threshold*/, "threshold\\_edges");
@@ -733,7 +805,6 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 #endif
 		clearOneRunMPPCs(ch);
 #endif //_HOTFIX_DECREASE_MPPC_MEMORY_USAGE
-		mppc_ind++;
 	}
 #endif //_TEMP_CODE
 #ifdef _USE_TIME_STATISTICS
@@ -794,23 +865,28 @@ void SingleRunData::calculate_MPPC_threshold_and_baseline(DVECTOR &xs, DVECTOR &
 	peaks_before_S1.clear();
 	DVECTOR before_S1_x = xs;
 	DVECTOR before_S1_y = ys;
-	SignalOperations::apply_time_limits(before_S1_x, before_S1_y, *before_S1_x.begin(), ParameterPile::S1_start_time);
+	double delta_x = *(xs.begin() + 1) - *xs.begin();
+	SignalOperations::apply_time_limits(before_S1_x, before_S1_y, *before_S1_x.begin(), ParameterPile::S1_start_time, delta_x);
 	baseline = SignalOperations::find_baseline_by_integral(baseline, before_S1_x, before_S1_y);
 	//^not many peaks expected, so integral is used, not a median
 	//SignalOperations::substract_baseline(before_S1_y, baseline);
 	//SignalOperations::substract_baseline(ys, baseline);
-	double approx_noise = TMath::RMS(before_S1_y.begin(), before_S1_y.end());
-	double approx_thresh_beforeS1 = approx_noise * 5.5;	//TODO: ParameterPile
-	double approx_edge_thresh = approx_noise*0.5;
-	//TODO: ParameterPile N_trust;
+	double approx_noise = SignalOperations::RMS(before_S1_y.begin(), before_S1_y.end());
+	double approx_thresh_beforeS1 = approx_noise * ParameterPile::MPPC_threshold_to_noise;
+	double approx_edge_thresh = approx_noise*0.5; //TODO: ParameterPile
 	SignalOperations::find_peaks_fine(before_S1_x, before_S1_y, peaks_before_S1,
 		baseline, approx_thresh_beforeS1 + baseline, approx_edge_thresh + baseline, ParameterPile::MPPC_N_trust);
-	/*exact*/baseline = SignalOperations::find_baseline_by_integral(0, before_S1_x, before_S1_y, peaks_before_S1);
-	SignalOperations::exclude_peaks(before_S1_x, before_S1_y, peaks_before_S1);
-	double exact_noise = TMath::RMS(before_S1_y.begin(), before_S1_y.end());
-	threshold = exact_noise * 5.5;//global means for all times, not for all channels and runs //TODO: ParameterPile
-	//double global_ROOT_threshold = exact_noise * 3.5;	//TODO: ParameterPile. ROOT's baseline is significantly lower that the actual one
-	double edge_threshold = exact_noise * 0;	//TODO: ParameterPile
+	double exact_noise = approx_noise;
+	if (!peaks_before_S1.empty()) {
+		/*exact*/baseline = SignalOperations::find_baseline_by_integral(0, before_S1_x, before_S1_y, peaks_before_S1);
+		SignalOperations::exclude_peaks(before_S1_x, before_S1_y, peaks_before_S1);
+		exact_noise = SignalOperations::RMS(before_S1_y.begin(), before_S1_y.end());
+	}
+	threshold = exact_noise * ParameterPile::MPPC_threshold_to_noise;//global means for all times, not for all channels and runs
+	if (threshold < ParameterPile::MPPC_minimum_peak_A)
+		threshold = ParameterPile::MPPC_minimum_peak_A;
+	if (threshold > ParameterPile::MPPC_maximum_peak_A)
+		threshold = ParameterPile::MPPC_maximum_peak_A;
 }
 
 double SingleRunData::find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, DVECTOR &y_peaks_spreaded, double &apr_thresh)

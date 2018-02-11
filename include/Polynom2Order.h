@@ -24,7 +24,7 @@ public:
 	//only for a part of a vector
 	virtual void setOrder(int n) override;
 
-	void FindMaximum(DVECTOR::const_iterator &x_max , double &x_max_exact, double &y_max_exact);
+	void FindMaximum(DVECTOR::const_iterator &x_max, double &x_max_exact, double &y_max_exact);
 	void FindMinimum(DVECTOR::const_iterator &x_min, double &x_min_exact, double &y_min_exact);
 	void FindIntersection(DVECTOR::const_iterator &x_inter, DVECTOR::const_iterator &x_inter2, double &x_inter_exact, double &x_inter_exact2,
 		double threshold); //if not found, returns x_iter=xs.end();

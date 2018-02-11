@@ -7,6 +7,7 @@
 #include <deque>
 #include <string.h>
 #include <sstream>
+#include <functional>
 
 #include <TThread.h>
 #include <TApplication.h>
@@ -15,6 +16,8 @@
 #include <TVector.h>
 #include <TF1.h>
 #include <TMath.h>
+#include <TFile.h>
+#include <TTree.h>
 #include <Math/Point2D.h>
 #include <windows.h>
 
@@ -36,7 +39,7 @@
 //in volts
 #define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
 //in volts
-#define OUTPUT_DIR "results\\"
+#define OUTPUT_DIR std::string("../../../Data/results/")
 #define OUTPUT_GEMS "GEMs.txt"
 #define OUTPUT_MPPCS "MPPC_"
 #define OUTPUT_MPPCS_PICS "MPPCs_v3\\MPPCs_"
@@ -60,15 +63,17 @@
 #define D_REV_ITERATOR DVECTOR::reverse_iterator
 
 //#define _PROCESS_GEMS
+DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end);
+void open_output_file(std::string name, std::ofstream &str, std::ios_base::openmode _mode = std::ios_base::trunc);
 
-void open_output_file(std::string name, std::ofstream &str);
-
-struct peak //TODO: add amplitude
+class peak
 {
+public:
 	double left;
 	double right;
 	double S; //Area
 	double A; //Amplitude (from baseline)
+	peak();
 };
 
 #endif

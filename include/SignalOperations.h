@@ -19,18 +19,31 @@ namespace SignalOperations
 	void find_baseline_by_ROOT_v6 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v7 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v8 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
+	const char *find_background_v_raw(double *spectrum, int ssize,
+		int numberIterations,
+		int direction, int filterOrder,
+		bool smoothing, int smoothWindow,
+		bool compton);
+	const char *find_background_v_0(double *spectrum, int ssize,
+		int numberIterations,
+		int direction, int filterOrder,
+		bool smoothing, int smoothWindow,
+		bool compton, int sparse = 1);
 
-	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double baseline = 0);
-	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out,
-		double left, double right, double baseline = 0);
-	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out,
-		DITERATOR left, DITERATOR right, double baseline = 0);
-	void integrate(DVECTOR &xs, DVECTOR &ys, double &y_out,
-		DITERATOR left, DITERATOR right, double baseline = 0);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double baseline);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double dx_hint, double baseline=0);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double baseline);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double dx_hint, double baseline);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, DITERATOR left, DITERATOR right, double baseline);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, DITERATOR left, DITERATOR right, double dx_hint, double baseline);
+	void integrate(DVECTOR &xs, DVECTOR &ys, double &y_out, DITERATOR left, DITERATOR right, double baseline);
+	void integrate(DVECTOR &xs, DVECTOR &ys, double &y_out, DITERATOR left, DITERATOR right, double dx_hint, double baseline);
 	//^area is [a,b], not (a,b)
 	void apply_time_limits(DVECTOR &xs, DVECTOR &ys, double x_left, double x_right);
+	void apply_time_limits(DVECTOR &xs, DVECTOR &ys, double x_left, double x_right, double dx_hint);
 
 	DITERATOR find_x_iterator_by_value(DITERATOR &x_left, DITERATOR &x_right, double x);
+	DITERATOR find_x_iterator_by_value(DITERATOR &x_left, DITERATOR &x_right, double x, double hint);
 	void get_max(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_max, double &y_max, int N_trust = 1);
 	void get_max(DVECTOR &xs, DVECTOR &ys, DITERATOR x_start, DITERATOR x_finish, DITERATOR &x_max, double &y_max, int N_trust = 1);
 	void get_min(DVECTOR &xs, DVECTOR &ys, DITERATOR x_start, DITERATOR x_finish, DITERATOR &x_min, double &y_min, int N_trust = 1);
@@ -63,6 +76,11 @@ namespace SignalOperations
 	void substract_baseline(DVECTOR &ys_in, double base_line);
 	void substract_baseline(DVECTOR &ys_in, DVECTOR &base_ys);
 	void substract_baseline(DVECTOR& xs_in, DVECTOR &ys_in, DVECTOR &base_xs, DVECTOR &base_ys, double baseline_baseline);
+
+	double Mean(DITERATOR first, DITERATOR last);
+	double RMS(DITERATOR first, DITERATOR last);
+	double Mean(STD_CONT<STD_CONT<peak>>::iterator first, STD_CONT<STD_CONT<peak>>::iterator last, std::function<double (peak& pk)> &value_picker);
+	double RMS(STD_CONT<STD_CONT<peak>>::iterator first, STD_CONT<STD_CONT<peak>>::iterator last, std::function<double(peak& pk)> &value_picker);
 };
 
 #endif

@@ -9,6 +9,8 @@
 
 class AnalysisManager
 {
+private:
+	ParameterPile::area_vector available_runs; //for current experiment
 public:
 	AnalysisManager(ParameterPile::experiment_area area);
 protected:
@@ -37,7 +39,9 @@ protected:
 	virtual void loopAllRuns_first_iteration(AllRunsResults *_all_results);
 	virtual void loopAllRuns(AllRunsResults *_all_results);
 	//virtual void processOneRun(SingleRunData *run, AllRunsResults *_all_results);
-
+	ParameterPile::experiment_area refine_exp_area(ParameterPile::experiment_area area);//looks up the existing runs in data directory 
+	//and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally
+	//TODO: maybe move to the AnalysisManager
 public:
 	//virtual void nextExperiment(void);
 

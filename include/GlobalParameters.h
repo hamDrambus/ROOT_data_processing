@@ -7,10 +7,15 @@
 #include <chrono>
 #endif
 
-#define ROOT_BL_CALL_V0 spec->Background(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
-#define ROOT_BL_CALL_V2 spec->Background(f_ys, ys.size(), 25,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
-#define ROOT_BL_CALL_V3 spec->Background(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
-#define ROOT_BL_CALL_V4 spec->Background(f_ys, ys.size(), 50,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+//unmodified algorithm parameters:
+//find_background_v_raw(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+//optimized (with sparse) optimal algorithm:
+//find_background_v_0(f_ys, ys.size(), 80, TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false, 2);
+
+#define ROOT_BL_CALL_V0 find_background_v_0(f_ys, ys.size(), 80,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false,2);
+#define ROOT_BL_CALL_V2 find_background_v_0(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false,2);
+#define ROOT_BL_CALL_V3 find_background_v_0(f_ys, ys.size(), 70,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false,2);
+#define ROOT_BL_CALL_V4 find_background_v_raw(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
 #define ROOT_BL_CALL_V5 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
 #define ROOT_BL_CALL_V6 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
 #define ROOT_BL_CALL_V7 spec->Background(f_ys, ys.size(), 20,	TSpectrum::kBackIncreasingWindow, TSpectrum::kBackOrder2, false, TSpectrum::kBackSmoothing3, false);
@@ -46,6 +51,10 @@ namespace ParameterPile
 	extern int GEM_N_of_averaging; //=== N_trust
 
 	extern double PMT_run_acceptance_threshold_to_noize;
+	extern double PMT_maximum_thresh;
+	extern double PMT_minimum_thresh;
+	extern double PMT1_minimum_thresh;
+	extern double PMT1_maximum_thresh;
 	extern int PMT_N_of_averaging; //=== N_trust
 	extern int PMT_N_peaks_acceptance;
 	extern double PMT_SArea_peaks_acceptance; //V*ms
@@ -57,10 +66,14 @@ namespace ParameterPile
 
 	extern double MPPC_peaks_smoothing_time;
 	extern int MPPC_N_trust;
+	extern int MPPC_double_I_N_trust;
 	extern double MPPC_ROOTs_bl_from_max_left;
 	extern double MPPC_ROOTs_bl_from_max_right;
 	extern double MPPC_ROOTs_bl_left_offset; //for baseline's baseline
 	extern double MPPC_ROOTs_bl_right_offset; //for baseline's baseline
+	extern double MPPC_threshold_to_noise;
+	extern double MPPC_maximum_peak_A;
+	extern double MPPC_minimum_peak_A;
 
 	extern int Max_iteration_N;
 

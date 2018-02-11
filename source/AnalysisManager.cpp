@@ -14,33 +14,44 @@ void AnalysisManager::nextRun(void)
 		_exp_area.channels.reset();//clears flags, but not the elements, for the valid get_next_index
 		_exp_area.runs.reset();
 		_exp_area.sub_runs.reset();
+		available_runs.reset();
 		current_under_processing.experiments.push_back(_exp_area.experiments[0]);
-		current_under_processing.runs.push_back(_exp_area.runs.get_next_index());
+		current_under_processing.runs = _exp_area.runs;
 		current_under_processing.sub_runs.push_back(_exp_area.sub_runs.get_next_index());
-		current_under_processing.channels= _exp_area.channels;
+		current_under_processing.channels = _exp_area.channels;
+		current_under_processing = refine_exp_area(current_under_processing);
+		available_runs = current_under_processing.runs;
+		current_under_processing.runs.erase();
+		current_under_processing.runs.push_back(available_runs.get_next_index());
 		curr_run = NextRunIs::FirstRun;//change to NewSubRun ?
 		return;
 	}
 	current_under_processing.sub_runs.back() = _exp_area.sub_runs.get_next_index();
 	if (current_under_processing.sub_runs.back() < 0){
 		current_under_processing.sub_runs.back() = _exp_area.sub_runs.get_next_index();
-		current_under_processing.runs.back() = _exp_area.runs.get_next_index();
+		current_under_processing.runs.back() = available_runs.get_next_index();
 		if (current_under_processing.runs.back() < 0){
-			current_under_processing.runs.back() = _exp_area.runs.get_next_index();
 			for (auto i = _exp_area.experiments.begin(); i != _exp_area.experiments.end(); i++)
 				if (*i == current_under_processing.experiments.back())
 					if (++i != _exp_area.experiments.end()){
 						current_under_processing.experiments.back() = *i;
 						curr_run = NextRunIs::NewExperiment;
-						return;
+						available_runs.erase();
+						break;
 					} else {
 						current_under_processing.experiments.pop_back();
 						current_under_processing.runs.erase();
 						current_under_processing.sub_runs.erase();
 						current_under_processing.channels.erase();
+						available_runs.erase();
 						curr_run = NextRunIs::Null;
 						return;
 					}
+			current_under_processing.runs = _exp_area.runs;
+			current_under_processing = refine_exp_area(current_under_processing);
+			available_runs = current_under_processing.runs;
+			current_under_processing.runs.push_back(available_runs.get_next_index());
+			return;
 		} else {
 			curr_run = NextRunIs::NewRun;
 			return;
@@ -189,3 +200,58 @@ void AnalysisManager::setThreadMutex(TMutex* mutex)
 {	_thread_mutex = mutex;}
 TMutex* AnalysisManager::getThreadMutex(void)
 {	return _thread_mutex;}
+
+
+ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::experiment_area area)//looks up the existing runs in data directory 
+//and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally
+//depr: TODO: maybe also move to the AnalysisManager
+{
+	ParameterPile::experiment_area out_area = area;
+	out_area.runs.erase();
+	std::vector<int> runs;
+	int from = -1, to = -1;
+	HANDLE dir;
+	WIN32_FIND_DATA file_data;
+	std::string path = DATA_PREFIX;
+	path += "event_x-ray_" + area.experiments.back();
+	if ((dir = FindFirstFile((path + "/*").c_str(), &file_data)) == INVALID_HANDLE_VALUE)
+		return out_area;
+	do {
+		std::string file_name = file_data.cFileName;
+		if ((file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
+			continue;
+		if (file_name.size() < 4)
+			continue;
+		if (file_name[0] == '.')
+			continue;
+		file_name.erase(file_name.begin(), file_name.begin() + 4); //erase "run_"
+		int n_underscore = file_name.find("_");
+		if (n_underscore == std::string::npos)
+			continue;
+		file_name.erase(file_name.begin() + n_underscore, file_name.end());
+		if (file_name.empty())
+			continue;
+		int run = std::stoi(file_name);
+
+		if (from < 0){
+			from = run;
+			to = run;
+			continue;
+		}
+		if (to == run)
+			continue;
+		if (to == (run - 1))
+			to++;
+		else {
+			out_area.runs.push_pair(from, to);
+			from = run;
+			to = from;
+		}
+	} while (FindNextFile(dir, &file_data));
+	if ((from >= 0) && (to >= 0))
+		out_area.runs.push_pair(from, to);
+	FindClose(dir);
+
+	out_area.runs = out_area.runs.intersect(area.runs);
+	return out_area;
+}

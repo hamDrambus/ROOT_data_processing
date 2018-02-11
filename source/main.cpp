@@ -29,12 +29,17 @@
 int main(int argc, char *argv[])
 {
 	ParameterPile::Init_globals();
+	/*std::ofstream str;
+	str.open("test_bin.dat", std::ios_base::trunc | std::ios_base::binary);
+	std::size_t sz = sizeof(std::size_t);
+	str.write((char*)&sz, sizeof(std::size_t));
+	str.close();*/
 	int n_par = 0;
 	char **f = NULL;
-	TApplication* app = new TApplication("test_app",&n_par,f);
-	TCanvas* c1 = new TCanvas("test", "test_title", 800, 500);
+	TApplication app("test_app",&n_par,f);
+	/*TCanvas* c1 = new TCanvas("test", "test_title", 800, 500);
 	TF1 *func = new TF1("test_func", "sin(x)+3*x", 0, 10);
-	func->Draw();
+	func->Draw();*/
 	
 #ifdef _USE_TIME_STATISTICS
 	auto timer_start = std::chrono::high_resolution_clock::now();
@@ -52,7 +57,7 @@ int main(int argc, char *argv[])
 	std::cout << "Time elapsed [s]: " << std::chrono::duration_cast<std::chrono::seconds>(timer_finish - timer_start).count();
 #endif
 
-	app->Run();
-	delete app;
+	app.Run();
+	//app->Delete();
 	return 0;
 }

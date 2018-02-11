@@ -31,6 +31,8 @@ protected:
 
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
+	STD_CONT<peak> PMT3_peaks;
+	STD_CONT<peak> PMT1_peaks;
 
 	bool is_valid;
 public:

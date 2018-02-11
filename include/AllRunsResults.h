@@ -87,21 +87,27 @@ protected:
 	STD_CONT<DVECTOR> mppc_peaks_in_S2_area; //size == mppc channels (depends on experiment area)
 	STD_CONT<DVECTOR> mppc_S2_start_time; //size == mppc channels (depends on experiment area)
 	STD_CONT<DVECTOR> mppc_S2_finish_time; //size == mppc channels (depends on experiment area)
-	STD_CONT<DVECTOR> mppc_all_peaks_Ss; //size == mppc channels (depends on experiment area)
+	//STD_CONT<DVECTOR> mppc_all_peaks_Ss; //size == mppc channels (depends on experiment area) //depr: now using mppc_peaks
 	STD_CONT<DVECTOR> mppc_double_Is; //size == mppc channels (depends on experiment area)
 	STD_CONT<int> mppc_channels;
+	STD_CONT<STD_CONT<STD_CONT<peak>>> mppc_peaks; //[channel][run#][peaks]. The number of runs must be equal to the size of DVECTOR above.
+	STD_CONT<STD_CONT<peak>> PMT3_peaks; //[run#][peaks]
+	STD_CONT<STD_CONT<peak>> PMT1_peaks; //[run#][peaks]
 
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
 	//void find_S_cutoff_v2(void);
 	TH1D* createMPPCHist(DVECTOR &what, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
-	void vector_to_file(DVECTOR &what, std::string fname);
+	TH1D* createMPPCHist_peaks_S(STD_CONT<STD_CONT<peak>> &what, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
+	void vector_to_file(DVECTOR &what, std::string fname, std::string title="MPPC");
+	void vector_to_file(STD_CONT<STD_CONT<peak>> &pks, std::string fname, std::string title = "MPPC_peaks");
 	TF1* createMPPCFitFunc(TH1D* hist, std::string name);
 
 #ifdef _USE_TIME_STATISTICS
 	time_results time_stat;
 	void report_time_statistics();
 #endif
+
 public:
 	AllRunsResults(ParameterPile::experiment_area experiment);//only experiment and channells are important here
 	void processAllRuns(STD_CONT<SingleRunResults> &single_results);

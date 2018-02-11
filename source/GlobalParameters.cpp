@@ -6,7 +6,14 @@
 
 #include <windows.h>
 
-void open_output_file(std::string name, std::ofstream &str)
+DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end)
+{
+	if (what < 0)
+		return end;
+	return ((int)(end - to) < what) ? end : to + what;
+}
+
+void open_output_file(std::string name, std::ofstream &str, std::ios_base::openmode _mode)
 {
 	std::string folder = name;
 	while ((folder.back() != '\\') &&(folder.back()!='/') &&!folder.empty())
@@ -21,7 +28,7 @@ void open_output_file(std::string name, std::ofstream &str)
 					std::cout << "mkdir error: " << GetLastError() << std::endl;
 			}
 	}
-	str.open(name, std::ios_base::trunc);
+	str.open(name, _mode);
 	if (!str.is_open())
 		std::cout << "Failed to open \"" << name << "\"" << std::endl;
 }
@@ -75,7 +82,7 @@ namespace ParameterPile
 	int subruns_per_file = 10;
 	//bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 6; //obv. must be >=1
+	int threads_number = 4; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
@@ -98,6 +105,10 @@ namespace ParameterPile
 	int GEM_N_of_averaging = 30; //=== N_trust
 	
 	double PMT_run_acceptance_threshold_to_noize = 2;//~ 2-3
+	double PMT_minimum_thresh = 0;
+	double PMT_maximum_thresh = DBL_MAX;
+	double PMT1_minimum_thresh = 0;
+	double PMT1_maximum_thresh = 0.008;
 	int PMT_N_of_averaging = 1; //=== N_trust. PMT signal is already smoothed by filter
 	int PMT_N_peaks_acceptance = 0;//1 //condition is >=1, not >1
 	double PMT_SArea_peaks_acceptance = 0.0; //V*ms 
@@ -125,10 +136,14 @@ namespace ParameterPile
 
 	double MPPC_peaks_smoothing_time = 5; //us
 	int MPPC_N_trust = 1;
+	int MPPC_double_I_N_trust = 1;
 	double MPPC_ROOTs_bl_from_max_left = 20;
 	double MPPC_ROOTs_bl_from_max_right = 40;
 	double MPPC_ROOTs_bl_left_offset = 5; //for baseline's baseline
 	double MPPC_ROOTs_bl_right_offset = 12; //for baseline's baseline
+	double MPPC_threshold_to_noise = 5.5;
+	double MPPC_minimum_peak_A = 0.012; //
+	double MPPC_maximum_peak_A = 0.015; //
 
 	int Max_iteration_N = 1;
 
@@ -171,47 +186,29 @@ namespace ParameterPile
 		//areas_to_draw.back().experiments.push_back("16_thmV");
 		//areas_to_draw.back().experiments.push_back("18_thmV");
 		//areas_to_draw.back().experiments.push_back("20_thmV");
-		areas_to_draw.back().runs.push_pair(0, 0);//(2855, 2855);
-		//areas_to_draw.back().channels.push_pair(0, 0);
+
+		areas_to_draw.back().runs.push_pair(0, 1);
+		areas_to_draw.back().channels.push_pair(0, 1);
 		areas_to_draw.back().channels.push_pair(34, 34);
 		areas_to_draw.back().channels.push_pair(36, 36);
 		areas_to_draw.back().channels.push_pair(38, 38);
 		areas_to_draw.back().channels.push_pair(44, 44);
 		areas_to_draw.back().channels.push_pair(53, 53);
 		areas_to_draw.back().sub_runs.push_pair(0, 1);
-		
-		/*areas_to_draw.push_back(areas_to_draw.back());
-		areas_to_draw.back().runs.erase();
-		areas_to_draw.back().runs.push_pair(2856, 2858);
-		areas_to_draw.back().channels.erase();
-		areas_to_draw.back().channels.push_pair(0,0);
-		areas_to_draw.back().sub_runs.erase();
-		areas_to_draw.back().sub_runs.push_pair(0, 0);*/
 
-		/*areas_to_draw.push_back(areas_to_draw.back());
-		areas_to_draw.back().runs.erase();
-		areas_to_draw.back().runs.push_pair(2915, 2918);
-		areas_to_draw.back().experiments.clear();
-		areas_to_draw.back().experiments.push_back("12_thmV");
-		
-		areas_to_draw.push_back(areas_to_draw.back());
-		areas_to_draw.back().runs.erase();
-		areas_to_draw.back().runs.push_pair(2762, 2765);
-		areas_to_draw.back().experiments.clear();
-		areas_to_draw.back().experiments.push_back("20_thmV");*/
-
-		exp_area.runs.push_pair(2000, 5000);
-		//exp_area.channels.push_pair(0, 0);
-		//exp_area.channels.push_pair(2, 2);
+		exp_area.runs.push_pair(0, 9999);
+		exp_area.channels.push_pair(0, 1);
+		/*exp_area.channels.push_pair(2, 2);*/
 		/*exp_area.channels.push_pair(34, 34);
 		exp_area.channels.push_pair(36, 36);
 		exp_area.channels.push_pair(38, 38);
 		exp_area.channels.push_pair(44, 44);
 		exp_area.channels.push_pair(53, 53);*/
+		
 		exp_area.channels.push_pair(32, 44); //13
 		exp_area.channels.push_pair(48, 55); //8	
 		exp_area.channels.push_pair(57, 59); //3 =>24
-		exp_area.sub_runs.push_pair(0,2); //subruns_per_file-1);
+		exp_area.sub_runs.push_pair(0,9); //subruns_per_file-1);
 
 		//exp_area.experiments.push_back("4_thmV");
 		//exp_area.experiments.push_back("5_thmV");

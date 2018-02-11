@@ -112,60 +112,6 @@ void MTAnalysisManager::processAllExperiments(void)
 	AnalysisManager::processAllExperiments();
 }
 
-ParameterPile::experiment_area MTAnalysisManager::refine_exp_area(ParameterPile::experiment_area area)//looks up the existing runs in data directory 
-//and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally
-//depr: TODO: maybe also move to the AnalysisManager
-{
-	ParameterPile::experiment_area out_area = area;
-	out_area.runs.erase();
-	std::vector<int> runs;
-	int from = -1, to = -1;
-	HANDLE dir;
-	WIN32_FIND_DATA file_data;
-	std::string path =  DATA_PREFIX;
-	path += "event_x-ray_" + area.experiments.back();
-	if ((dir = FindFirstFile((path + "/*").c_str(), &file_data)) == INVALID_HANDLE_VALUE)
-		return out_area;
-	do {
-		std::string file_name = file_data.cFileName;
-		if ((file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0)
-			continue;
-		if (file_name.size() < 4)
-			continue;
-		if (file_name[0]=='.')
-			continue;
-		file_name.erase(file_name.begin(), file_name.begin() + 4); //erase "run_"
-		int n_underscore = file_name.find("_");
-		if (n_underscore == std::string::npos)
-			continue;
-		file_name.erase(file_name.begin() + n_underscore, file_name.end());
-		if (file_name.empty())
-			continue;
-		int run = std::stoi(file_name);
-
-		if (from < 0){
-			from = run;
-			to = run;
-			continue;
-		}
-		if (to == run)
-			continue;
-		if (to == (run - 1))
-			to++;
-		else {
-			out_area.runs.push_pair(from, to);
-			from = run;
-			to = from;
-		}
-	} while (FindNextFile(dir, &file_data));
-	if ((from >= 0) && (to >= 0))
-		out_area.runs.push_pair(from, to);
-	FindClose(dir);
-
-	out_area.runs = out_area.runs.intersect(area.runs);
-	return out_area;
-}
-
 STD_CONT<ParameterPile::experiment_area> MTAnalysisManager::split_exp_area(ParameterPile::experiment_area area_to_split, int N)
 {
 	STD_CONT <ParameterPile::experiment_area> out_;
