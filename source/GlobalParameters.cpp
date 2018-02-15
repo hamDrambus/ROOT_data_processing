@@ -82,7 +82,7 @@ namespace ParameterPile
 	int subruns_per_file = 10;
 	//bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 4; //obv. must be >=1
+	int threads_number = 3; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
@@ -97,14 +97,14 @@ namespace ParameterPile
 
 	//these values are approximate, especially S2
 	double S1_start_time = 32; //in ms
-	double S1_finish_time = 35; //in ms
+	double S1_finish_time = 42; //in ms
 	double S2_start_time = 45; //in ms
 	double S2_finish_time = 145; //in ms
 
 	double GEM_threshold_to_noise = 1.1;
 	int GEM_N_of_averaging = 30; //=== N_trust
 	
-	double PMT_run_acceptance_threshold_to_noize = 2;//~ 2-3
+	double PMT_run_acceptance_threshold_to_noize = 4;//~ 2-3
 	double PMT_minimum_thresh = 0;
 	double PMT_maximum_thresh = DBL_MAX;
 	double PMT1_minimum_thresh = 0;
@@ -143,7 +143,7 @@ namespace ParameterPile
 	double MPPC_ROOTs_bl_right_offset = 12; //for baseline's baseline
 	double MPPC_threshold_to_noise = 5.5;
 	double MPPC_minimum_peak_A = 0.012; //
-	double MPPC_maximum_peak_A = 0.015; //
+	double MPPC_maximum_peak_A = 0.013; //
 
 	int Max_iteration_N = 1;
 
@@ -165,63 +165,51 @@ namespace ParameterPile
 		this_path = _getcwd(path, FILENAME_MAX);
 
 		//clear the GEM output file
+#ifdef _PROCESS_GEMS
 		std::ofstream file;
-		open_output_file(std::string(OUTPUT_DIR) + OUTPUT_GEMS, file);//creates folder AND trucates the file
+		open_output_file(std::string(OUTPUT_DIR) + OUTPUT_GEMS + "/" + OUTPUT_GEMS + ".txt", file);//creates folder AND trucates the file
 		file << "Experiment\tIntegral[V*us]\tt_from\tt_to\tN_valid\tN\tS_cutoff" << std::endl;
 		file.close();
+#endif
 
 		TThread::Initialize();
 		
 		areas_to_draw.push_back(experiment_area());
-		//areas_to_draw.back().experiments.push_back("4_thmV");
-		//areas_to_draw.back().experiments.push_back("5_thmV");
-		//areas_to_draw.back().experiments.push_back("6_thmV");
-		//areas_to_draw.back().experiments.push_back("7_thmV");
-		//areas_to_draw.back().experiments.push_back("8_thmV");
-		//areas_to_draw.back().experiments.push_back("9_thmV");
-		//areas_to_draw.back().experiments.push_back("10_thmV");
-		//areas_to_draw.back().experiments.push_back("10_thmV_recalib");
-		//areas_to_draw.back().experiments.push_back("12_thmV");
-		areas_to_draw.back().experiments.push_back("14_thmV");
-		//areas_to_draw.back().experiments.push_back("16_thmV");
-		//areas_to_draw.back().experiments.push_back("18_thmV");
-		//areas_to_draw.back().experiments.push_back("20_thmV");
+		
+		areas_to_draw.back().experiments.push_back("X_ray_12kV_SiPM_46V_THGEM_0V_coll_6mm");
+		areas_to_draw.back().experiments.push_back("X_ray_14kV_SiPM_46V_THGEM_0V_coll_6mm");
+		areas_to_draw.back().experiments.push_back("X_ray_16kV_SiPM_46V_THGEM_0V_coll_6mm");
+		areas_to_draw.back().experiments.push_back("X_ray_18kV_SiPM_46V_THGEM_0V_coll_6mm");
+		areas_to_draw.back().experiments.push_back("X_ray_20kV_SiPM_46V_THGEM_0V_coll_6mm");
 
-		areas_to_draw.back().runs.push_pair(0, 1);
-		areas_to_draw.back().channels.push_pair(0, 1);
-		areas_to_draw.back().channels.push_pair(34, 34);
-		areas_to_draw.back().channels.push_pair(36, 36);
-		areas_to_draw.back().channels.push_pair(38, 38);
-		areas_to_draw.back().channels.push_pair(44, 44);
-		areas_to_draw.back().channels.push_pair(53, 53);
-		areas_to_draw.back().sub_runs.push_pair(0, 1);
+		areas_to_draw.back().runs.push_pair(0, 0);
+		areas_to_draw.back().channels.push_pair(0, 0);
+		areas_to_draw.back().channels.push_pair(2, 2);
+		//areas_to_draw.back().channels.push_pair(34, 34);
+		//areas_to_draw.back().channels.push_pair(36, 36);
+		//areas_to_draw.back().channels.push_pair(38, 38);
+		//areas_to_draw.back().channels.push_pair(44, 44);
+		//areas_to_draw.back().channels.push_pair(53, 53);
+		areas_to_draw.back().sub_runs.push_pair(0, 0);
 
 		exp_area.runs.push_pair(0, 9999);
-		exp_area.channels.push_pair(0, 1);
-		/*exp_area.channels.push_pair(2, 2);*/
-		/*exp_area.channels.push_pair(34, 34);
-		exp_area.channels.push_pair(36, 36);
-		exp_area.channels.push_pair(38, 38);
-		exp_area.channels.push_pair(44, 44);
-		exp_area.channels.push_pair(53, 53);*/
+		exp_area.channels.push_pair(0, 0);
+		exp_area.channels.push_pair(2, 2);
+		//exp_area.channels.push_pair(34, 34);
+		//exp_area.channels.push_pair(36, 36);
+		//exp_area.channels.push_pair(38, 38);
+		//exp_area.channels.push_pair(44, 44);
+		//exp_area.channels.push_pair(53, 53);
 		
-		exp_area.channels.push_pair(32, 44); //13
-		exp_area.channels.push_pair(48, 55); //8	
-		exp_area.channels.push_pair(57, 59); //3 =>24
-		exp_area.sub_runs.push_pair(0,9); //subruns_per_file-1);
+		//exp_area.channels.push_pair(32, 44); //13
+		//exp_area.channels.push_pair(48, 55); //8	
+		//exp_area.channels.push_pair(57, 59); //3 =>24
+		exp_area.sub_runs.push_pair(0, 9); //subruns_per_file-1);
 
-		//exp_area.experiments.push_back("4_thmV");
-		//exp_area.experiments.push_back("5_thmV");
-		//exp_area.experiments.push_back("6_thmV");
-		//exp_area.experiments.push_back("7_thmV");
-		//exp_area.experiments.push_back("8_thmV");
-		//exp_area.experiments.push_back("9_thmV");
-		//exp_area.experiments.push_back("10_thmV");
-		//exp_area.experiments.push_back("10_thmV_recalib");
-		//exp_area.experiments.push_back("12_thmV");
-		exp_area.experiments.push_back("14_thmV");
-		//exp_area.experiments.push_back("16_thmV");
-		//exp_area.experiments.push_back("18_thmV");
-		//exp_area.experiments.push_back("20_thmV");
+		exp_area.experiments.push_back("X_ray_12kV_SiPM_46V_THGEM_0V_coll_6mm");
+		exp_area.experiments.push_back("X_ray_14kV_SiPM_46V_THGEM_0V_coll_6mm");
+		exp_area.experiments.push_back("X_ray_16kV_SiPM_46V_THGEM_0V_coll_6mm");
+		exp_area.experiments.push_back("X_ray_18kV_SiPM_46V_THGEM_0V_coll_6mm");
+		exp_area.experiments.push_back("X_ray_20kV_SiPM_46V_THGEM_0V_coll_6mm");
 	}
 };

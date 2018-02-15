@@ -53,6 +53,7 @@ protected:
 	void clearOneRunMPPCs(int channel);
 #endif
 	void calculate_MPPC_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline,STD_CONT<peak> &peaks_before_S1);
+	void calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline, STD_CONT<peak> &peaks_before_S1, int channel);
 public:
 	SingleRunData(ParameterPile::experiment_area area);
 	SingleRunResults processSingleRun_Iter_0(AllRunsResults *all_runs_results);

@@ -68,10 +68,13 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 {
 	//this->Clear() called before in the AnalysisManager. 
 	int n_valid_runs = 0;
+	int __N_of_runs = single_results.size();
 	N_of_runs = single_results.size();
+	N_of_valid_runs = 0;
 	for (auto i = single_results.begin(); i != single_results.end(); ++i){
 		if (i->isValid()) { //may be false only at the secondary function call (when test_PMT cut is applied)
-			n_valid_runs++;
+			++n_valid_runs;
+			++N_of_valid_runs;
 			_Ss.push_back(i->PMT3_summed_peaks_area);
 			_ns.push_back(i->PMT3_n_peaks);
 			PMT3_peaks.push_back(i->PMT3_peaks);
@@ -111,10 +114,10 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 				mppc_peaks.resize(sz, STD_CONT<STD_CONT<peak>>());
 #ifndef _USE_DEQUE
 				for (int ch = 0; ch != sz; ++ch) {
-					mppc_peaks_in_S2_area[ch].reserve(N_of_runs);
-					mppc_S2_start_time[ch].reserve(N_of_runs);
-					mppc_S2_finish_time[ch].reserve(N_of_runs);
-					mppc_double_Is[ch].reserve(N_of_runs);
+					mppc_peaks_in_S2_area[ch].reserve(__N_of_runs);
+					mppc_S2_start_time[ch].reserve(__N_of_runs);
+					mppc_S2_finish_time[ch].reserve(__N_of_runs);
+					mppc_double_Is[ch].reserve(__N_of_runs);
 				}		
 #endif
 				mppc_channels = i->mppc_channels;
@@ -301,6 +304,7 @@ void AllRunsResults::Merge(AllRunsResults* with)
 	N_peaks_cutoff = with->N_peaks_cutoff;
 	S_peaks_cutoff = with->S_peaks_cutoff;
 	N_of_runs += with->N_of_runs;
+	N_of_valid_runs += with->N_of_valid_runs;
 	//Iteration_N = with->Iteration_N;
 	if (1 == Iteration_N) {
 		if (_xs_GEM_sum.empty()) {
@@ -411,6 +415,9 @@ void AllRunsResults::Merge(AllRunsResults* with)
 
 void AllRunsResults::Merged(void)
 {
+	std::cout << "Iteration " << Iteration_N << std::endl;
+	std::cout << "N of runs " << N_of_runs << std::endl;
+	std::cout << "N of valid runs " << N_of_valid_runs << std::endl;
 	if (!_Ss.empty() && (0==Iteration_N)) {//_xs_GEM is empty at the first run
 		find_S_cutoff();
 
@@ -429,6 +436,14 @@ void AllRunsResults::Merged(void)
 			/*hist_n->Fill(_ns[_n]);*/
 			hist_S->Fill(_Ss[_s]);
 		}
+		std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
+			+ "\\" + "PMT_0" + "\\" + "PMT_0_";
+		std::string PMT1_output_prefix = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
+			+ "\\" + "PMT_1" + "\\" + "PMT_1_";
+		vector_to_file(_Ss, PMT_output_prefix + "Ss.dat");
+		vector_to_file(PMT3_peaks, PMT_output_prefix + "peaks.dat");
+		vector_to_file(PMT1_peaks, PMT1_output_prefix + "peaks.dat");
+
 		TCanvas *c1 = new TCanvas(("S_peaks_distribution " + _exp.experiments.back()).c_str(),
 			("S_peaks_distribution " + _exp.experiments.back()).c_str());
 		c1->cd();
@@ -438,8 +453,8 @@ void AllRunsResults::Merged(void)
 		cutoff->SetLineColor(kRed);
 		cutoff->Draw();
 		c1->Update();
-		std::string pmt_filename = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR)
-			+"PMT_S_peaks_selection,ThreshToNoise=2.5\\" + _exp.experiments.back() + ".png";
+		std::string pmt_filename = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
+			+"\\"+"PMT_0" + "\\" + "PMT_0_" + "S_peaks_selection,ThreshToNoise=2.5" + ".png";
 		c1->SaveAs(pmt_filename.c_str(), "png");
 		/*TCanvas *c2 = new TCanvas(("n_peaks_distribution " + _exp.experiments.back()).c_str(),
 		("n_peaks_distribution " + _exp.experiments.back()).c_str());
@@ -454,18 +469,24 @@ void AllRunsResults::Merged(void)
 		c3->Update();*/
 		/*delete[] NNs;
 		delete[] SSs;*/
-
-		//Saved to file together with mppcs
 	}
-	int n_valid_runs = _Ss.size();
 #ifdef _PROCESS_GEMS
-	if (!_xs_GEM_sum.empty() && (0 != n_valid_runs)&&(1==Iteration_N)){
+	if (!_xs_GEM_sum.empty() && (0 != N_of_valid_runs)&&(1==Iteration_N)){
 		//x_GEM is not empty only at the second processing (when proper cutoffs were applied)
-		for (auto i = _ys_GEM_sum.begin(); i != _ys_GEM_sum.end(); ++i)
-			*i /= n_valid_runs;
+		for (auto i = _ys_GEM_sum.begin(), _end_ = _ys_GEM_sum.end(); i != _end_; ++i)
+			*i /= N_of_valid_runs;
+#ifdef GEM_V2_
+		STD_CONT<peak> no_peaks;
+		no_peaks.push_back(peak());
+		no_peaks.back().left = ParameterPile::S1_start_time;
+		no_peaks.back().right = _xs_GEM_sum.back();
+		double gem_baseline =
+			SignalOperations::find_baseline_by_integral(0, _xs_GEM_sum, _ys_GEM_sum, no_peaks);
+		SignalOperations::substract_baseline(_ys_GEM_sum, gem_baseline);
+#endif
 		ParameterPile::experiment_area area_ = ParameterPile::areas_to_draw.back().to_point();
 		area_.experiments = _exp.experiments;
-		if (ParameterPile::draw_required(area_)){
+		if (ParameterPile::draw_required(area_)){ //TODO: remove this condition?
 			//xs_GEM.insert(xs_GEM.begin(), 0);
 			//ys_GEM.insert(ys_GEM.begin(), 0);
 			std::string exp = _exp.experiments.back();
@@ -483,7 +504,7 @@ void AllRunsResults::Merged(void)
 			Drawing *dr = graph_manager.GetDrawing("GEM_" + area_.experiments.back(), 0, ParameterPile::DrawEngine::Gnuplot);
 			dr->AddToDraw(_xs_GEM_sum, _ys_GEM_sum, "GEM\\\_" + exp, "", 0);
 			DVECTOR GEM_int;
-			SignalOperations::integrate(_xs_GEM_sum, _ys_GEM_sum, GEM_int);
+			SignalOperations::integrate(_xs_GEM_sum, _ys_GEM_sum, GEM_int,0/*baseline*/);
 			dr->AddToDraw(_xs_GEM_sum, GEM_int, "GEM\\\_I\\\_" + exp, "axes x1y2", 0);
 
 			//find start GEM time 
@@ -499,9 +520,9 @@ void AllRunsResults::Merged(void)
 				SignalOperations::get_max(temp_xs, temp_ys_I, x_finish, temp_y_max, ParameterPile::GEM_N_of_averaging);
 				if (x_finish != temp_xs.end())
 					dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"", 0);
-				std::cout << "Experiment " << area_.experiments.back() << " processed" << std::endl;
+				std::cout << "Experiment " << area_.experiments.back() << " GEM processed" << std::endl;
 				std::cout << "# of runs " << N_of_runs << std::endl;
-				std::cout << "# of valid runs " << n_valid_runs << std::endl;
+				std::cout << "# of valid runs " << N_of_valid_runs << std::endl;
 				//std::cout << "# of runs with empty PMT signal" << runs_no_PMT << std::endl;
 				if (x_finish != temp_xs.end() && x_start != _xs_GEM_sum.end()){
 					x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
@@ -509,8 +530,8 @@ void AllRunsResults::Merged(void)
 					std::cout << "GEM integral is " << Integ << std::endl;
 
 					std::ofstream GEM_results_file;
-					GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS, std::ios_base::app);
-					GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish << "\t" << n_valid_runs << "\t"
+					GEM_results_file.open(std::string(OUTPUT_DIR) + OUTPUT_GEMS + "/" + OUTPUT_GEMS+".txt", std::ios_base::app);
+					GEM_results_file << area_.experiments.back() << "\t" << Integ << "\t" << *x_start << "\t" << *x_finish << "\t" << N_of_valid_runs << "\t"
 						<< N_of_runs << "\t" << S_peaks_cutoff << std::endl;
 					GEM_results_file.close();
 
@@ -518,8 +539,13 @@ void AllRunsResults::Merged(void)
 				} else {
 					std::cout << "GEM time boundaries are invalid" << std::endl;
 				}
+				std::ofstream GEM_results_file;
+				open_output_file(std::string(OUTPUT_DIR) + OUTPUT_GEMS + "/" + OUTPUT_GEMS+"_" + area_.experiments.back() + ".dat",GEM_results_file, std::ios_base::trunc);
+				for (int i = 0, size_ = _xs_GEM_sum.size(); i != size_; ++i)
+					GEM_results_file << _xs_GEM_sum[i] << "\t" << _ys_GEM_sum[i] << std::endl;
+				GEM_results_file.close();
 			} else {
-				std::cout << "GEM time boundaries are invalid" << std::endl;
+				std::cout << "GEM x-y size mismatch" << std::endl;
 			}
 		}
 	}
@@ -658,17 +684,9 @@ void AllRunsResults::Merged(void)
 					<< "\t" << _S2_finish_t_fit->GetParameter(1) << std::endl;
 				std::cout << "MPPC " << area_.experiments.back() << " processed" << std::endl;
 				std::cout << "# of runs " << N_of_runs << std::endl;
-				std::cout << "# of valid runs " << n_valid_runs << std::endl;
+				std::cout << "# of valid runs " << N_of_valid_runs << std::endl;
 			}
-#ifdef OUTPUT_MPPCS_PICS
-			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + "PMT_v1\\PMT_" + _exp.experiments.back()
-				+ "\\" + "PMT_0" + "\\" + "PMT_0_";
-			std::string PMT1_output_prefix = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + "PMT_v1\\PMT_" + _exp.experiments.back()
-				+ "\\" + "PMT_1" + "\\" + "PMT_1_";
-			vector_to_file(_Ss, PMT_output_prefix + "Ss.dat");
-			vector_to_file(PMT3_peaks, PMT_output_prefix + "peaks.dat");
-			vector_to_file(PMT1_peaks, PMT1_output_prefix + "peaks.dat");
-#endif
+
 			output.close();
 		}
 	}
@@ -679,7 +697,9 @@ void AllRunsResults::Merged(void)
 	if (ParameterPile::Max_iteration_N == Iteration_N)
 		report_time_statistics();
 #endif
-	Iteration_N++;
+	++Iteration_N;
+	N_of_runs = 0;
+	N_of_valid_runs = 0;
 	graph_manager.Draw();
 }
 

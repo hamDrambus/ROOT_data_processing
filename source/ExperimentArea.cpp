@@ -228,6 +228,7 @@ namespace ParameterPile {
 #else
 		_vec.clear();
 #endif
+		_is_valid = false;
 		reset();
 	}
 	bool area_vector::isValid(void)

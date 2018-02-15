@@ -34,6 +34,8 @@ int main(int argc, char *argv[])
 	std::size_t sz = sizeof(std::size_t);
 	str.write((char*)&sz, sizeof(std::size_t));
 	str.close();*/
+	std::cout << "This: " << ParameterPile::this_path << std::endl;
+
 	int n_par = 0;
 	char **f = NULL;
 	TApplication app("test_app",&n_par,f);

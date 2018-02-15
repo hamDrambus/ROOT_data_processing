@@ -8,6 +8,7 @@ namespace SignalOperations
 
 	void invert_y(DVECTOR &x_in_out, DVECTOR &y_in_out);
 	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
+	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys);
 	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys);
 	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
 	void find_baseline_by_ROOT (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
@@ -31,7 +32,7 @@ namespace SignalOperations
 		bool compton, int sparse = 1);
 
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double baseline);
-	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double dx_hint, double baseline=0);
+	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double dx_hint, double baseline);
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double baseline);
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double dx_hint, double baseline);
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, DITERATOR left, DITERATOR right, double baseline);

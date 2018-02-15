@@ -77,6 +77,7 @@ protected:
 	DVECTOR _xs_GEM_sum;
 	DVECTOR _ys_GEM_sum;
 	int N_of_runs;
+	int N_of_valid_runs;//i.e. accepted by PMT cut
 	int Iteration_N;
 	ParameterPile::experiment_area _exp;
 	GraphicOutputManager graph_manager;

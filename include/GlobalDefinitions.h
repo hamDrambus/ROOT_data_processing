@@ -24,9 +24,9 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../../../Data/")
+#define DATA_PREFIX std::string("../../../../Data/180201/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
-#define DATA_EXPERIMENT_FORMAT "^event_x-ray_\d{1,2}_.*$"
+#define DATA_EXPERIMENT_FORMAT "^X-ray_\d{1,2}_.*$"
 
 #define RUNS_CACHE_PATH "output/processed_runs.txt"
 #define ALL_RUNS_PATH "output/processed_experiments.txt"
@@ -39,8 +39,19 @@
 //in volts
 #define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
 //in volts
-#define OUTPUT_DIR std::string("../../../Data/results/")
-#define OUTPUT_GEMS "GEMs.txt"
+#define OUTPUT_DIR std::string("../../../../Data/180201/results_x_ray/")
+//GEM_v1 - finding baseline for every event
+//GEM_v2 - finding baseline for averaged signal
+#define GEM_V2_
+#undef GEM_V1_
+#ifdef GEM_V1_
+#define OUTPUT_GEMS "GEM_v1"
+#endif
+#ifdef GEM_V2_
+#define OUTPUT_GEMS "GEM_v2"
+#endif
+
+#define OUTPUT_PMTS "PMT_v1\\PMT_"
 #define OUTPUT_MPPCS "MPPC_"
 #define OUTPUT_MPPCS_PICS "MPPCs_v3\\MPPCs_"
 #define _TEMP_CODE
@@ -62,7 +73,8 @@
 #define DITERATOR DVECTOR::iterator
 #define D_REV_ITERATOR DVECTOR::reverse_iterator
 
-//#define _PROCESS_GEMS
+#define _PROCESS_GEMS
+
 DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end);
 void open_output_file(std::string name, std::ofstream &str, std::ios_base::openmode _mode = std::ios_base::trunc);
 

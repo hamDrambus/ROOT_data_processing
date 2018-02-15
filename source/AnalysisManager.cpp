@@ -213,7 +213,7 @@ ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::e
 	HANDLE dir;
 	WIN32_FIND_DATA file_data;
 	std::string path = DATA_PREFIX;
-	path += "event_x-ray_" + area.experiments.back();
+	path += area.experiments.back();
 	if ((dir = FindFirstFile((path + "/*").c_str(), &file_data)) == INVALID_HANDLE_VALUE)
 		return out_area;
 	do {
