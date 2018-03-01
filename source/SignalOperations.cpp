@@ -134,7 +134,7 @@ namespace SignalOperations {
 		ys_out.resize(ys.size());
 
 		TSpectrum *spec = new TSpectrum();
-		float *f_ys = new float[ys.size()];
+		double *f_ys = new double[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		spec->Background(f_ys, ys.size(), 60, TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
@@ -250,7 +250,7 @@ namespace SignalOperations {
 		ys_out.resize(ys.size());
 
 		TSpectrum *spec = new TSpectrum();
-		float *f_ys = new float[ys.size()];
+		double *f_ys = new double[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
@@ -266,7 +266,7 @@ namespace SignalOperations {
 		ys_out.resize(ys.size());
 
 		TSpectrum *spec = new TSpectrum();
-		float *f_ys = new float[ys.size()];
+		double *f_ys = new double[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
@@ -299,7 +299,7 @@ namespace SignalOperations {
 		ys_out.resize(ys.size());
 
 		TSpectrum *spec = new TSpectrum();
-		float *f_ys = new float[ys.size()];
+		double *f_ys = new double[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
@@ -315,7 +315,7 @@ namespace SignalOperations {
 		ys_out.resize(ys.size());
 
 		TSpectrum *spec = new TSpectrum();
-		float *f_ys = new float[ys.size()];
+		double *f_ys = new double[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
@@ -1767,7 +1767,8 @@ namespace SignalOperations {
 		if ((xs.size() != ys.size()) || x_left >= x_right||!(dx_hint>0)||(xs.empty()))
 			return;
 		auto _end_ = xs.end();
-		DITERATOR iterator_left = iter_add(xs.begin(),(int)((x_left - *xs.begin()) / dx_hint),_end_);
+		auto _begin_ = xs.begin();
+		DITERATOR iterator_left = iter_add(_begin_,(int)((x_left - *xs.begin()) / dx_hint),_end_);
 		bool left_fallback = false;
 		if ((iterator_left != _end_) && (iterator_left != (_end_-1))) { // ==end considered that the hint worked
 			if (!((*iterator_left <= x_left) && (*(iterator_left + 1) > x_left))) //hint didn't work
@@ -1781,7 +1782,7 @@ namespace SignalOperations {
 					iterator_left = xs.begin();
 				}
 		}
-		DITERATOR iterator_right = iter_add(xs.begin(), (int)((x_right - *xs.begin()) / dx_hint), _end_);
+		DITERATOR iterator_right = iter_add(_begin_, (int)((x_right - *xs.begin()) / dx_hint), _end_);
 		bool right_fallback = false;
 		if ((iterator_right != _end_) && (iterator_right != (_end_ - 1))) { // ==end considered that the hint worked
 			if (!((*iterator_right <= x_right) && (*(iterator_right + 1) > x_right))) //hint didn't work
@@ -1864,7 +1865,8 @@ namespace SignalOperations {
 	//hint is the distance between 2 point in case they are all at equal distancess
 	DITERATOR find_x_iterator_by_value(DITERATOR &x_left, DITERATOR &x_right, double x, double hint)
 	{
-		DITERATOR approx_left = iter_add(x_left, (int)((x - *x_left) / hint),(x_right+1));
+		DITERATOR _right_ = x_right+1;
+		DITERATOR approx_left = iter_add(x_left, (int)((x - *x_left) / hint),_right_);
 		if (approx_left==(x_right+1))
 			return find_x_iterator_by_value(x_left, x_right, x); //fallback in case the hint does not work
 		if (!(*approx_left > x) && !(*(approx_left + 1) < x)) {
@@ -2117,6 +2119,12 @@ namespace SignalOperations {
 		x_finish = xs.end();
 		DITERATOR minimal_iterator = x_start;
 		DITERATOR pk_max;
+		bool use_fit = true;
+		if (N_trust < 3) {//2nd order polynom
+			N_trust = 1;
+			use_fit = false;
+		}
+		int delta = N_trust / 3;
 		if ((xs.size() != ys.size()) || ((xs.end() - x_start)<N_trust))
 			goto bad_return;
 		find_next_peak(xs, ys, x_start, x_finish, thresh_finder, N_trust);
@@ -2126,12 +2134,6 @@ namespace SignalOperations {
 		if (pk_max == xs.end())
 			goto bad_return;
 
-		bool use_fit = true;
-		if (N_trust < 3) {//2nd order polynom
-			N_trust = 1;
-			use_fit = false;
-		}
-		int delta = N_trust / 3;
 		if (use_fit){ //now extend edges
 			Polynom2Order fitter;
 			auto _end_ = xs.end();

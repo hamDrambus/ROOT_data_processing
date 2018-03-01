@@ -1,6 +1,7 @@
 #ifndef MT_ANALYSIS_MANAGER_H
 #define MT_ANALYSIS_MANAGER_H
 
+#include "TMutex.h"
 #include "TThread.h"
 #include "AnalysisManager.h"
 

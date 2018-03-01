@@ -44,8 +44,8 @@ namespace ParameterPile
 	//all times below are approximate
 	extern double S1_start_time; //in ms
 	extern double S1_finish_time; //in ms
-	extern double S2_start_time; //in ms
-	extern double S2_finish_time; //in ms
+	extern std::map<std::string,double> S2_start_time; //in ms
+	extern std::map<std::string,double> S2_finish_time; //in ms
 
 	extern double GEM_threshold_to_noise;
 	extern int GEM_N_of_averaging; //=== N_trust
@@ -63,6 +63,7 @@ namespace ParameterPile
 	extern double PMT_mean_above_cutoff_acceptance;
 	extern double PMT_right_cutoff_from_RMS;
 	extern double PMT_left_cutoff_from_RMS;
+	extern std::map<int,bool> PMT_use_average;
 
 	extern double MPPC_peaks_smoothing_time;
 	extern int MPPC_N_trust;

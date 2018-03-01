@@ -34,6 +34,11 @@ protected:
 	STD_CONT<peak> PMT3_peaks;
 	STD_CONT<peak> PMT1_peaks;
 
+	DVECTOR xs_PMT3;
+	DVECTOR ys_PMT3;
+	DVECTOR xs_PMT1;
+	DVECTOR ys_PMT1;
+
 	bool is_valid;
 public:
 	SingleRunResults(SingleRunData *of_what);

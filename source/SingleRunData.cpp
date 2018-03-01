@@ -38,7 +38,7 @@ void SingleRunData::readOneRun(SingleRunResults &_result)
 		}
 #endif
 		std::string path = DATA_PREFIX;
-		path += curr_area.experiments.back() + "\\";
+		path += curr_area.experiments.back() + "/";
 		path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(ch) + ".dat";
 		file_to_vector(path, xs_channels.back(), ys_channels.back(), curr_area.sub_runs.back());
 		if (!xs_channels.back().empty() && !ys_channels.back().empty())
@@ -61,7 +61,7 @@ void SingleRunData::readOneRunMPPCs(SingleRunResults &results, int channel)
 	if (ind < 0)
 		return;
 	std::string path = DATA_PREFIX;
-	path += curr_area.experiments.back() + "\\";
+	path += curr_area.experiments.back() + "/";
 	path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(channel) + ".dat";
 	file_to_vector(path, xs_channels[ind], ys_channels[ind], curr_area.sub_runs.back());
 }
@@ -261,7 +261,9 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 //#ifndef _TEMP_CODE
 	add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
 		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(0), graph_manager, ParameterPile::DrawEngine::Gnuplot, 0);
-//#endif
+	add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
+		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(1), graph_manager, ParameterPile::DrawEngine::Gnuplot, 1);
+	//#endif
 
 	int ind = curr_area.channels.get_order_index_by_index(0);
 	if (ind >= 0) {
@@ -286,8 +288,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 			threshold,found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
 		double S_sum = 0;
 		for (auto i = _result.PMT3_peaks.begin(), _end_ = _result.PMT3_peaks.end(); i != _end_; ++i)
-			if (i->right > ParameterPile::S1_finish_time){
-				S_sum += i->S;
+			if ((i->left > ParameterPile::S2_start_time.find(curr_area.experiments.back())->second)&&(i->right < ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second)){
+				S_sum += i->S >0 ? i->S : 0;
 				++_result.PMT3_n_peaks;
 			}
 		_result.PMT3_summed_peaks_area = S_sum;
@@ -337,7 +339,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 		auto PMT_peaks_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 
-		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.PMT3_peaks, found_base_lines[ind],
+		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.PMT1_peaks, found_base_lines[ind],
 			threshold, found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
 		//=========================================================================
 		ParameterPile::experiment_area area = curr_area.to_point();
@@ -452,6 +454,24 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 		runProcessedProc();
 		return _result;
 	}
+	for (int ch = 0; ch < 2; ch++){
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if (ind < 0)
+			continue;
+		readOneRunMPPCs(_result, ch);
+		if (ParameterPile::PMT_use_average.find(ch)!=ParameterPile::PMT_use_average.end()){
+			if (ParameterPile::PMT_use_average.find(ch)->second){
+				if (0==ch){
+					_result.xs_PMT3=xs_channels[ind];
+					_result.ys_PMT3=ys_channels[ind];
+				} else {
+					_result.xs_PMT1=xs_channels[ind];
+					_result.ys_PMT1=ys_channels[ind];
+				}
+			}
+		}
+	}
+
 	int mppc_ind = -1;
 	for (int ch = 32; ch < 64; ch++){
 		int ind = curr_area.channels.get_order_index_by_index(ch);
@@ -523,14 +543,17 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		auto MPPC_filter_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 		double delta_x = *(_result.mppc_baseline_xs[mppc_ind].begin() + 1) - *(_result.mppc_baseline_xs[mppc_ind].begin());
-		DITERATOR S2_start_i = SignalOperations::find_x_iterator_by_value(_result.mppc_baseline_xs[mppc_ind].begin(),
-			(_result.mppc_baseline_xs[mppc_ind].end() - 1), ParameterPile::S2_start_time, delta_x);
+		DITERATOR _end_ = _result.mppc_baseline_xs[mppc_ind].end() - 1;
+		DITERATOR _begin_ = _result.mppc_baseline_xs[mppc_ind].begin();
+		DITERATOR S2_start_i = SignalOperations::find_x_iterator_by_value(_begin_,
+			_end_, ParameterPile::S2_start_time.find(curr_area.experiments.back())->second, delta_x);
 		DITERATOR S2_finish_i = SignalOperations::find_x_iterator_by_value(S2_start_i,
-			(_result.mppc_baseline_xs[mppc_ind].end() - 1), ParameterPile::S2_finish_time, delta_x);
+			_end_, ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second, delta_x);
 		DITERATOR max_signal_pos;
 		double max_sgnal_val;
 		//TODO: ParameterPile
-		SignalOperations::get_max(_result.mppc_baseline_xs[mppc_ind], ys_cut, S2_start_i, (S2_finish_i + 1), max_signal_pos, max_sgnal_val, 1);
+		++S2_finish_i;
+		SignalOperations::get_max(_result.mppc_baseline_xs[mppc_ind], ys_cut, S2_start_i, S2_finish_i, max_signal_pos, max_sgnal_val, 1);
 		double root_start_t = *max_signal_pos - ParameterPile::MPPC_ROOTs_bl_from_max_left;
 		double root_finish_t = *max_signal_pos + ParameterPile::MPPC_ROOTs_bl_from_max_right;
 		SignalOperations::apply_time_limits(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_start_t, root_finish_t,delta_x);
@@ -708,19 +731,22 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 			continue;
 		STD_CONT<peak>::iterator max_intersection; //search for largest cluster which is above treshold. In 99% if not 100% I 
 		//suspect there will be only single sp_peaks i.e. intersection, but just in case.
+		std::string __exp = curr_area.experiments.back();
 		max_intersection = std::max_element(sp_peaks.begin(), sp_peaks.end(), 
-			[](peak a, peak b) { 
-			if ((b.left > ParameterPile::S2_finish_time) || (b.right < ParameterPile::S2_start_time))
+			[__exp](peak a, peak b) {
+			if ((b.left > ParameterPile::S2_finish_time.find(__exp)->second) || (b.right < ParameterPile::S2_start_time.find(__exp)->second))
 				return false;
-			if ((a.left > ParameterPile::S2_finish_time) || (a.right < ParameterPile::S2_start_time))
+			if ((a.left > ParameterPile::S2_finish_time.find(__exp)->second) || (a.right < ParameterPile::S2_start_time.find(__exp)->second))
 				return true;
 			return a.S < b.S; 
 		});
-		double S2_finish_t_v2 = std::min(max_intersection->right, ParameterPile::S2_finish_time);
-		double S2_start_t_v2 = std::max(max_intersection->left, ParameterPile::S2_start_time);
+		double S2_finish_t_v2 = std::min(max_intersection->right, ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second);
+		double S2_start_t_v2 = std::max(max_intersection->left, ParameterPile::S2_start_time.find(curr_area.experiments.back())->second);
 		//TODO: ParameterPile
-		double S2_finish_t = std::min(max_intersection->right + ParameterPile::MPPC_peaks_smoothing_time, ParameterPile::S2_finish_time);
-		double S2_start_t = std::max(max_intersection->left - ParameterPile::MPPC_peaks_smoothing_time, ParameterPile::S2_start_time);
+		double S2_finish_t = std::min(max_intersection->right + ParameterPile::MPPC_peaks_smoothing_time,
+				ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second);
+		double S2_start_t = std::max(max_intersection->left - ParameterPile::MPPC_peaks_smoothing_time,
+				ParameterPile::S2_start_time.find(curr_area.experiments.back())->second);
 		if (S2_finish_t < S2_start_t) {
 			S2_finish_t = 0;
 			S2_start_t = 0;
@@ -909,7 +935,8 @@ double SingleRunData::find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, D
 	//variant0: appprox_thresh===(max+min)/2 -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
 	//variant1: appprox_thresh===meidan -> {mean,RMS above ; mean,RMS below} -> spereaded peaks threshold -> S2 time
 	//variant2: spereaded peaks threshold === median //I think it's bad choice
-	double sp_approx_thr = SignalOperations::find_baseline_by_median(0, x_peaks_spreaded, y_peaks_spreaded, STD_CONT<peak>());
+	STD_CONT<peak> peaks = STD_CONT<peak>();
+	double sp_approx_thr = SignalOperations::find_baseline_by_median(0, x_peaks_spreaded, y_peaks_spreaded, peaks);
 	apr_thresh = sp_approx_thr;
 	double n_below = 0, n_above = 0;
 	double mean_below = 0, mean_above = 0;

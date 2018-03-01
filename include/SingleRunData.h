@@ -37,7 +37,7 @@ protected:
 	void extract_one_subrun(STD_CONT<DVECTOR> &xxs, STD_CONT<DVECTOR> &yys, int sub_index);
 	void add_draw_data(std::string prefix, GraphicOutputManager& graph_manager,
 		ParameterPile::DrawEngine de = ParameterPile::DrawEngine::Gnuplot, int ch = -1); //only draws specified runs
-	void SingleRunData::add_draw_baselines(std::string prefix, GraphicOutputManager& graph_manager,
+	void add_draw_baselines(std::string prefix, GraphicOutputManager& graph_manager,
 		ParameterPile::DrawEngine de = ParameterPile::DrawEngine::Gnuplot);
 
 	void file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, int index);
@@ -47,9 +47,9 @@ protected:
 	//bool is_valid;
 	//SingleRunResults * _results;
 	GraphicOutputManager graph_manager;
-	void readOneRun(SingleRunResults &results);
+	void readOneRun(SingleRunResults &results);//TODO: rework this function using readOneRunMPPCs (or remove altogether)
 #ifdef _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
-	void readOneRunMPPCs(SingleRunResults &results, int channel);
+	void readOneRunMPPCs(SingleRunResults &results, int channel);//TODO: rename function and get rid of _HOTFIX_DECREASE_MEMORY at all
 	void clearOneRunMPPCs(int channel);
 #endif
 	void calculate_MPPC_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline,STD_CONT<peak> &peaks_before_S1);

@@ -1,6 +1,8 @@
 #ifndef GLOBAL_DEFINITIONS_H
 #define GLOBAL_DEFINITIONS_H
 
+//#define __WIN32__
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -8,6 +10,14 @@
 #include <string.h>
 #include <sstream>
 #include <functional>
+#if defined(__WIN32__)
+#include <direct.h>
+#else
+#include <dirent.h>
+#include <errno.h>
+#include <sys/stat.h>
+#endif
+
 
 #include <TThread.h>
 #include <TApplication.h>
@@ -19,12 +29,11 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <Math/Point2D.h>
-#include <windows.h>
 
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../../../../Data/180201/")
+#define DATA_PREFIX std::string("../../Data/170622/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
 #define DATA_EXPERIMENT_FORMAT "^X-ray_\d{1,2}_.*$"
 
@@ -39,10 +48,10 @@
 //in volts
 #define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
 //in volts
-#define OUTPUT_DIR std::string("../../../../Data/180201/results_x_ray/")
+#define OUTPUT_DIR std::string("../../Data/170622/results/")
 //GEM_v1 - finding baseline for every event
 //GEM_v2 - finding baseline for averaged signal
-//#define _PROCESS_GEMS
+#define _PROCESS_GEMS
 #define GEM_V2_
 #undef GEM_V1_
 #ifdef GEM_V1_
@@ -52,9 +61,9 @@
 #define OUTPUT_GEMS "GEM_v2"
 #endif
 
-#define OUTPUT_PMTS "PMT_v1\\PMT_"
+#define OUTPUT_PMTS "PMT_v1/PMT_"
 #define OUTPUT_MPPCS "MPPC_"
-#define OUTPUT_MPPCS_PICS "MPPCs_v3\\MPPCs_"
+#define OUTPUT_MPPCS_PICS "MPPCs_v3/MPPCs_"
 #define _TEMP_CODE
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
@@ -73,6 +82,12 @@
 
 #define DITERATOR DVECTOR::iterator
 #define D_REV_ITERATOR DVECTOR::reverse_iterator
+
+#if defined(__WIN32__)
+#define INVOKE_GNUPLOT(a) system(("start \"\" \"%GNUPLOT%\\gnuplot.exe\" --persist \"" + a + "\"").c_str())
+#else
+#define INVOKE_GNUPLOT(a) system(("konsole -e gnuplot \"" + a +"\"").c_str());
+#endif //__WIN32__
 
 
 DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end);

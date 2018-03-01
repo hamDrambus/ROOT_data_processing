@@ -3,13 +3,13 @@
 Polynom2Order::Polynom2Order() : PolynomialFit(2), _xs_last(NULL), _ys_last(NULL), _x_left(0), _x_right(0), _x0_in(0)
 {
 }
-void Polynom2Order::operator ()(const DVECTOR &xs_in, const DVECTOR &ys_in,
+void Polynom2Order::operator ()(std::vector<double> &xs_in, std::vector<double> &ys_in,
 	TVectorD &pars_out, double in_x0) //in_x0 - in what point set zero x (In the SG filter it is convinient to set x_in
 	//to the point in which value is calculated
 {
 	this->operator()(xs_in, ys_in, 0, xs_in.size(), pars_out, in_x0);
 }
-void Polynom2Order::operator ()(const DVECTOR &xs_in, const DVECTOR &ys_in,
+void Polynom2Order::operator ()(std::vector<double> &xs_in, std::vector<double> &ys_in,
 	int offset, int N_points, TVectorD &pars_out, double in_x0) //only for a part of a vector
 {
 	if (xs_in.size() != ys_in.size())
@@ -32,7 +32,7 @@ void Polynom2Order::setOrder(int n)
 	_order = 2;
 }
 
-void Polynom2Order::FindMaximum(DVECTOR::const_iterator &x_max, double &x_max_exact, double &y_max_exact)
+void Polynom2Order::FindMaximum(std::vector<double>::iterator &x_max, double &x_max_exact, double &y_max_exact)
 {
 	x_max = _xs_last->end();
 	if (_last_coefs[2] >= 0){ //max at the ends of the range
@@ -70,7 +70,7 @@ void Polynom2Order::FindMaximum(DVECTOR::const_iterator &x_max, double &x_max_ex
 		}
 	}
 }
-void Polynom2Order::FindMinimum(DVECTOR::const_iterator &x_min, double &x_min_exact, double &y_min_exact)
+void Polynom2Order::FindMinimum(std::vector<double>::iterator &x_min, double &x_min_exact, double &y_min_exact)
 {
 	x_min = _xs_last->end();
 	if (_last_coefs[2] <= 0){ //min at the ends of the range
@@ -109,7 +109,7 @@ void Polynom2Order::FindMinimum(DVECTOR::const_iterator &x_min, double &x_min_ex
 	}
 }
 
-void Polynom2Order::FindIntersection(DVECTOR::const_iterator &x_inter, DVECTOR::const_iterator &x_inter2, double &x_inter_exact, double &x_inter_exact2,
+void Polynom2Order::FindIntersection(std::vector<double>::iterator &x_inter, std::vector<double>::iterator &x_inter2, double &x_inter_exact, double &x_inter_exact2,
 	double threshold) //if not found, returns x_iter=xs.end();
 {
 	x_inter = _xs_last->end();
@@ -136,7 +136,7 @@ void Polynom2Order::FindIntersection(DVECTOR::const_iterator &x_inter, DVECTOR::
 	}
 }
 
-void Polynom2Order::FindExtremum(DVECTOR::const_iterator &x_extr, double &x_extr_exact, double &y_extr_exact){
+void Polynom2Order::FindExtremum(std::vector<double>::iterator &x_extr, double &x_extr_exact, double &y_extr_exact){
 	x_extr_exact = -_last_coefs[1] / (2 * _last_coefs[2]);
 	x_extr_exact += _x0_in;
 	if (!(x_extr_exact<_x_left) && !(x_extr_exact>_x_right)){//extremum inside the range
@@ -159,7 +159,7 @@ double Polynom2Order::Derivative(double X){
 	return _last_coefs[1] + _last_coefs[2] * 2 * (X - _x0_in);
 }
 
-DVECTOR::const_iterator Polynom2Order::find_x_iterator_by_value(double x)
+std::vector<double>::iterator Polynom2Order::find_x_iterator_by_value(double x)
 {
 	for (auto h = _x_start; h != (_x_finish - 1); h++) //find in which point of the vector the maximum realizes
 		if (!(*h > x) && !(*(h + 1) < x)){

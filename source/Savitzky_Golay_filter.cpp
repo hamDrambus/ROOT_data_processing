@@ -47,7 +47,7 @@ void SavitzkyGolayFilter::getPars(int &n_points, int &order, int &n_iterations) 
 	n_iterations = _n_iterations;
 }
 
-void SavitzkyGolayFilter::operator ()(const DVECTOR &xs_in, const DVECTOR &ys_in,
+void SavitzkyGolayFilter::operator ()(DVECTOR &xs_in, DVECTOR &ys_in,
 	DVECTOR &xs_out, DVECTOR &ys_out) const
 {
 	if (xs_in.size() != ys_in.size())

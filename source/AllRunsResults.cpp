@@ -7,6 +7,7 @@ AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 	S_peaks_max_cutoff = S_peaks_cutoff - 1;
 	N_peaks_cutoff = ParameterPile::PMT_N_peaks_acceptance;
 	N_of_runs = 0;
+	N_of_valid_runs = 0;
 	Iteration_N = 0;
 #ifdef _USE_TIME_STATISTICS
 	time_stat.t_PMT_proc=0;//0st iteration
@@ -79,6 +80,22 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 			_ns.push_back(i->PMT3_n_peaks);
 			PMT3_peaks.push_back(i->PMT3_peaks);
 			PMT1_peaks.push_back(i->PMT1_peaks);
+			if (_xs_PMT3_sum.empty()){
+				_xs_PMT3_sum = i->xs_PMT3;
+				_ys_PMT3_sum = i->ys_PMT3;
+			} else {
+				for (auto ys1 = _ys_PMT3_sum.begin(), ys2 = i->ys_PMT3.begin();
+					(ys1 != _ys_PMT3_sum.end() && ys2 != i->ys_PMT3.end()); ++ys1, ++ys2)
+						*ys1 += *ys2;
+			}
+			if (_xs_PMT1_sum.empty()){
+				_xs_PMT1_sum = i->xs_PMT1;
+				_ys_PMT1_sum = i->ys_PMT1;
+			} else {
+				for (auto ys1 = _ys_PMT1_sum.begin(), ys2 = i->ys_PMT1.begin();
+					(ys1 != _ys_PMT1_sum.end() && ys2 != i->ys_PMT1.end()); ++ys1, ++ys2)
+						*ys1 += *ys2;
+			}
 #ifdef _PROCESS_GEMS
 			if (_xs_GEM_sum.empty()){
 				_xs_GEM_sum = (*i).xs_GEM;
@@ -266,8 +283,10 @@ void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and mb tes
 	double mean = TMath::Mean(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
 	double rms = TMath::RMS(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
 	double cutoff = mean - rms * ParameterPile::PMT_left_cutoff_from_RMS;
-	DITERATOR i_mean = SignalOperations::find_x_iterator_by_value(areas.begin(), areas.end() - 1, G_mean);
-	DITERATOR i_cutoff = SignalOperations::find_x_iterator_by_value(areas.begin(), areas.end() - 1, cutoff);
+	DITERATOR _last = areas.end()-1;
+	DITERATOR _begin = areas.begin();
+	DITERATOR i_mean = SignalOperations::find_x_iterator_by_value(_begin, _last, G_mean);
+	DITERATOR i_cutoff = SignalOperations::find_x_iterator_by_value(_begin, _last, cutoff);
 	if (G_mean < cutoff)
 		if ((i_cutoff - i_mean) >= N_above_global_mean_acceptable)
 			cutoff = G_mean;//or set to S_peaks_cutoff ?
@@ -314,6 +333,21 @@ void AllRunsResults::Merge(AllRunsResults* with)
 			for (auto i = _ys_GEM_sum.begin(), j = with->_ys_GEM_sum.begin(); (i != _ys_GEM_sum.end()) && (j != with->_ys_GEM_sum.end()); ++j, ++i)
 				*i += *j;
 		}
+		if (_xs_PMT3_sum.empty()) {
+			_xs_PMT3_sum = with->_xs_PMT3_sum;
+			_ys_PMT3_sum = with->_ys_PMT3_sum;
+		} else {
+			for (auto i = _ys_PMT3_sum.begin(), j = with->_ys_PMT3_sum.begin(); (i != _ys_PMT3_sum.end()) && (j != with->_ys_PMT3_sum.end()); ++j, ++i)
+				*i += *j;
+		}
+		if (_xs_PMT1_sum.empty()) {
+			_xs_PMT1_sum = with->_xs_PMT1_sum;
+			_ys_PMT1_sum = with->_ys_PMT1_sum;
+		} else {
+			for (auto i = _ys_PMT1_sum.begin(), j = with->_ys_PMT1_sum.begin(); (i != _ys_PMT1_sum.end()) && (j != with->_ys_PMT1_sum.end()); ++j, ++i)
+				*i += *j;
+		}
+
 
 		bool empty = false, valid = true;
 		if (mppc_peaks_in_S2_area.empty())
@@ -421,54 +455,107 @@ void AllRunsResults::Merged(void)
 	if (!_Ss.empty() && (0==Iteration_N)) {//_xs_GEM is empty at the first run
 		find_S_cutoff();
 
-		DITERATOR S_max = std::max_element(_Ss.begin(), _Ss.end());
-		double hist_S_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S_max) : *S_max;
-		TH1D *hist_S = new TH1D("PMT_S_peaks", "PMT_S_peaks", 60, 0, hist_S_max);
-		/*TH1I *hist_n = new TH1I("PMT_N_peaks", "PMT_N_peaks", 30, 0, 30);*/
+		std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "/" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
+			+ "/" + "PMT_0" + "/" + "PMT_0_";
+		std::string PMT1_output_prefix = std::string(ParameterPile::this_path) + "/" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
+			+ "/" + "PMT_1" + "/" + "PMT_1_";
+		vector_to_file(_Ss, PMT_output_prefix + "S2s.dat");
+		if (ParameterPile::exp_area.channels.contains(0))
+			vector_to_file(PMT3_peaks, PMT_output_prefix + "peaks.dat");
+		if (ParameterPile::exp_area.channels.contains(1))
+			vector_to_file(PMT1_peaks, PMT1_output_prefix + "peaks.dat");
 
-		/*double *NNs = new double[_ns.size()];
-		double *SSs = new double[_Ss.size()];*/
-		for (int _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n){
-			if ((S_peaks_max_cutoff > S_peaks_cutoff) && (_Ss[_s] > S_peaks_max_cutoff))
-				continue; //do not draw if maximum limit is imposed && element exceeds it
-			/*NNs[_n] = _ns[_n];
-			SSs[_s] = _Ss[_s];*/
-			/*hist_n->Fill(_ns[_n]);*/
-			hist_S->Fill(_Ss[_s]);
+		if (ParameterPile::exp_area.channels.contains(0)){
+			DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
+			double hist_S2_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S2_max) : *S2_max;
+			TH1D *hist_S2 = new TH1D("3PMT_S2_peaks", "3PMT_S2_peaks", 60, 0, hist_S2_max);
+
+			for (int _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n){
+				if ((S_peaks_max_cutoff > S_peaks_cutoff) && (_Ss[_s] > S_peaks_max_cutoff))
+					continue; //do not draw if maximum limit is imposed && element exceeds it
+				hist_S2->Fill(_Ss[_s]);
+			}
+
+			TCanvas *c1 = new TCanvas(("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str(),
+				("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str());
+			c1->cd();
+			hist_S2->Draw();
+			TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
+			cutoff->SetLineColor(kRed);
+			cutoff->Draw();
+			c1->Update();
+			c1->SaveAs((PMT_output_prefix+"S2s.png").c_str(),"png");
+
+			double S_tot_max =0;
+			for (auto i= PMT3_peaks.begin(),_end_=PMT3_peaks.end();i!=_end_;++i){
+				double val=0;
+				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+					val+= j->S > 0 ? j->S : 0;
+				S_tot_max = std::max(S_tot_max,val);
+			}
+			TH1D *hist_S_tot = new TH1D("3PMT_S_tot_peaks", "3PMT_S_tot_peaks", 60, 0, S_tot_max);
+
+			for (auto i= PMT3_peaks.begin(),_end_=PMT3_peaks.end();i!=_end_;++i){
+				double val=0;
+				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+					val+= j->S > 0 ? j->S : 0;
+				hist_S_tot->Fill(val);
+			}
+			TCanvas *c2 = new TCanvas(("3PMT_S_total_peaks_distribution " + _exp.experiments.back()).c_str(),
+				("3PMT_S_total_peaks_distribution " + _exp.experiments.back()).c_str());
+			c2->cd();
+			hist_S_tot->Draw();
+			c2->Update();
+			c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
 		}
-		std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
-			+ "\\" + "PMT_0" + "\\" + "PMT_0_";
-		std::string PMT1_output_prefix = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
-			+ "\\" + "PMT_1" + "\\" + "PMT_1_";
-		vector_to_file(_Ss, PMT_output_prefix + "Ss.dat");
-		vector_to_file(PMT3_peaks, PMT_output_prefix + "peaks.dat");
-		vector_to_file(PMT1_peaks, PMT1_output_prefix + "peaks.dat");
+		if (ParameterPile::exp_area.channels.contains(1)){
+			double S2_max =0;
+			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
+				double val=0;
+				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
+					if ((j->left>ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+						val+= j->S > 0 ? j->S : 0;
+				}
+				S2_max = std::max(S2_max,val);
+			}
+			TH1D *hist_S2 = new TH1D("PMT#1_S_tot_peaks", "PMT#1_S2_tot_peaks", 60, 0, S2_max);
+			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
+				double val=0;
+				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
+					if ((j->left>ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+						val+= j->S > 0 ? j->S : 0;
+				}
+				hist_S2->Fill(val);
+			}
+			TCanvas *c1 = new TCanvas(("PMT#1_S2_peaks_distribution " + _exp.experiments.back()).c_str(),
+				("PMT#1_S2_peaks_distribution " + _exp.experiments.back()).c_str());
+			c1->cd();
+			hist_S2->Draw();
+			c1->Update();
+			c1->SaveAs((PMT_output_prefix+"S2.png").c_str(),"png");
 
-		TCanvas *c1 = new TCanvas(("S_peaks_distribution " + _exp.experiments.back()).c_str(),
-			("S_peaks_distribution " + _exp.experiments.back()).c_str());
-		c1->cd();
-		hist_S->Draw();
-		c1->Update();
-		TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
-		cutoff->SetLineColor(kRed);
-		cutoff->Draw();
-		c1->Update();
-		std::string pmt_filename = std::string(ParameterPile::this_path) + "\\" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
-			+"\\"+"PMT_0" + "\\" + "PMT_0_" + "S_peaks_selection,ThreshToNoise=2.5" + ".png";
-		c1->SaveAs(pmt_filename.c_str(), "png");
-		/*TCanvas *c2 = new TCanvas(("n_peaks_distribution " + _exp.experiments.back()).c_str(),
-		("n_peaks_distribution " + _exp.experiments.back()).c_str());
-		c2->cd();
-		hist_n->Draw();
-		c2->Update();
+			double S_tot_max =0;
+			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
+				double val=0;
+				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+					val+= j->S > 0 ? j->S : 0;
+				S_tot_max = std::max(S_tot_max,val);
+			}
+			TH1D *hist_S_tot = new TH1D("PMT#1_S_tot_peaks", "PMT#1_S_tot_peaks", 60, 0, S_tot_max);
 
-		TCanvas *c3 = new TCanvas(("N-S Scatter " + _exp.experiments.back()).c_str(), ("N-S Scatter " + _exp.experiments.back()).c_str());
-		TGraph *gr = new TGraph(std::min(_ns.size(), _Ss.size()), SSs, NNs);
-		c3->cd();
-		gr->Draw("ap");
-		c3->Update();*/
-		/*delete[] NNs;
-		delete[] SSs;*/
+			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
+				double val=0;
+				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+					val+= j->S > 0 ? j->S : 0;
+				hist_S_tot->Fill(val);
+			}
+			TCanvas *c2 = new TCanvas(("PMT#1_S_total_peaks_distribution " + _exp.experiments.back()).c_str(),
+				("PMT#1_S_total_peaks_distribution " + _exp.experiments.back()).c_str());
+			c2->cd();
+			hist_S_tot->Draw();
+			c2->Update();
+			c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
+		}
 	}
 #ifdef _PROCESS_GEMS
 	if (!_xs_GEM_sum.empty() && (0 != N_of_valid_runs)&&(1==Iteration_N)){
@@ -481,7 +568,7 @@ void AllRunsResults::Merged(void)
 		no_peaks.back().left = ParameterPile::S1_start_time;
 		no_peaks.back().right = _xs_GEM_sum.back();
 		double gem_baseline =
-			SignalOperations::find_baseline_by_integral(0, _xs_GEM_sum, _ys_GEM_sum, no_peaks);
+			SignalOperations::find_baseline_by_median(0, _xs_GEM_sum, _ys_GEM_sum, no_peaks);
 		SignalOperations::substract_baseline(_ys_GEM_sum, gem_baseline);
 #endif
 		ParameterPile::experiment_area area_ = ParameterPile::areas_to_draw.back().to_point();
@@ -501,7 +588,7 @@ void AllRunsResults::Merged(void)
 					invalid = true;
 				}
 			}
-			Drawing *dr = graph_manager.GetDrawing("GEM_" + area_.experiments.back(), 0, ParameterPile::DrawEngine::Gnuplot);
+			Drawing *dr = graph_manager.GetDrawing("GEM_" + area_.experiments.back(), 2, ParameterPile::DrawEngine::Gnuplot);
 			dr->AddToDraw(_xs_GEM_sum, _ys_GEM_sum, "GEM\\\_" + exp, "", 0);
 			DVECTOR GEM_int;
 			SignalOperations::integrate(_xs_GEM_sum, _ys_GEM_sum, GEM_int,0/*baseline*/);
@@ -525,7 +612,9 @@ void AllRunsResults::Merged(void)
 				std::cout << "# of valid runs " << N_of_valid_runs << std::endl;
 				//std::cout << "# of runs with empty PMT signal" << runs_no_PMT << std::endl;
 				if (x_finish != temp_xs.end() && x_start != _xs_GEM_sum.end()){
-					x_finish = SignalOperations::find_x_iterator_by_value(_xs_GEM_sum.begin(), _xs_GEM_sum.end() - 1, *x_finish);
+					DITERATOR _begin_ =_xs_GEM_sum.begin();
+					DITERATOR _end_ = _xs_GEM_sum.end() - 1;
+					x_finish = SignalOperations::find_x_iterator_by_value(_begin_,_end_, *x_finish);
 					double Integ = *(GEM_int.begin() + (x_finish - _xs_GEM_sum.begin())) - *(GEM_int.begin() + (x_start - _xs_GEM_sum.begin()));
 					std::cout << "GEM integral is " << Integ << std::endl;
 
@@ -555,6 +644,32 @@ void AllRunsResults::Merged(void)
 		/*|| (mppc_peaks_in_S2_area.size() != mppc_all_peaks_Ss.size())*/||(mppc_peaks_in_S2_area.size()!=mppc_channels.size())
 		|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()) || (mppc_peaks_in_S2_area.size() != mppc_peaks.size()))
 		valid = false;
+	if(1==Iteration_N){
+		if (!_xs_PMT3_sum.empty()){
+			for (auto i= _ys_PMT3_sum.begin(),_end_=_ys_PMT3_sum.end();i!=_end_;++i)
+				*i/=N_of_valid_runs;
+			DVECTOR xs_before_S1 = _xs_PMT3_sum, ys_before_S1=_ys_PMT3_sum;
+			SignalOperations::apply_time_limits(xs_before_S1,ys_before_S1,*xs_before_S1.begin(),ParameterPile::S1_start_time);
+			double baseline = SignalOperations::find_baseline_by_integral(0,xs_before_S1,ys_before_S1);
+			SignalOperations::substract_baseline(_ys_PMT3_sum, baseline);
+			SignalOperations::integrate(_xs_PMT3_sum,_ys_PMT3_sum,ys_before_S1, 0);
+			Drawing* dr = graph_manager.GetDrawing("3PMT_"+_exp.experiments.back()+"\\_AVR\\_",0,ParameterPile::DrawEngine::Gnuplot);
+			dr->AddToDraw(_xs_PMT3_sum,_ys_PMT3_sum,"3PMT average signal "+_exp.experiments.back());
+			dr->AddToDraw(_xs_PMT3_sum,ys_before_S1,"3PMT I of average signal "+_exp.experiments.back(),"axes x1y2");
+		}
+		if (!_xs_PMT1_sum.empty()){
+			for (auto i= _ys_PMT1_sum.begin(),_end_=_ys_PMT1_sum.end();i!=_end_;++i)
+				*i/=N_of_valid_runs;
+			DVECTOR xs_before_S1 = _xs_PMT1_sum, ys_before_S1=_ys_PMT1_sum;
+			SignalOperations::apply_time_limits(xs_before_S1,ys_before_S1,*xs_before_S1.begin(),ParameterPile::S1_start_time);
+			double baseline = SignalOperations::find_baseline_by_integral(0,xs_before_S1,ys_before_S1);
+			SignalOperations::substract_baseline(_ys_PMT1_sum, baseline);
+			SignalOperations::integrate(_xs_PMT1_sum,_ys_PMT1_sum,ys_before_S1, 0);
+			Drawing* dr = graph_manager.GetDrawing("PMT#1_"+_exp.experiments.back()+"\\\_AVR\\\_",1,ParameterPile::DrawEngine::Gnuplot);
+			dr->AddToDraw(_xs_PMT1_sum,_ys_PMT1_sum,"PMT#1 average signal "+_exp.experiments.back());
+			dr->AddToDraw(_xs_PMT1_sum,ys_before_S1,"PMT#1 I of average signal "+_exp.experiments.back(),"axes x1y2");
+		}
+	}
 	if (valid && !(mppc_peaks_in_S2_area.empty())) {
 		ParameterPile::experiment_area area_(ParameterPile::experiment_area::Type::Point);
 		area_.experiments.push_back(_exp.experiments.back()); //done: TODO: account for MPPC channel
@@ -575,8 +690,8 @@ void AllRunsResults::Merged(void)
 				//TH1D *hist_S = createMPPCHist(mppc_all_peaks_Ss[ch], Ss_name, 0, 4.0, 60);
 				TH1D *hist_S = createMPPCHist_peaks_S(mppc_peaks[ch], Ss_name, 0, 4.0, 60);
 				TH1D *hist_S2_S = createMPPCHist(mppc_peaks_in_S2_area[ch], S2_S_name, 0, 4.0, 60);
-				TH1D *hist_S2_start_t = createMPPCHist(mppc_S2_start_time[ch], S2_start_t_name, ParameterPile::S2_start_time, 4.0, 60);
-				TH1D *hist_S2_finish_t = createMPPCHist(mppc_S2_finish_time[ch], S2_finish_t_name, ParameterPile::S2_start_time, 6.0, 60);
+				TH1D *hist_S2_start_t = createMPPCHist(mppc_S2_start_time[ch], S2_start_t_name, ParameterPile::S2_start_time.find(_exp.experiments.back())->second, 4.0, 60);
+				TH1D *hist_S2_finish_t = createMPPCHist(mppc_S2_finish_time[ch], S2_finish_t_name, ParameterPile::S2_start_time.find(_exp.experiments.back())->second, 6.0, 60);
 				TH1D *hist_double_I = createMPPCHist(mppc_double_Is[ch], double_I_name, -1, 6.0, 60);
 
 				/*TF1 *g1 = new TF1("m1", "gaus", hist_S->GetMinimum(), hist_S->GetMaximum());
@@ -709,6 +824,7 @@ void AllRunsResults::Merged(void)
 	N_of_runs = 0;
 	N_of_valid_runs = 0;
 	graph_manager.Draw();
+	graph_manager.Clear();
 }
 
 void AllRunsResults::vector_to_file(STD_CONT<STD_CONT<peak>> &pks, std::string fname, std::string title)

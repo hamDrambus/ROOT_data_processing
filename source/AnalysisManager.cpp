@@ -67,9 +67,9 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 	one_run_data.push_back(SingleRunData(current_under_processing));
 	one_run_results.push_back(one_run_data.back().processSingleRun(_all_results));
 	if (!one_run_results.back().isValid()){
-		/*std::cout << "invalid: " << current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
-			<< current_under_processing.sub_runs.back() << "_processed" << std::endl;
-		std::cout << "reason: " << one_run_results.back().getStatus()<<std::endl;*/
+		std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
+			<< current_under_processing.sub_runs.back() << " processed" << std::endl;
+		std::cout << "reason: " << one_run_results.back().getStatus()<<std::endl;
 		//std::cout << "S=" << one_run_results.back().PMT3_summed_peaks_area << "| N = " << one_run_results.back().PMT3_n_peaks << std::endl;
 		one_run_results.pop_back();
 		one_run_data.pop_back();
@@ -210,6 +210,7 @@ ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::e
 	out_area.runs.erase();
 	std::vector<int> runs;
 	int from = -1, to = -1;
+#if defined(__WIN32__)
 	HANDLE dir;
 	WIN32_FIND_DATA file_data;
 	std::string path = DATA_PREFIX;
@@ -248,10 +249,50 @@ ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::e
 			to = from;
 		}
 	} while (FindNextFile(dir, &file_data));
-	if ((from >= 0) && (to >= 0))
-		out_area.runs.push_pair(from, to);
 	FindClose(dir);
+#else //__WIN32__
 
-	out_area.runs = out_area.runs.intersect(area.runs);
+	DIR *dp;
+    struct dirent *dirp;
+	std::string path = DATA_PREFIX;
+	path += area.experiments.back();
+    if((dp  = opendir(path.c_str())) == NULL) {
+        std::cout << "Error(" << errno << ") opening " << path << std::endl;
+        return out_area;
+    }
+	while ((dirp = readdir(dp)) != NULL) {
+        std::string file_name = dirp->d_name;
+       	if (file_name.size() < 4)
+       		continue;
+       	if (file_name[0] == '.')
+       		continue;
+       	file_name.erase(file_name.begin(), file_name.begin() + 4); //erase "run_"
+       	int n_underscore = file_name.find("_");
+       	if (n_underscore == std::string::npos)
+       		continue;
+       		file_name.erase(file_name.begin() + n_underscore, file_name.end());
+       	if (file_name.empty())
+       		continue;
+       	int run = std::stoi(file_name);
+       		if (from < 0){
+      			from = run;
+       			to = run;
+      			continue;
+     	}
+      	if (to == run)
+       		continue;
+       	if (to == (run - 1))
+        	to++;
+       	else {
+       		out_area.runs.push_pair(from, to);
+       		from = run;
+       		to = from;
+       	}
+	}
+    closedir(dp);
+#endif //__WIN32__
+    if ((from >= 0) && (to >= 0))
+    		out_area.runs.push_pair(from, to);
+    out_area.runs = out_area.runs.intersect(area.runs);
 	return out_area;
 }

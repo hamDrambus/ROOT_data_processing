@@ -76,6 +76,10 @@ protected:
 	DVECTOR _Ss;
 	DVECTOR _xs_GEM_sum;
 	DVECTOR _ys_GEM_sum;
+	DVECTOR _xs_PMT3_sum;
+	DVECTOR _ys_PMT3_sum;
+	DVECTOR _xs_PMT1_sum;
+	DVECTOR _ys_PMT1_sum;
 	int N_of_runs;
 	int N_of_valid_runs;//i.e. accepted by PMT cut
 	int Iteration_N;

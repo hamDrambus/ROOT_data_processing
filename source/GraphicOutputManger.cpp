@@ -1,7 +1,7 @@
 #include "GraphicOutputManager.h"
 
 Drawing::Drawing(std::string name, ParameterPile::DrawEngine de, int id_index):
-_name(name), _id_index(id_index)
+_name(name), _id_index(id_index), _de(de)
 {
 	for (int s = 0; s < _name.size(); s++)
 		if (_name[s] == '\\' || _name[s] == '/')
@@ -11,11 +11,13 @@ _name(name), _id_index(id_index)
 	_script_lines.push_back("set multiplot");
 	_script_lines.push_back("set ytics nomirror");
 	_script_lines.push_back("set y2tics");
-	_script_lines.push_back("set key top rmargin");
+	_script_lines.push_back("set key top left");
 	_script_lines.push_back("###");
 	_script_lines.push_back("###");
 	_script_lines.push_back("unset multiplot");
+#if !defined(__WIN32__)
 	_script_lines.push_back("pause -1");
+#endif
 }
 
 int Drawing::get_index_of_pad_marker(int pad_index)//before which line enter the script;
@@ -49,10 +51,10 @@ void Drawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std::string
 		return;
 	
 	_data_fnames.push_back(_name +"_"+ std::to_string(_data_fnames.size()));
-	std::string line = "plot '"+ParameterPile::this_path + "\\temp_gnuplot_files\\" + _data_fnames.back() +"' u 1:2 title '"+title+"' " + extra_txt;
+	std::string line = "plot '"+ParameterPile::this_path + "/temp_gnuplot_files/" + _data_fnames.back() +"' u 1:2 title '"+title+"' " + extra_txt;
 	_script_lines.insert(_script_lines.begin() + off, line);
 
-	line = "temp_gnuplot_files\\" + _data_fnames.back();
+	line = "temp_gnuplot_files/" + _data_fnames.back();
 	std::ofstream f_data;
 	open_output_file(line, f_data);
 	for (auto i = xs.begin(), j = ys.begin(); (i != xs.end()) && (j != ys.end()); i++, j++)
@@ -63,8 +65,6 @@ void Drawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std::string
 void Drawing::AddToDraw_baseline(double base_line, std::string title, std::string extra_txt, int pad_index)
 {
 	std::string definition_lines;
-	//definition_lines=("a = " + std::to_string(base_line)+"\n");
-	//definition_lines+="base(x) = a";
 	AddToDraw(definition_lines, std::to_string(base_line), title, extra_txt, pad_index);
 }
 
@@ -117,19 +117,22 @@ void Drawing::DrawData(DVECTOR &xs, DVECTOR &ys, std::string title, std::string 
 			if (mod_name[s] == '\\' || mod_name[s] == '/')
 				mod_name[s] = '.';
 		std::ofstream file;
-		open_output_file("temp_gnuplot_files\\" + mod_name, file);
-		std::cout << "file " << "temp_gnuplot_files\\" + mod_name << ".is_open() " << file.is_open() << std::endl;
-		if (!file.is_open())
+		open_output_file("temp_gnuplot_files/" + mod_name, file);
+		std::cout << "file '" << "temp_gnuplot_files/" + mod_name << "'.is_open() " << file.is_open() << std::endl;
+		if (!file.is_open()){
+			std::cout<<"Could not open a file!";
+#if defined (__WIN32__)
 			std::cout << GetLastError() << std::endl;
+#endif //__WIn32__
+		}
 		for (int h = 0; h < xs.size(); h++)
 			file << xs[h] << '\t' << ys[h] << std::endl;
 		file.close();
-		open_output_file("temp_gnuplot_files\\"+_script_fname, file);
-		file << "plot '" << ParameterPile::this_path + "\\temp_gnuplot_files\\" + mod_name << "' u 1:2 title '" << title<<"' "<<extra_txt<< std::endl;
+		open_output_file("temp_gnuplot_files/"+_script_fname, file);
+		file << "plot '" << ParameterPile::this_path + "/temp_gnuplot_files/" + mod_name << "' u 1:2 title '" << title<<"' "<<extra_txt<< std::endl;
 		file << "pause -1";
 		file.close();
-		system(("start \"\" \"%GNUPLOT%\\gnuplot.exe\" -c \"" + ParameterPile::this_path + "\\temp_gnuplot_files\\"+_script_fname+"\"").c_str());
-		//std::cout << "Gnuplot is not supported yet" << std::endl;
+		INVOKE_GNUPLOT(ParameterPile::this_path + "/temp_gnuplot_files/" + _script_fname);
 	}
 }
 
@@ -152,9 +155,13 @@ void Drawing::DrawData(void)
 		_script_lines[1].insert(0,"#");
 	}
 
+#if defined(__WIN32__)
 	_script_lines.insert(_script_lines.begin() + 1, "set terminal wxt size " + std::to_string(ParameterPile::gnuplot_width) + ","
 		+ std::to_string(std::min(ParameterPile::gnuplot_max_size , N_pads*ParameterPile::gnuplot_pad_size)));
-	
+#else
+	_script_lines.insert(_script_lines.begin() + 1, "set terminal x11 size " + std::to_string(ParameterPile::gnuplot_width) + ","
+			+ std::to_string(std::min(ParameterPile::gnuplot_max_size , N_pads*ParameterPile::gnuplot_pad_size)));
+#endif
 	int set_pads = 0;
 	while (set_pads < N_pads){ //because inserting the lines invalidates iterators
 		int pads_off = set_pads + 1;//+1 in order to account for the first "###"
@@ -162,7 +169,7 @@ void Drawing::DrawData(void)
 			if ((*i) == std::string("###")){
 				is_empty = true;
 				bool has_plot = false;
-				for (auto j = (i + 1); (j != _script_lines.end()) && ((*j) != "###"); j++) {//scan the pad
+				for (auto j = (i + 1); (j != _script_lines.end()) && ((*j) != "###"); ++j) {//scan the pad
 					//There should be only one 'plot' in one pad and the rest are 'replot'. Otherwise the same color is used and title is simply overriden 
 					if (0 == (*j).find("plot")){
 						if (has_plot)
@@ -189,11 +196,11 @@ void Drawing::DrawData(void)
 			}
 	}
 	std::ofstream file;
-	open_output_file("temp_gnuplot_files\\" + _script_fname, file);
+	open_output_file("temp_gnuplot_files/" + _script_fname, file);
 	for (auto i = _script_lines.begin(); i != _script_lines.end(); i++)
 		file << *i << std::endl;
 	file.close();
-	system(("start \"\" \"%GNUPLOT%\\gnuplot.exe\" -c \"" + ParameterPile::this_path + "\\temp_gnuplot_files\\" + _script_fname + "\"").c_str());
+	INVOKE_GNUPLOT(ParameterPile::this_path + "/temp_gnuplot_files/" + _script_fname);
 }
 
 void Drawing::Clear(void)
