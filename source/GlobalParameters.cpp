@@ -82,7 +82,7 @@ namespace ParameterPile
 	int subruns_per_file = 10;
 	//bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 3; //obv. must be >=1
+	int threads_number = 2; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
@@ -183,27 +183,25 @@ namespace ParameterPile
 		areas_to_draw.back().experiments.push_back("X_ray_20kV_SiPM_46V_THGEM_0V_coll_6mm");
 
 		areas_to_draw.back().runs.push_pair(0, 0);
-		areas_to_draw.back().channels.push_pair(0, 0);
-		areas_to_draw.back().channels.push_pair(2, 2);
+		//areas_to_draw.back().channels.push_pair(0, 0);
+		//areas_to_draw.back().channels.push_pair(2, 2);
 		//areas_to_draw.back().channels.push_pair(34, 34);
 		//areas_to_draw.back().channels.push_pair(36, 36);
 		//areas_to_draw.back().channels.push_pair(38, 38);
 		//areas_to_draw.back().channels.push_pair(44, 44);
 		//areas_to_draw.back().channels.push_pair(53, 53);
+		areas_to_draw.back().channels.push_pair(32, 44); //13
+		areas_to_draw.back().channels.push_pair(48, 55); //8	
+		areas_to_draw.back().channels.push_pair(57, 59); //3 =>24
 		areas_to_draw.back().sub_runs.push_pair(0, 0);
 
 		exp_area.runs.push_pair(0, 9999);
 		exp_area.channels.push_pair(0, 0);
-		exp_area.channels.push_pair(2, 2);
-		//exp_area.channels.push_pair(34, 34);
-		//exp_area.channels.push_pair(36, 36);
-		//exp_area.channels.push_pair(38, 38);
-		//exp_area.channels.push_pair(44, 44);
-		//exp_area.channels.push_pair(53, 53);
+		//exp_area.channels.push_pair(2, 2);
 		
-		//exp_area.channels.push_pair(32, 44); //13
-		//exp_area.channels.push_pair(48, 55); //8	
-		//exp_area.channels.push_pair(57, 59); //3 =>24
+		exp_area.channels.push_pair(32, 44); //13
+		exp_area.channels.push_pair(48, 55); //8	
+		exp_area.channels.push_pair(57, 59); //3 =>24
 		exp_area.sub_runs.push_pair(0, 9); //subruns_per_file-1);
 
 		exp_area.experiments.push_back("X_ray_12kV_SiPM_46V_THGEM_0V_coll_6mm");

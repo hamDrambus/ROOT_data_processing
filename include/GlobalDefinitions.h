@@ -42,6 +42,7 @@
 #define OUTPUT_DIR std::string("../../../../Data/180201/results_x_ray/")
 //GEM_v1 - finding baseline for every event
 //GEM_v2 - finding baseline for averaged signal
+//#define _PROCESS_GEMS
 #define GEM_V2_
 #undef GEM_V1_
 #ifdef GEM_V1_
@@ -73,7 +74,6 @@
 #define DITERATOR DVECTOR::iterator
 #define D_REV_ITERATOR DVECTOR::reverse_iterator
 
-#define _PROCESS_GEMS
 
 DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end);
 void open_output_file(std::string name, std::ofstream &str, std::ios_base::openmode _mode = std::ios_base::trunc);

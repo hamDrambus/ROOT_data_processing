@@ -685,7 +685,15 @@ void AllRunsResults::Merged(void)
 				std::cout << "MPPC " << area_.experiments.back() << " processed" << std::endl;
 				std::cout << "# of runs " << N_of_runs << std::endl;
 				std::cout << "# of valid runs " << N_of_valid_runs << std::endl;
-			}
+				
+				c1->Close();
+				c2->Close();
+#ifndef _TEMP_CODE
+				c3->Close();
+				c4->Close();
+#endif //_TEMP_CODE			
+				c5->Close();
+				}
 
 			output.close();
 		}
