@@ -775,7 +775,7 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		DVECTOR ys_raw_i, ys_raw_ii;
 		DITERATOR x_ii_max = xs_raw_0bl.end();
 		double y_ii_max, y_ii_min;
-		if (!xs_raw_0bl.empty()) {
+		if (xs_raw_0bl.size()>=2) {
 			SignalOperations::integrate(xs_raw_0bl, ys_raw_0bl, ys_raw_i, delta_x, 0);
 			SignalOperations::integrate(xs_raw_0bl, ys_raw_i, ys_raw_ii, delta_x, 0);
 			//TODO: ParameterPile

@@ -235,6 +235,11 @@ void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and mb tes
 	if (_Ss.size() < ParameterPile::PMT_min_statistics) //not statistically significant. TODO: figure out the number,
 		//and ParameterPile, however this is not important
 		return;
+#if defined(_NO_AUTO_PMT_SELECTION)||defined(_NO_PMT_SELECTION)
+	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
+	S_peaks_max_cutoff = S_peaks_cutoff - 1;
+	return;
+#endif
 	DVECTOR areas = _Ss;
 	std::sort(areas.begin(), areas.end());
 	double G_mean = TMath::Mean(areas.begin(), areas.end());
@@ -291,10 +296,7 @@ void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and mb tes
 		if ((i_cutoff - i_mean) >= N_above_global_mean_acceptable)
 			cutoff = G_mean;//or set to S_peaks_cutoff ?
 	S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
-#ifdef _NO_PMT_SELECTION
-	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
-	S_peaks_max_cutoff = S_peaks_cutoff - 1;
-#endif
+
 }
 
 //void AllRunsResults::find_S_cutoff_v2(void)
@@ -532,7 +534,7 @@ void AllRunsResults::Merged(void)
 			c1->cd();
 			hist_S2->Draw();
 			c1->Update();
-			c1->SaveAs((PMT_output_prefix+"S2.png").c_str(),"png");
+			c1->SaveAs((PMT1_output_prefix+"S2.png").c_str(),"png");
 
 			double S_tot_max =0;
 			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
@@ -554,7 +556,7 @@ void AllRunsResults::Merged(void)
 			c2->cd();
 			hist_S_tot->Draw();
 			c2->Update();
-			c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
+			c2->SaveAs((PMT1_output_prefix+"S_tot.png").c_str(),"png");
 		}
 	}
 #ifdef _PROCESS_GEMS
@@ -714,6 +716,8 @@ void AllRunsResults::Merged(void)
 				TF1 *_S2_finish_t_fit = createMPPCFitFunc(hist_S2_finish_t, S2_finish_t_name);
 				TF1 *_double_I_fit = createMPPCFitFunc(hist_double_I, double_I_name);
 
+				TCanvas *c1 = new TCanvas(Ss_name.c_str(), Ss_name.c_str());
+				c1->cd();
 #ifdef _TEMP_CODE
 				if (hist_S2_start_t)
 					hist_S2_start_t->Fit(_S2_start_t_fit, "Q"); //affects the name of the previous to this code fit in canvas, So not rendered fits
@@ -723,8 +727,7 @@ void AllRunsResults::Merged(void)
 #endif
 
 				gStyle->SetOptFit(102);
-				TCanvas *c1 = new TCanvas(Ss_name.c_str(), Ss_name.c_str());
-				c1->cd();
+				c1->Clear();
 				c1->SetTitle(Ss_name.c_str());
 				if (hist_S){
 					hist_S->Fit(_S_fit, "Q");
@@ -775,8 +778,8 @@ void AllRunsResults::Merged(void)
 				//_S2_finish_t_fit->Draw();
 				c5->Update();
 #ifdef OUTPUT_MPPCS_PICS
-				std::string output_prefix =std::string(ParameterPile::this_path)+"\\"+ std::string(OUTPUT_DIR) + OUTPUT_MPPCS_PICS + area_.experiments.back() 
-					+ "\\" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "\\" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "_";
+				std::string output_prefix =std::string(ParameterPile::this_path)+"/"+ std::string(OUTPUT_DIR) + OUTPUT_MPPCS_PICS + area_.experiments.back()
+					+ "/" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "/" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "_";
 				//vector_to_file(mppc_all_peaks_Ss[ch], output_prefix + "Ss.dat");
 				vector_to_file(mppc_peaks_in_S2_area[ch], output_prefix + "S2_S.dat","MPPC_S2");
 				vector_to_file(mppc_S2_start_time[ch], output_prefix + "S2_start_t.dat", "MPPC_st");
