@@ -91,22 +91,25 @@ namespace ParameterPile
 	int subruns_per_file = 1000;
 	//bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 1; //obv. must be >=1
+	int threads_number = 3; //obv. must be >=1
 
 	int filter_MPPC_n_points = 15;
 	int filter_MPPC_order = 4;
 	int filter_MPPC_n_iterations = 1;
-	int filter_PMT_n_points = 50;//50
-	int filter_PMT_order = 8;//8
-	int filter_PMT_n_iterations = 1;
+	std::map<int,int> filter_PMT_n_points;
+	std::map<int,int> filter_PMT_order;
+	std::map<int,int> filter_PMT_n_iterations;
+	//int filter_PMT_n_points = 50;//50
+	//int filter_PMT_order = 8;//8
+	//int filter_PMT_n_iterations = 1;
 
 	//TODO: depr
 	//std::pair<double, double> baseline_search_limits(-0.1, 0.1);// = std::pair<double, double>(-0.05, 0.05);
 	//int baseline_search_max_iterations=4;
 
 	//these values are approximate, especially S2
-	double S1_start_time = 31; //in ms
-	double S1_finish_time = 42; //in ms
+	double S1_start_time = 30; //in ms
+	double S1_finish_time = 40; //in ms
 	std::map<std::string,double> S2_start_time; //in ms
 	std::map<std::string,double> S2_finish_time; //in ms
 
@@ -114,10 +117,12 @@ namespace ParameterPile
 	int GEM_N_of_averaging = 30; //=== N_trust
 	
 	double PMT_run_acceptance_threshold_to_noize = 4;//~ 2-3
-	double PMT_minimum_thresh = 0.050;
-	double PMT_maximum_thresh = 0.050;
-	double PMT1_minimum_thresh = 0.051;
-	double PMT1_maximum_thresh = 0.051;
+	//double PMT_minimum_thresh = 0.050;
+	//double PMT_maximum_thresh = 0.050;
+	//double PMT1_minimum_thresh = 0.051;
+	//double PMT1_maximum_thresh = 0.051;
+	std::map<int,double> PMT_maximum_thresh;
+	std::map<int,double> PMT_minimum_thresh;
 	int PMT_N_of_averaging = 1; //=== N_trust. PMT signal is already smoothed by filter
 	int PMT_N_peaks_acceptance = 0;//1 //condition is >=1, not >1
 	double PMT_SArea_peaks_acceptance = 0.00; //V*us
@@ -159,7 +164,7 @@ namespace ParameterPile
 
 	int gnuplot_pad_size = 400;
 	int gnuplot_max_size = 1600;
-	int gnuplot_width = 1400; //default for gnuplot is 640
+	int gnuplot_width = 1200; //default for gnuplot is 640
 
 	bool draw_required(ParameterPile::experiment_area what)
 	{
@@ -188,67 +193,95 @@ namespace ParameterPile
 
 		TThread::Initialize();
 		
+		filter_PMT_n_points.insert		(std::pair<int,int>(0,50));
+		filter_PMT_order.insert			(std::pair<int,int>(0,8));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(0,1));
+		filter_PMT_n_points.insert		(std::pair<int,int>(1,50));
+		filter_PMT_order.insert			(std::pair<int,int>(1,8));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(1,1));
+		filter_PMT_n_points.insert		(std::pair<int,int>(8,50));
+		filter_PMT_order.insert			(std::pair<int,int>(8,4));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(8,1));
+		filter_PMT_n_points.insert		(std::pair<int,int>(12,50));
+		filter_PMT_order.insert			(std::pair<int,int>(12,4));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,1));
+
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.053));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.053));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.049));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.049));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(8,0.00046));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(8,0.00046));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(12,0.00038));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(12,0.00038));
+
 		PMT_use_average.insert(std::pair<int,bool>(0,true));
 		PMT_use_average.insert(std::pair<int,bool>(1,true));
 
 		S2_start_time.insert(std::pair<std::string,double>("7kV_SiPM_46V_xray_240Hz_PMT_750V",50));
-		S2_start_time.insert(std::pair<std::string,double>("8kV_SiPM_46V_xray_240Hz_PMT_750V",42));
-		S2_start_time.insert(std::pair<std::string,double>("9kV_SiPM_46V_xray_240Hz_",50));
-		S2_start_time.insert(std::pair<std::string,double>("10kV_SiPM_46V_xray_240Hz",42));
-		S2_start_time.insert(std::pair<std::string,double>("11kV_SiPM_46V_xray_240Hz",42));
+		S2_start_time.insert(std::pair<std::string,double>("8kV_SiPM_46V_xray_240Hz_PMT_750V",50));
+		S2_start_time.insert(std::pair<std::string,double>("9kV_SiPM_46V_xray_240Hz",50));
+		S2_start_time.insert(std::pair<std::string,double>("10kV_SiPM_46V_xray_240Hz",48));
+		S2_start_time.insert(std::pair<std::string,double>("11kV_SiPM_46V_xray_240Hz",46));
 		S2_start_time.insert(std::pair<std::string,double>("12kV_SiPM_46V_xray_240Hz",42));
 		S2_start_time.insert(std::pair<std::string,double>("13kV_SiPM_46V_xray_240Hz",42));
 		S2_start_time.insert(std::pair<std::string,double>("14kV_SiPM_46V_xray_240Hz",42));
 		S2_start_time.insert(std::pair<std::string,double>("15kV_SiPM_46V_xray_240Hz_PMT_700V_6dB",42));
 
 		S2_finish_time.insert(std::pair<std::string,double>("7kV_SiPM_46V_xray_240Hz_PMT_750V",90));
-		S2_finish_time.insert(std::pair<std::string,double>("8kV_SiPM_46V_xray_240Hz_PMT_750V",88));
-		S2_finish_time.insert(std::pair<std::string,double>("9kV_SiPM_46V_xray_240Hz_",88));
-		S2_finish_time.insert(std::pair<std::string,double>("10kV_SiPM_46V_xray_240Hz",10));
-		S2_finish_time.insert(std::pair<std::string,double>("11kV_SiPM_46V_xray_240Hz",88));
-		S2_finish_time.insert(std::pair<std::string,double>("12kV_SiPM_46V_xray_240Hz",88));
-		S2_finish_time.insert(std::pair<std::string,double>("13kV_SiPM_46V_xray_240Hz",88));
-		S2_finish_time.insert(std::pair<std::string,double>("14kV_SiPM_46V_xray_240Hz",88));
-		S2_finish_time.insert(std::pair<std::string,double>("15kV_SiPM_46V_xray_240Hz_PMT_700V_6dB",88));
+		S2_finish_time.insert(std::pair<std::string,double>("8kV_SiPM_46V_xray_240Hz_PMT_750V",90));
+		S2_finish_time.insert(std::pair<std::string,double>("9kV_SiPM_46V_xray_240Hz",90));
+		S2_finish_time.insert(std::pair<std::string,double>("10kV_SiPM_46V_xray_240Hz",85));
+		S2_finish_time.insert(std::pair<std::string,double>("11kV_SiPM_46V_xray_240Hz",82));
+		S2_finish_time.insert(std::pair<std::string,double>("12kV_SiPM_46V_xray_240Hz",81));
+		S2_finish_time.insert(std::pair<std::string,double>("13kV_SiPM_46V_xray_240Hz",78));
+		S2_finish_time.insert(std::pair<std::string,double>("14kV_SiPM_46V_xray_240Hz",75));
+		S2_finish_time.insert(std::pair<std::string,double>("15kV_SiPM_46V_xray_240Hz_PMT_700V_6dB",75));
 
 		areas_to_draw.push_back(experiment_area());
 		
-		areas_to_draw.back().experiments.push_back("7kV_SiPM_46V_xray_240Hz_PMT_750V");
-		/*areas_to_draw.back().experiments.push_back("8kV_SiPM_46V_xray_240Hz_PMT_750V");
+		//areas_to_draw.back().experiments.push_back("7kV_SiPM_46V_xray_240Hz_PMT_750V");
+		//areas_to_draw.back().experiments.push_back("8kV_SiPM_46V_xray_240Hz_PMT_750V");
 		areas_to_draw.back().experiments.push_back("9kV_SiPM_46V_xray_240Hz");
 		areas_to_draw.back().experiments.push_back("10kV_SiPM_46V_xray_240Hz");
 		areas_to_draw.back().experiments.push_back("11kV_SiPM_46V_xray_240Hz");
 		areas_to_draw.back().experiments.push_back("12kV_SiPM_46V_xray_240Hz");
-		areas_to_draw.back().experiments.push_back("13kV_SiPM_46V_xray_240Hz");
-		areas_to_draw.back().experiments.push_back("14kV_SiPM_46V_xray_240Hz");
-		areas_to_draw.back().experiments.push_back("15kV_SiPM_46V_xray_240Hz_PMT_700V_6dB");*/
+		//areas_to_draw.back().experiments.push_back("13kV_SiPM_46V_xray_240Hz");
+		//areas_to_draw.back().experiments.push_back("14kV_SiPM_46V_xray_240Hz");
+		//areas_to_draw.back().experiments.push_back("15kV_SiPM_46V_xray_240Hz_PMT_700V_6dB");
 
-		areas_to_draw.back().runs.push_pair(0, 9999);
+		areas_to_draw.back().runs.push_pair(0, 0);
 		areas_to_draw.back().channels.push_pair(0, 1);
-		areas_to_draw.back().channels.push_pair(2, 2);
+		//areas_to_draw.back().channels.push_pair(2, 2);
+		areas_to_draw.back().channels.push_pair(8, 8);
+		areas_to_draw.back().channels.push_pair(12, 12);
 
-		areas_to_draw.back().channels.push_pair(32, 64);
+		//areas_to_draw.back().channels.push_pair(56, 56);
 
-		/*areas_to_draw.back().channels.push_pair(32, 44); //13
-		areas_to_draw.back().channels.push_pair(48, 55); //8
-		areas_to_draw.back().channels.push_pair(57, 59);*/ //3 =>24
-		areas_to_draw.back().sub_runs.push_pair(1, 1);
+		areas_to_draw.back().channels.push_pair(32, 44); //13
+		areas_to_draw.back().channels.push_pair(48, 56); //8
+		areas_to_draw.back().channels.push_pair(57, 59); //3 =>24
+		areas_to_draw.back().sub_runs.push_pair(0, 0);
 
-		exp_area.runs.push_pair(67, 67);
+		exp_area.runs.push_pair(0, 9999);
 		exp_area.channels.push_pair(0, 1);
 		exp_area.channels.push_pair(2, 2);
+		exp_area.channels.push_pair(8, 8);
+		exp_area.channels.push_pair(12, 12);
+
+		//exp_area.channels.push_pair(56, 56);
 
 		exp_area.channels.push_pair(32, 44); //13
 		exp_area.channels.push_pair(48, 56); //9
 		exp_area.channels.push_pair(57, 59); //3 =>25 channels
-		exp_area.sub_runs.push_pair(0, 9); //subruns_per_file-1);
+		exp_area.sub_runs.push_pair(0, 999); //subruns_per_file-1);
 
-		exp_area.experiments.push_back("7kV_SiPM_46V_xray_240Hz_PMT_750V");
+		//exp_area.experiments.push_back("7kV_SiPM_46V_xray_240Hz_PMT_750V");
 		//exp_area.experiments.push_back("8kV_SiPM_46V_xray_240Hz_PMT_750V");
-		//exp_area.experiments.push_back("9kV_SiPM_46V_xray_240Hz");
-		//exp_area.experiments.push_back("10kV_SiPM_46V_xray_240Hz");
-		//exp_area.experiments.push_back("11kV_SiPM_46V_xray_240Hz");
-		//exp_area.experiments.push_back("12kV_SiPM_46V_xray_240Hz");
+		exp_area.experiments.push_back("9kV_SiPM_46V_xray_240Hz");
+		exp_area.experiments.push_back("10kV_SiPM_46V_xray_240Hz");
+		exp_area.experiments.push_back("11kV_SiPM_46V_xray_240Hz");
+		exp_area.experiments.push_back("12kV_SiPM_46V_xray_240Hz");
 		//exp_area.experiments.push_back("13kV_SiPM_46V_xray_240Hz");
 		//exp_area.experiments.push_back("14kV_SiPM_46V_xray_240Hz");
 		//exp_area.experiments.push_back("15kV_SiPM_46V_xray_240Hz_PMT_700V_6dB");

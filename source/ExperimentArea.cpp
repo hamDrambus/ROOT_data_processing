@@ -129,9 +129,6 @@ namespace ParameterPile {
 	STD_CONT<area_vector> area_vector::split_area(int N)
 	{
 		STD_CONT <area_vector> out_;
-		for (int h = 0; h < N; h++){
-			out_.push_back(area_vector());
-		}
 		int N_runs = 0;
 		bool even = true;
 		int l, r;
@@ -142,6 +139,11 @@ namespace ParameterPile {
 				r = *h;
 				N_runs += r - l + 1;
 			}
+		}
+		if ((N_runs<N)&&(N_runs>0))
+			N = N_runs;
+		for (int h = 0; h < N; h++){
+			out_.push_back(area_vector());
 		}
 		int N_accum = 0;
 		int curr_index = 0;

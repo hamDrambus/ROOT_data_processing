@@ -96,13 +96,13 @@ void SingleRunData::file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, 
 		file.close();
 		return;
 	}
-	int Size = file.tellg();
+	long long Size = file.tellg();
 #ifndef _USE_DEQUE
-	xs.reserve(Size / ParameterPile::subruns_per_file);
-	ys.reserve(Size / ParameterPile::subruns_per_file);
+	xs.reserve((Size / ParameterPile::subruns_per_file)/2);
+	ys.reserve((Size / ParameterPile::subruns_per_file)/2);
 #endif
-	int offset = index * Size / (ParameterPile::subruns_per_file);
-	int to_read = Size / (ParameterPile::subruns_per_file);
+	long long offset = index * (Size / (ParameterPile::subruns_per_file));
+	long long to_read = Size / (ParameterPile::subruns_per_file);
 	file.seekg(offset, std::ios_base::beg);
 	char bytes[2];
 	unsigned long int read_N = 0;
@@ -227,6 +227,11 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 	auto PMT_read_file_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 	readOneRun(_result);
+	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()){
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if ((ch==8)||(12==ch))
+		SignalOperations::invert_y(xs_channels[ind],ys_channels[ind]);
+	}
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_read_file_end_timer = std::chrono::high_resolution_clock::now();
 	all_runs_results->time_stat.n_PMT_file_reading++;
@@ -235,22 +240,68 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 #endif
 	//#ifndef _TEMP_CODE
 	add_draw_data("PMT_raw" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
-		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(0), graph_manager, ParameterPile::DrawEngine::Gnuplot, 0);
+		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(8), graph_manager, ParameterPile::DrawEngine::Gnuplot, 8);
+	add_draw_data("PMT_raw" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
+			std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(12), graph_manager, ParameterPile::DrawEngine::Gnuplot, 12);
 	//#endif
 	if (!_result.isValid())
 		return _result;
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_filter_start_timer = std::chrono::high_resolution_clock::now();
 #endif
-	SavitzkyGolayFilter SGfilter(ParameterPile::filter_PMT_n_points, ParameterPile::filter_PMT_order, ParameterPile::filter_PMT_n_iterations);
-	for (int ch = 0; ch < 2; ch++){
+	curr_area.channels.reset();
+	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()){
 		int ind = curr_area.channels.get_order_index_by_index(ch);
-		if (ind < 0)
+		if ((ind < 0)||(ch>=32)||(2==ch))
 			continue;
+		bool valid_pars = ParameterPile::filter_PMT_n_points.find(ch)!=ParameterPile::filter_PMT_n_points.end();
+		valid_pars = valid_pars&&(ParameterPile::filter_PMT_order.find(ch)!=ParameterPile::filter_PMT_order.end());
+		valid_pars = valid_pars&&(ParameterPile::filter_PMT_n_iterations.find(ch)!=ParameterPile::filter_PMT_n_iterations.end());
+		if (!valid_pars) //no filter applied
+			continue;
+		SavitzkyGolayFilter SGfilter(ParameterPile::filter_PMT_n_points.find(ch)->second, ParameterPile::filter_PMT_order.find(ch)->second,
+				ParameterPile::filter_PMT_n_iterations.find(ch)->second);
 		DVECTOR xs, ys;
 		SGfilter(xs_channels[ind], ys_channels[ind], xs, ys);
 		xs_channels[ind] = xs;
 		ys_channels[ind] = ys;
+		/*if (8==ch){
+			int sz = ys_channels[ind].size();
+			double *in_p = new double [sz];
+			for (int i=0;i<sz;++i)
+				in_p[i] = ys_channels[ind][i];
+			DVECTOR out_r(sz);
+			DVECTOR out_i(sz);
+			DVECTOR out_m(sz);
+
+			TVirtualFFT * fft = TVirtualFFT::FFT(1, &sz,"R2C");
+			fft->SetPoints(in_p);
+			fft->Transform();
+
+			for (int i=0;i<sz;++i){
+				fft->GetPointComplex(i,out_r[i],out_i[i]);
+				out_m[i] = std::sqrt(out_r[i]*out_r[i]+out_i[i]*out_i[i]);
+			}
+
+			ParameterPile::experiment_area area = curr_area.to_point();
+			area.channels.erase();
+			area.channels.push_back(ch);
+			std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
+				"\\_ch" + std::to_string(ch) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
+			if (ParameterPile::draw_required(area)) {
+				std::string plot_name = "";
+				plot_name += curr_area.experiments.back() + "_";
+				plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(ch) + "_sub" + std::to_string(area.sub_runs.back());
+				Drawing *dr = graph_manager.GetDrawing(plot_name, ch+100, ParameterPile::DrawEngine::Gnuplot);
+				if (NULL != dr) {
+					dr->AddToDraw(xs_channels[ind], out_r, "FFT::Re" + plot_title, "with points pt 1", 0);
+					dr->AddToDraw(xs_channels[ind], out_i, "FFT::Im" + plot_title, "with points pt 2", 0);
+					dr->AddToDraw(xs_channels[ind], out_m, "FFT::|.|" + plot_title, "with points pt 3", 0);
+				}
+			}
+
+			delete [] in_p;
+		}*/
 	} //apply the filter to PMTs
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_filter_end_timer = std::chrono::high_resolution_clock::now();
@@ -259,53 +310,75 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 		std::chrono::duration_cast<std::chrono::nanoseconds>(PMT_filter_end_timer - PMT_filter_start_timer).count();
 #endif
 //#ifndef _TEMP_CODE
-	add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
+	/*add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
 		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(0), graph_manager, ParameterPile::DrawEngine::Gnuplot, 0);
 	add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
 		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(1), graph_manager, ParameterPile::DrawEngine::Gnuplot, 1);
+	add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
+		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(8), graph_manager, ParameterPile::DrawEngine::Gnuplot, 8);
+	add_draw_data("filtered_PMT" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
+		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(12), graph_manager, ParameterPile::DrawEngine::Gnuplot, 12);*/
 	//#endif
 
-	int ind = curr_area.channels.get_order_index_by_index(0);
-	if (ind >= 0) {
+	curr_area.channels.reset();
+	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()){
+		int ind = curr_area.channels.get_order_index_by_index(ch);
+		if ((ind < 0)||(ch>=32)||(2==ch))
+			continue;
+		_result.pmt_peaks.push_back(STD_CONT<peak>());
+		_result.pmt_channels.push_back(ch);
 #ifdef _USE_TIME_STATISTICS
 		auto PMT_baseline_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 		STD_CONT<peak> ppeaks;
 		double threshold = 0;
-		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, found_base_lines[ind], ppeaks, 0);
+		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, found_base_lines[ind], ppeaks, ch);
 
 #ifdef _USE_TIME_STATISTICS
 		auto PMT_baseline_end_timer = std::chrono::high_resolution_clock::now();
 		all_runs_results->time_stat.n_PMT_baseline++;
 		all_runs_results->time_stat.t_PMT_baseline +=
 			std::chrono::duration_cast<std::chrono::nanoseconds>(PMT_baseline_end_timer - PMT_baseline_start_timer).count();
-#endif
-#ifdef _USE_TIME_STATISTICS
 		auto PMT_peaks_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 
-		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.PMT3_peaks, found_base_lines[ind],
+		//instead of find_peaks_fine(xs[ind],ys[ind]...) I need to split peaks at S2 start time for correct S2 selection.
+		DVECTOR xs_S2 = xs_channels[ind], ys_S2 = ys_channels[ind];
+		double tempt = ParameterPile::S2_start_time.find(curr_area.experiments.back())->second;
+		SignalOperations::apply_time_limits(xs_S2,ys_S2,tempt,xs_S2.back());
+		DVECTOR xs_bef_S2 = xs_channels[ind], ys_bef_S2 = ys_channels[ind];
+		SignalOperations::apply_time_limits(xs_bef_S2,ys_bef_S2, *(xs_S2.begin()), ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second);
+
+		SignalOperations::find_peaks_fine(xs_bef_S2, ys_bef_S2, _result.pmt_peaks.back(), found_base_lines[ind],
 			threshold,found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
-		double S_sum = 0;
-		for (auto i = _result.PMT3_peaks.begin(), _end_ = _result.PMT3_peaks.end(); i != _end_; ++i)
-			if ((i->left > ParameterPile::S2_start_time.find(curr_area.experiments.back())->second)&&(i->right < ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second)){
-				S_sum += i->S >0 ? i->S : 0;
-				++_result.PMT3_n_peaks;
-			}
-		_result.PMT3_summed_peaks_area = S_sum;
-		PMT3_summed_peaks_area = S_sum;
-		PMT3_n_peaks = _result.PMT3_n_peaks;
+		STD_CONT<peak> peaks;
+		SignalOperations::find_peaks_fine(xs_S2, ys_S2, peaks, found_base_lines[ind],
+					threshold,found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
+
+		_result.pmt_peaks.back().insert(_result.pmt_peaks.back().end(), peaks.begin(), peaks.end());
+
+		if (0==ch){
+			double S_sum = 0;
+			for (auto i = _result.pmt_peaks.back().begin(), _end_ = _result.pmt_peaks.back().end(); i != _end_; ++i)
+				if ((i->left >= ParameterPile::S2_start_time.find(curr_area.experiments.back())->second)&&(i->right <= ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second)){
+					S_sum += i->S >0 ? i->S : 0;
+					++_result.PMT3_n_peaks;
+				}
+			_result.PMT3_summed_peaks_area = S_sum;
+			PMT3_summed_peaks_area = S_sum;
+			PMT3_n_peaks = _result.PMT3_n_peaks;
+		}
 		//=========================================================================
 		ParameterPile::experiment_area area = curr_area.to_point();
 		area.channels.erase();
-		area.channels.push_back(0);
+		area.channels.push_back(ch);
 		std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
-			"\\_ch" + std::to_string(0) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
+			"\\_ch" + std::to_string(ch) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
 		if (ParameterPile::draw_required(area)) {
 			std::string plot_name = "";
 			plot_name += curr_area.experiments.back() + "_";
-			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(0) + "_sub" + std::to_string(area.sub_runs.back());
-			Drawing *dr = graph_manager.GetDrawing(plot_name, 0, ParameterPile::DrawEngine::Gnuplot);
+			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(ch) + "_sub" + std::to_string(area.sub_runs.back());
+			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, ParameterPile::DrawEngine::Gnuplot);
 			if (NULL != dr) {
 				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered" + plot_title, "with points pt 1", 0);
 				dr->AddToDraw_baseline(threshold, "threshold");
@@ -318,52 +391,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 		all_runs_results->time_stat.t_PMT_peaks +=
 			std::chrono::duration_cast<std::chrono::nanoseconds>(PMT_peaks_end_timer - PMT_peaks_start_timer).count();
 #endif
-	}
-	ind = curr_area.channels.get_order_index_by_index(1);
-	if (ind >= 0) {
-#ifdef _USE_TIME_STATISTICS
-		auto PMT_baseline_start_timer = std::chrono::high_resolution_clock::now();
-#endif
-		STD_CONT<peak> ppeaks;
-		double threshold = 0;
-		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, found_base_lines[ind], ppeaks, 1);
 
-
-#ifdef _USE_TIME_STATISTICS
-		auto PMT_baseline_end_timer = std::chrono::high_resolution_clock::now();
-		all_runs_results->time_stat.n_PMT_baseline++;
-		all_runs_results->time_stat.t_PMT_baseline +=
-			std::chrono::duration_cast<std::chrono::nanoseconds>(PMT_baseline_end_timer - PMT_baseline_start_timer).count();
-#endif
-#ifdef _USE_TIME_STATISTICS
-		auto PMT_peaks_start_timer = std::chrono::high_resolution_clock::now();
-#endif
-
-		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.PMT1_peaks, found_base_lines[ind],
-			threshold, found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
-		//=========================================================================
-		ParameterPile::experiment_area area = curr_area.to_point();
-		area.channels.erase();
-		area.channels.push_back(1);
-		std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
-			"\\_ch" + std::to_string(1) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
-		if (ParameterPile::draw_required(area)) {
-			std::string plot_name = "";
-			plot_name += curr_area.experiments.back() + "_";
-			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(1) + "_sub" + std::to_string(area.sub_runs.back());
-			Drawing *dr = graph_manager.GetDrawing(plot_name, 1, ParameterPile::DrawEngine::Gnuplot);
-			if (NULL != dr) {
-				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered" + plot_title, "with points pt 1", 0);
-				dr->AddToDraw_baseline(threshold, "threshold");
-				dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
-			}
-		}
-#ifdef _USE_TIME_STATISTICS
-		auto PMT_peaks_end_timer = std::chrono::high_resolution_clock::now();
-		all_runs_results->time_stat.n_PMT_peaks++;
-		all_runs_results->time_stat.t_PMT_peaks +=
-			std::chrono::duration_cast<std::chrono::nanoseconds>(PMT_peaks_end_timer - PMT_peaks_start_timer).count();
-#endif
 	}
 	PMT_peaks_analysed = true;
 
@@ -397,13 +425,6 @@ void SingleRunData::calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &y
 	baseline = (0==channel) ? SignalOperations::find_baseline_by_integral(baseline, xs, ys)
 		: SignalOperations::find_baseline_by_median(baseline, xs, ys);
 	//calculate first-order baseline
-
-	//the old method for calculating threshold (fails when there is large noise/peaks before S1)
-	//DITERATOR x_max_noise;
-	//SignalOperations::get_max(xs_before_S1, ys_before_S1, x_max_noise, noise_amp, ParameterPile::PMT_N_of_averaging);
-	//noise_amp -= PMT_baseline;
-	//threshold = noise_amp*ParameterPile::PMT_run_acceptance_threshold_to_noize;
-
 	double noise_amp;
 	noise_amp = SignalOperations::RMS(ys_before_S1.begin(), ys_before_S1.end());
 	/*approx*/threshold = noise_amp*ParameterPile::PMT_run_acceptance_threshold_to_noize;
@@ -419,17 +440,13 @@ void SingleRunData::calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &y
 		}
 		/*exact*/threshold = exact_noise*ParameterPile::PMT_run_acceptance_threshold_to_noize;
 	}
-	if (0 == channel){
-		if (threshold < ParameterPile::PMT_minimum_thresh)
-			threshold = ParameterPile::PMT_minimum_thresh;
-		if (threshold > ParameterPile::PMT_maximum_thresh)
-			threshold = ParameterPile::PMT_maximum_thresh;
-	}
-	else {
-		if (threshold < ParameterPile::PMT1_minimum_thresh)
-			threshold = ParameterPile::PMT1_minimum_thresh;
-		if (threshold > ParameterPile::PMT1_maximum_thresh)
-			threshold = ParameterPile::PMT1_maximum_thresh;
+	bool valid_limits=(ParameterPile::PMT_maximum_thresh.find(channel)!=ParameterPile::PMT_maximum_thresh.end());
+	valid_limits=valid_limits&&(ParameterPile::PMT_minimum_thresh.find(channel)!=ParameterPile::PMT_minimum_thresh.end());
+	if (valid_limits){
+		if (threshold < ParameterPile::PMT_minimum_thresh.find(channel)->second)
+			threshold = ParameterPile::PMT_minimum_thresh.find(channel)->second;
+		if (threshold > ParameterPile::PMT_maximum_thresh.find(channel)->second)
+			threshold = ParameterPile::PMT_maximum_thresh.find(channel)->second;
 	}
 	threshold += baseline;
 }

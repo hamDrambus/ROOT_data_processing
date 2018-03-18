@@ -20,6 +20,7 @@ protected:
 	DVECTOR xs_GEM;
 	DVECTOR ys_GEM;
 	STD_CONT<STD_CONT<peak>> mppc_peaks; //only for mppc channels
+	STD_CONT<STD_CONT<peak>> pmt_peaks; //only for pmt channels
 	STD_CONT<DVECTOR> mppc_baseline_xs;
 	STD_CONT<DVECTOR> mppc_baseline_ys;
 	DVECTOR mppc_S2_peaks_area;
@@ -27,13 +28,16 @@ protected:
 	DVECTOR mppc_S2_finish_t;
 	//DVECTOR mppc_sum_peaks_area;
 	DVECTOR mppc_double_I;
+
 	STD_CONT<int> mppc_channels;
+	STD_CONT<int> pmt_channels;
 
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
-	STD_CONT<peak> PMT3_peaks;
-	STD_CONT<peak> PMT1_peaks;
+	//STD_CONT<peak> PMT3_peaks;
+	//STD_CONT<peak> PMT1_peaks;
 
+	//TODO: combine averaging xs ys for PMTs and gems to a signle DVECTOR<DVECTOR> to_average; STD_CONT<int> channels_to_average;
 	DVECTOR xs_PMT3;
 	DVECTOR ys_PMT3;
 	DVECTOR xs_PMT1;

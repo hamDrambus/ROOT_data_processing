@@ -53,7 +53,7 @@ void MTAnalysisManager::processAllRuns(void)
 	ParameterPile::experiment_area actual_area = refine_exp_area(current_under_processing);
 	STD_CONT<ParameterPile::experiment_area> areas = split_exp_area(actual_area, ParameterPile::threads_number);
 	all_runs_results.push_back(AllRunsResults(actual_area));
-	for (int n =0;n<ParameterPile::threads_number; ++n) {
+	for (int n =0;n<areas.size(); ++n) {
 		mutexes.push_back(new TMutex());
 		conditions.push_back(new TCondition(mutexes[n]));
 		thread_mutexes.push_back (new TMutex());
@@ -65,14 +65,14 @@ void MTAnalysisManager::processAllRuns(void)
 	}
 
 	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N) {
-		for (int n = 0; n < ParameterPile::threads_number; ++n) {
+		for (int n = 0; n < areas.size(); ++n) {
 			_submanagers[n]->setAllRunsResults(&all_runs_results.back());
 			pThreads[n]->Run(); //if it is the last iteration, submanager (AnalysisManager) clears its data
 		}
 		//TThread::Ps();
 		all_runs_results.back().Clear();
-		for (int n = 0; n<ParameterPile::threads_number; ++n) {
-			if (0 != thread_mutexes[n]->TryLock()){ //thread is already executed, so no wait required
+		for (int n = 0; n<areas.size(); ++n) {
+			if (0 != thread_mutexes[n]->TryLock()) { //thread is already executed, so no wait required
 			} else {
 				conditions[n]->Wait();
 			}
@@ -84,7 +84,7 @@ void MTAnalysisManager::processAllRuns(void)
 		all_runs_results.back().Merged();
 	}
 	
-	for (int n = 0; n<ParameterPile::threads_number; ++n){
+	for (int n = 0; n<areas.size(); ++n) {
 		pThreads[n]->Delete();
 		delete _submanagers[n];
 		conditions[n]->Delete();
@@ -116,7 +116,7 @@ STD_CONT<ParameterPile::experiment_area> MTAnalysisManager::split_exp_area(Param
 {
 	STD_CONT <ParameterPile::experiment_area> out_;
 	STD_CONT<ParameterPile::area_vector> Runs = area_to_split.runs.split_area(N);
-	for (int h = 0; h < N; h++){
+	for (int h = 0; h < Runs.size(); h++){
 		out_.push_back(area_to_split);
 		out_[h].runs = Runs[h];
 	}

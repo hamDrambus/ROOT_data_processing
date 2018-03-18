@@ -78,8 +78,6 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 			++N_of_valid_runs;
 			_Ss.push_back(i->PMT3_summed_peaks_area);
 			_ns.push_back(i->PMT3_n_peaks);
-			PMT3_peaks.push_back(i->PMT3_peaks);
-			PMT1_peaks.push_back(i->PMT1_peaks);
 			if (_xs_PMT3_sum.empty()){
 				_xs_PMT3_sum = i->xs_PMT3;
 				_ys_PMT3_sum = i->ys_PMT3;
@@ -149,14 +147,33 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 					mppc_all_peaks_Ss[ch].push_back(peaks->S);
 				}*/
 			}
+
+			first = false;
+			valid = true;
+			if (pmt_peaks.empty())
+				first = true;
+			if (pmt_peaks.size() != pmt_channels.size())
+				valid = false;
+			if (i->pmt_peaks.size() != i->pmt_channels.size())
+				valid = false;
+			if (!valid) {
+				std::cout << "SingleRunResulst PMT channels size mismatch" << std::endl;
+				continue;
+			}
+			sz = i->pmt_channels.size();
+			if (first){
+				pmt_peaks.resize(sz, STD_CONT<STD_CONT<peak>>());
+				pmt_channels = i->pmt_channels;
+			}
+			for (int ch = 0; ch != sz; ++ch)
+				pmt_peaks[ch].push_back(i->pmt_peaks[ch]);
 		}
-#ifdef _HOTFIX_CLEAR_MEMORY
 		STD_CONT<DVECTOR>().swap(i->mppc_baseline_xs);
 		STD_CONT<DVECTOR>().swap(i->mppc_baseline_ys);
 		STD_CONT<int>().swap(i->mppc_channels);
+		STD_CONT<int>().swap(i->pmt_channels);
 		STD_CONT<STD_CONT<peak>>().swap(i->mppc_peaks);
-		STD_CONT<peak>().swap(i->PMT3_peaks);
-		STD_CONT<peak>().swap(i->PMT1_peaks);
+		STD_CONT<STD_CONT<peak>>().swap(i->pmt_peaks);
 		DVECTOR().swap(i->mppc_S2_finish_t);
 		DVECTOR().swap(i->mppc_S2_peaks_area);
 		DVECTOR().swap(i->mppc_S2_start_t);
@@ -164,21 +181,7 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 		DVECTOR().swap(i->mppc_double_I);
 		DVECTOR().swap(i->xs_GEM);
 		DVECTOR().swap(i->ys_GEM);
-#else
-		i->mppc_baseline_xs.clear();
-		i->mppc_baseline_ys.clear();
-		i->mppc_channels.clear();
-		i->mppc_peaks.clear();
-		i->mppc_S2_finish_t.clear();
-		i->mppc_S2_peaks_area.clear();
-		i->mppc_S2_start_t.clear();
-		//i->mppc_sum_peaks_area.clear();
-		i->mppc_double_I.clear();
-		i->xs_GEM.clear();
-		i->ys_GEM.clear();
-#endif
 	}
-	
 }
 
 void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man)
@@ -319,8 +322,28 @@ void AllRunsResults::Merge(AllRunsResults* with)
 	if (0 == Iteration_N) {
 		_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
 		_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
-		PMT1_peaks.insert(PMT1_peaks.end(), with->PMT1_peaks.begin(), with->PMT1_peaks.end());
-		PMT3_peaks.insert(PMT3_peaks.end(), with->PMT3_peaks.begin(), with->PMT3_peaks.end());
+		bool empty = false, valid = true;
+		if (pmt_peaks.empty())
+			empty = true;
+		if (pmt_channels.size() != pmt_peaks.size())
+			valid = false;
+		if (with->pmt_peaks.size() != with->pmt_channels.size())
+			valid = false;
+		if (!valid) {
+			std::cout << "AllRunsResults contains invalid PMT data: channels' size mismatches" << std::endl;
+			return;
+		}
+		if (!empty && (pmt_channels.size() != with->pmt_channels.size())){
+			std::cout << "WARNING Two AllRunsResults have PMT channels' size mismatches: not Merging" << std::endl;
+			return;
+		}
+		if (empty) {
+			pmt_channels = with->pmt_channels;
+			pmt_peaks = with->pmt_peaks;
+		} else {
+			for (int ch = 0; ch < pmt_channels.size(); ++ch)
+				pmt_peaks[ch].insert(pmt_peaks[ch].end(), with->pmt_peaks[ch].begin(), with->pmt_peaks[ch].end());
+		}
 	}
 	N_peaks_cutoff = with->N_peaks_cutoff;
 	S_peaks_cutoff = with->S_peaks_cutoff;
@@ -456,107 +479,102 @@ void AllRunsResults::Merged(void)
 	std::cout << "N of valid runs " << N_of_valid_runs << std::endl;
 	if (!_Ss.empty() && (0==Iteration_N)) {//_xs_GEM is empty at the first run
 		find_S_cutoff();
+		for (int ch=0;ch<pmt_channels.size();++ch){
+			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "/" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
+						+ "/" + "PMT_" + std::to_string(pmt_channels[ch]) + "/" + "PMT_" + std::to_string(pmt_channels[ch]) +"_";
+			if (ParameterPile::exp_area.channels.contains(pmt_channels[ch]))
+				vector_to_file(pmt_peaks[ch], PMT_output_prefix + "peaks.dat");
+			if (ParameterPile::exp_area.channels.contains(0)&&(0==pmt_channels[ch])){
+				DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
+				double hist_S2_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S2_max) : *S2_max;
+				TH1D *hist_S2 = new TH1D("3PMT_S2_peaks", "3PMT_S2_peaks", 60, 0, hist_S2_max);
 
-		std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "/" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
-			+ "/" + "PMT_0" + "/" + "PMT_0_";
-		std::string PMT1_output_prefix = std::string(ParameterPile::this_path) + "/" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
-			+ "/" + "PMT_1" + "/" + "PMT_1_";
-		vector_to_file(_Ss, PMT_output_prefix + "S2s.dat");
-		if (ParameterPile::exp_area.channels.contains(0))
-			vector_to_file(PMT3_peaks, PMT_output_prefix + "peaks.dat");
-		if (ParameterPile::exp_area.channels.contains(1))
-			vector_to_file(PMT1_peaks, PMT1_output_prefix + "peaks.dat");
-
-		if (ParameterPile::exp_area.channels.contains(0)){
-			DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
-			double hist_S2_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S2_max) : *S2_max;
-			TH1D *hist_S2 = new TH1D("3PMT_S2_peaks", "3PMT_S2_peaks", 60, 0, hist_S2_max);
-
-			for (int _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n){
-				if ((S_peaks_max_cutoff > S_peaks_cutoff) && (_Ss[_s] > S_peaks_max_cutoff))
-					continue; //do not draw if maximum limit is imposed && element exceeds it
-				hist_S2->Fill(_Ss[_s]);
-			}
-
-			TCanvas *c1 = new TCanvas(("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str(),
-				("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str());
-			c1->cd();
-			hist_S2->Draw();
-			TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
-			cutoff->SetLineColor(kRed);
-			cutoff->Draw();
-			c1->Update();
-			c1->SaveAs((PMT_output_prefix+"S2s.png").c_str(),"png");
-
-			double S_tot_max =0;
-			for (auto i= PMT3_peaks.begin(),_end_=PMT3_peaks.end();i!=_end_;++i){
-				double val=0;
-				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
-					val+= j->S > 0 ? j->S : 0;
-				S_tot_max = std::max(S_tot_max,val);
-			}
-			TH1D *hist_S_tot = new TH1D("3PMT_S_tot_peaks", "3PMT_S_tot_peaks", 60, 0, S_tot_max);
-
-			for (auto i= PMT3_peaks.begin(),_end_=PMT3_peaks.end();i!=_end_;++i){
-				double val=0;
-				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
-					val+= j->S > 0 ? j->S : 0;
-				hist_S_tot->Fill(val);
-			}
-			TCanvas *c2 = new TCanvas(("3PMT_S_total_peaks_distribution " + _exp.experiments.back()).c_str(),
-				("3PMT_S_total_peaks_distribution " + _exp.experiments.back()).c_str());
-			c2->cd();
-			hist_S_tot->Draw();
-			c2->Update();
-			c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
-		}
-		if (ParameterPile::exp_area.channels.contains(1)){
-			double S2_max =0;
-			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
-				double val=0;
-				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
-					if ((j->left>ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
-						val+= j->S > 0 ? j->S : 0;
+				for (int _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n){
+					if ((S_peaks_max_cutoff > S_peaks_cutoff) && (_Ss[_s] > S_peaks_max_cutoff))
+						continue; //do not draw if maximum limit is imposed && element exceeds it
+					hist_S2->Fill(_Ss[_s]);
 				}
-				S2_max = std::max(S2_max,val);
-			}
-			TH1D *hist_S2 = new TH1D("PMT#1_S_tot_peaks", "PMT#1_S2_tot_peaks", 60, 0, S2_max);
-			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
-				double val=0;
-				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
-					if ((j->left>ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+
+				TCanvas *c1 = new TCanvas(("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str(),
+					("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str());
+				c1->cd();
+				hist_S2->Draw();
+				TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
+				cutoff->SetLineColor(kRed);
+				cutoff->Draw();
+				c1->Update();
+				c1->SaveAs((PMT_output_prefix+"S2s.png").c_str(),"png");
+
+				double S_tot_max =0;
+				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
+					double val=0;
+					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
 						val+= j->S > 0 ? j->S : 0;
+					S_tot_max = std::max(S_tot_max,val);
 				}
-				hist_S2->Fill(val);
-			}
-			TCanvas *c1 = new TCanvas(("PMT#1_S2_peaks_distribution " + _exp.experiments.back()).c_str(),
-				("PMT#1_S2_peaks_distribution " + _exp.experiments.back()).c_str());
-			c1->cd();
-			hist_S2->Draw();
-			c1->Update();
-			c1->SaveAs((PMT1_output_prefix+"S2.png").c_str(),"png");
+				TH1D *hist_S_tot = new TH1D("3PMT_S_tot_peaks", "3PMT_S_tot_peaks", 60, 0, S_tot_max);
 
-			double S_tot_max =0;
-			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
-				double val=0;
-				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
-					val+= j->S > 0 ? j->S : 0;
-				S_tot_max = std::max(S_tot_max,val);
+				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
+					double val=0;
+					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+						val+= j->S > 0 ? j->S : 0;
+					hist_S_tot->Fill(val);
+				}
+				TCanvas *c2 = new TCanvas(("3PMT_S_total_peaks_distribution " + _exp.experiments.back()).c_str(),
+					("3PMT_S_total_peaks_distribution " + _exp.experiments.back()).c_str());
+				c2->cd();
+				hist_S_tot->Draw();
+				c2->Update();
+				c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
 			}
-			TH1D *hist_S_tot = new TH1D("PMT#1_S_tot_peaks", "PMT#1_S_tot_peaks", 60, 0, S_tot_max);
+			if (ParameterPile::exp_area.channels.contains(1)&&1==pmt_channels[ch]){
+				double S2_max =0;
+				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
+					double val=0;
+					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
+						if ((j->left>=ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<=ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+							val+= j->S > 0 ? j->S : 0;
+					}
+					S2_max = std::max(S2_max,val);
+				}
+				TH1D *hist_S2 = new TH1D("PMT#1_S_tot_peaks", "PMT#1_S2_tot_peaks", 60, 0, S2_max);
+				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
+					double val=0;
+					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
+						if ((j->left>=ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<=ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+							val+= j->S > 0 ? j->S : 0;
+					}
+					hist_S2->Fill(val);
+				}
+				TCanvas *c1 = new TCanvas(("PMT#1_S2_peaks_distribution " + _exp.experiments.back()).c_str(),
+					("PMT#1_S2_peaks_distribution " + _exp.experiments.back()).c_str());
+				c1->cd();
+				hist_S2->Draw();
+				c1->Update();
+				c1->SaveAs((PMT_output_prefix+"S2.png").c_str(),"png");
 
-			for (auto i= PMT1_peaks.begin(),_end_=PMT1_peaks.end();i!=_end_;++i){
-				double val=0;
-				for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
-					val+= j->S > 0 ? j->S : 0;
-				hist_S_tot->Fill(val);
+				double S_tot_max = 0;
+				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
+					double val=0;
+					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+						val+= j->S > 0 ? j->S : 0;
+					S_tot_max = std::max(S_tot_max,val);
+				}
+				TH1D *hist_S_tot = new TH1D("PMT#1_S_tot_peaks", "PMT#1_S_tot_peaks", 60, 0, S_tot_max);
+
+				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
+					double val=0;
+					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j)
+						val+= j->S > 0 ? j->S : 0;
+					hist_S_tot->Fill(val);
+				}
+				TCanvas *c2 = new TCanvas(("PMT#1_S_total_peaks_distribution " + _exp.experiments.back()).c_str(),
+					("PMT#1_S_total_peaks_distribution " + _exp.experiments.back()).c_str());
+				c2->cd();
+				hist_S_tot->Draw();
+				c2->Update();
+				c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
 			}
-			TCanvas *c2 = new TCanvas(("PMT#1_S_total_peaks_distribution " + _exp.experiments.back()).c_str(),
-				("PMT#1_S_total_peaks_distribution " + _exp.experiments.back()).c_str());
-			c2->cd();
-			hist_S_tot->Draw();
-			c2->Update();
-			c2->SaveAs((PMT1_output_prefix+"S_tot.png").c_str(),"png");
 		}
 	}
 #ifdef _PROCESS_GEMS

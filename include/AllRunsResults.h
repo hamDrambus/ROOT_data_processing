@@ -95,9 +95,9 @@ protected:
 	//STD_CONT<DVECTOR> mppc_all_peaks_Ss; //size == mppc channels (depends on experiment area) //depr: now using mppc_peaks
 	STD_CONT<DVECTOR> mppc_double_Is; //size == mppc channels (depends on experiment area)
 	STD_CONT<int> mppc_channels;
-	STD_CONT<STD_CONT<STD_CONT<peak>>> mppc_peaks; //[channel][run#][peaks]. The number of runs must be equal to the size of DVECTOR above.
-	STD_CONT<STD_CONT<peak>> PMT3_peaks; //[run#][peaks]
-	STD_CONT<STD_CONT<peak>> PMT1_peaks; //[run#][peaks]
+	STD_CONT<int> pmt_channels;
+	STD_CONT<STD_CONT<STD_CONT<peak> > > mppc_peaks; //[channel][run#][peaks]. The number of runs must be equal to the size of DVECTOR above.
+	STD_CONT<STD_CONT<STD_CONT<peak> > > pmt_peaks;	//[channel][run#][peaks]
 
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff

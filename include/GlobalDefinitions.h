@@ -21,6 +21,7 @@
 
 #include <TThread.h>
 #include <TApplication.h>
+#include <TVirtualFFT.h>
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TVector.h>

@@ -10,6 +10,7 @@
 class AnalysisManager;
 class AllRunsResults;
 class SingleRunResults;
+class TVirtualFFT;
 
 class SingleRunData
 {

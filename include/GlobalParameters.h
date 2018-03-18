@@ -37,9 +37,9 @@ namespace ParameterPile
 	extern int filter_MPPC_n_points;
 	extern int filter_MPPC_order;
 	extern int filter_MPPC_n_iterations;
-	extern int filter_PMT_n_points;
-	extern int filter_PMT_order;
-	extern int filter_PMT_n_iterations;
+	extern std::map<int,int> filter_PMT_n_points;
+	extern std::map<int,int> filter_PMT_order;
+	extern std::map<int,int> filter_PMT_n_iterations;
 
 	//all times below are approximate
 	extern double S1_start_time; //in ms
@@ -51,10 +51,8 @@ namespace ParameterPile
 	extern int GEM_N_of_averaging; //=== N_trust
 
 	extern double PMT_run_acceptance_threshold_to_noize;
-	extern double PMT_maximum_thresh;
-	extern double PMT_minimum_thresh;
-	extern double PMT1_minimum_thresh;
-	extern double PMT1_maximum_thresh;
+	extern std::map<int,double> PMT_maximum_thresh;
+	extern std::map<int,double> PMT_minimum_thresh;
 	extern int PMT_N_of_averaging; //=== N_trust
 	extern int PMT_N_peaks_acceptance;
 	extern double PMT_SArea_peaks_acceptance; //V*ms
