@@ -164,9 +164,17 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 			if (first){
 				pmt_peaks.resize(sz, STD_CONT<STD_CONT<peak>>());
 				pmt_channels = i->pmt_channels;
+				pmt_S2_integral.resize(sz, DVECTOR());
+#ifndef _USE_DEQUE
+				for (int ch = 0; ch != sz; ++ch) {
+					pmt_S2_integral[ch].reserve(__N_of_runs);
+				}
+#endif
 			}
-			for (int ch = 0; ch != sz; ++ch)
+			for (int ch = 0; ch != sz; ++ch){
 				pmt_peaks[ch].push_back(i->pmt_peaks[ch]);
+				pmt_S2_integral[ch].push_back(i->PMT_S2_integral[ch]);
+			}
 		}
 		STD_CONT<DVECTOR>().swap(i->mppc_baseline_xs);
 		STD_CONT<DVECTOR>().swap(i->mppc_baseline_ys);
@@ -181,6 +189,11 @@ void AllRunsResults::processAllRuns(STD_CONT<SingleRunResults> &single_results)
 		DVECTOR().swap(i->mppc_double_I);
 		DVECTOR().swap(i->xs_GEM);
 		DVECTOR().swap(i->ys_GEM);
+		DVECTOR().swap(i->xs_PMT1);
+		DVECTOR().swap(i->ys_PMT1);
+		DVECTOR().swap(i->xs_PMT3);
+		DVECTOR().swap(i->ys_PMT3);
+		DVECTOR().swap(i->PMT_S2_integral);
 	}
 }
 
@@ -340,9 +353,12 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		if (empty) {
 			pmt_channels = with->pmt_channels;
 			pmt_peaks = with->pmt_peaks;
+			pmt_S2_integral = with->pmt_S2_integral;
 		} else {
-			for (int ch = 0; ch < pmt_channels.size(); ++ch)
+			for (int ch = 0; ch < pmt_channels.size(); ++ch){
 				pmt_peaks[ch].insert(pmt_peaks[ch].end(), with->pmt_peaks[ch].begin(), with->pmt_peaks[ch].end());
+				pmt_S2_integral[ch].insert(pmt_S2_integral[ch].end(), with->pmt_S2_integral[ch].begin(), with->pmt_S2_integral[ch].end());
+			}
 		}
 	}
 	N_peaks_cutoff = with->N_peaks_cutoff;
@@ -479,12 +495,14 @@ void AllRunsResults::Merged(void)
 	std::cout << "N of valid runs " << N_of_valid_runs << std::endl;
 	if (!_Ss.empty() && (0==Iteration_N)) {//_xs_GEM is empty at the first run
 		find_S_cutoff();
-		for (int ch=0;ch<pmt_channels.size();++ch){
+		for (int ch=0;ch<pmt_channels.size();++ch) {
 			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + "/" + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
 						+ "/" + "PMT_" + std::to_string(pmt_channels[ch]) + "/" + "PMT_" + std::to_string(pmt_channels[ch]) +"_";
-			if (ParameterPile::exp_area.channels.contains(pmt_channels[ch]))
+			//if (ParameterPile::exp_area.channels.contains(pmt_channels[ch])){ TODO: check it is in area to draw
 				vector_to_file(pmt_peaks[ch], PMT_output_prefix + "peaks.dat");
-			if (ParameterPile::exp_area.channels.contains(0)&&(0==pmt_channels[ch])){
+				vector_to_file(pmt_S2_integral[ch], PMT_output_prefix + "S2_int.dat");
+			//}
+			if (/*ParameterPile::exp_area.channels.contains(0)&&*/(0==pmt_channels[ch])){
 				DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
 				double hist_S2_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S2_max) : *S2_max;
 				TH1D *hist_S2 = new TH1D("3PMT_S2_peaks", "3PMT_S2_peaks", 60, 0, hist_S2_max);
@@ -527,12 +545,12 @@ void AllRunsResults::Merged(void)
 				c2->Update();
 				c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
 			}
-			if (ParameterPile::exp_area.channels.contains(1)&&1==pmt_channels[ch]){
+			if (/*ParameterPile::exp_area.channels.contains(1)&&*/1==pmt_channels[ch]){
 				double S2_max =0;
 				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
 					double val=0;
 					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
-						if ((j->left>=ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<=ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+						if ((j->t>=ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->t<=ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
 							val+= j->S > 0 ? j->S : 0;
 					}
 					S2_max = std::max(S2_max,val);
@@ -541,7 +559,7 @@ void AllRunsResults::Merged(void)
 				for (auto i= pmt_peaks[ch].begin(),_end_=pmt_peaks[ch].end();i!=_end_;++i){
 					double val=0;
 					for (auto j= i->begin(),_end1_=i->end();j!=_end1_;++j){
-						if ((j->left>=ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->right<=ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
+						if ((j->t>=ParameterPile::S2_start_time.find(_exp.experiments.back())->second)&&(j->t<=ParameterPile::S2_finish_time.find(_exp.experiments.back())->second))
 							val+= j->S > 0 ? j->S : 0;
 					}
 					hist_S2->Fill(val);
@@ -864,6 +882,7 @@ void AllRunsResults::vector_to_file(STD_CONT<STD_CONT<peak>> &pks, std::string f
 			str.write((char*)&pp->right, sizeof(double));
 			str.write((char*)&pp->S, sizeof(double));
 			str.write((char*)&pp->A,sizeof(double));
+			str.write((char*)&pp->t,sizeof(double));
 		}
 	}
 	str.close();

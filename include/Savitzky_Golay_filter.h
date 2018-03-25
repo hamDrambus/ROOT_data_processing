@@ -25,8 +25,7 @@ public:
 	int getNIter(void) const;
 	void getPars(int &n_points, int &order, int &n_iterations) const;
 
-	void operator ()(DVECTOR &xs_in, DVECTOR &ys_in,
-		DVECTOR &xs_out, DVECTOR &ys_out) const;
+	void operator ()(DVECTOR &xs_in_out, DVECTOR &ys_in_out) const;
 };
 
 #endif

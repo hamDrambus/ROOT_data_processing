@@ -1,4 +1,4 @@
-#ifndef PEAK_INFO_H
+/*#ifndef PEAK_INFO_H
 #define PEAK_INFO_H
 
 #include <vector>
@@ -15,3 +15,4 @@ public:
 };
 
 #endif
+*/

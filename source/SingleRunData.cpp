@@ -32,7 +32,7 @@ void SingleRunData::readOneRun(SingleRunResults &_result)
 		xs_channels.push_back(DVECTOR());
 		ys_channels.push_back(DVECTOR());
 #ifdef _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
-		if (ch >= 32 && ch <= 63){
+		if ((ch >= 32 && ch <= 63)||(2==ch)){
 			//empty_run = false;
 			continue;
 		}
@@ -71,13 +71,8 @@ void SingleRunData::clearOneRunMPPCs(int channel)
 	int ind = curr_area.channels.get_order_index_by_index(channel);
 	if (ind < 0)
 		return;
-#ifdef _HOTFIX_CLEAR_MEMORY
 	DVECTOR().swap(xs_channels[ind]);
 	DVECTOR().swap(ys_channels[ind]);
-#else
-	xs_channels[ind].clear();
-	ys_channels[ind].clear();
-#endif
 }
 #endif //_HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 
@@ -117,7 +112,7 @@ void SingleRunData::file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, 
 			val = DATA_VOLTAGE_AMPLITUDE*(val / DATA_VOLTAGE_CHANNELS) + DATA_VOLTAGE_OF_ZERO_CHANNEL;
 			xs.push_back(read_N*DATA_TIME_CONSTANT);
 			ys.push_back(val);
-			read_N++;
+			++read_N;
 		}
 	}
 	file.close();
@@ -218,11 +213,6 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 	auto PMT_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 	SingleRunResults _result(this);
-//#ifdef _TEMP_CODE
-//	_result._current_status = SingleRunResults::Status::Ok;
-//	_result.setValid(true);
-//	return _result;
-//#endif
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_read_file_start_timer = std::chrono::high_resolution_clock::now();
 #endif
@@ -238,14 +228,16 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 	all_runs_results->time_stat.t_PMT_file_reading +=
 		std::chrono::duration_cast<std::chrono::nanoseconds>(PMT_read_file_end_timer - PMT_read_file_start_timer).count();
 #endif
-	//#ifndef _TEMP_CODE
+
 	add_draw_data("PMT_raw" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
 		std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(8), graph_manager, ParameterPile::DrawEngine::Gnuplot, 8);
 	add_draw_data("PMT_raw" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back()) + "\\_sub" +
 			std::to_string(curr_area.sub_runs.back()) + "\\_ch" + std::to_string(12), graph_manager, ParameterPile::DrawEngine::Gnuplot, 12);
-	//#endif
-	if (!_result.isValid())
+
+	if (!_result.isValid()){
+		runProcessedProc();
 		return _result;
+	}
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_filter_start_timer = std::chrono::high_resolution_clock::now();
 #endif
@@ -261,10 +253,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 			continue;
 		SavitzkyGolayFilter SGfilter(ParameterPile::filter_PMT_n_points.find(ch)->second, ParameterPile::filter_PMT_order.find(ch)->second,
 				ParameterPile::filter_PMT_n_iterations.find(ch)->second);
-		DVECTOR xs, ys;
-		SGfilter(xs_channels[ind], ys_channels[ind], xs, ys);
-		xs_channels[ind] = xs;
-		ys_channels[ind] = ys;
+		SGfilter(xs_channels[ind], ys_channels[ind]);
 		/*if (8==ch){
 			int sz = ys_channels[ind].size();
 			double *in_p = new double [sz];
@@ -327,6 +316,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 			continue;
 		_result.pmt_peaks.push_back(STD_CONT<peak>());
 		_result.pmt_channels.push_back(ch);
+		_result.PMT_S2_integral.push_back(-1);
 #ifdef _USE_TIME_STATISTICS
 		auto PMT_baseline_start_timer = std::chrono::high_resolution_clock::now();
 #endif
@@ -342,25 +332,13 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 		auto PMT_peaks_start_timer = std::chrono::high_resolution_clock::now();
 #endif
 
-		//instead of find_peaks_fine(xs[ind],ys[ind]...) I need to split peaks at S2 start time for correct S2 selection.
-		DVECTOR xs_S2 = xs_channels[ind], ys_S2 = ys_channels[ind];
-		double tempt = ParameterPile::S2_start_time.find(curr_area.experiments.back())->second;
-		SignalOperations::apply_time_limits(xs_S2,ys_S2,tempt,xs_S2.back());
-		DVECTOR xs_bef_S2 = xs_channels[ind], ys_bef_S2 = ys_channels[ind];
-		SignalOperations::apply_time_limits(xs_bef_S2,ys_bef_S2, *(xs_S2.begin()), ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second);
-
-		SignalOperations::find_peaks_fine(xs_bef_S2, ys_bef_S2, _result.pmt_peaks.back(), found_base_lines[ind],
+		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], _result.pmt_peaks.back(), found_base_lines[ind],
 			threshold,found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
-		STD_CONT<peak> peaks;
-		SignalOperations::find_peaks_fine(xs_S2, ys_S2, peaks, found_base_lines[ind],
-					threshold,found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
-
-		_result.pmt_peaks.back().insert(_result.pmt_peaks.back().end(), peaks.begin(), peaks.end());
 
 		if (0==ch){
 			double S_sum = 0;
 			for (auto i = _result.pmt_peaks.back().begin(), _end_ = _result.pmt_peaks.back().end(); i != _end_; ++i)
-				if ((i->left >= ParameterPile::S2_start_time.find(curr_area.experiments.back())->second)&&(i->right <= ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second)){
+				if ((i->t >= ParameterPile::S2_start_time.find(curr_area.experiments.back())->second)&&(i->t <= ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second)){
 					S_sum += i->S >0 ? i->S : 0;
 					++_result.PMT3_n_peaks;
 				}
@@ -368,6 +346,14 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 			PMT3_summed_peaks_area = S_sum;
 			PMT3_n_peaks = _result.PMT3_n_peaks;
 		}
+		double S2_st = ParameterPile::S2_start_time.find(curr_area.experiments.back())->second;
+		double S2_ft = ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second;
+		DVECTOR ys_int, xs_int;
+		SignalOperations::integrate(xs_channels[ind],ys_channels[ind],xs_int, ys_int, S2_st, S2_ft,
+				(*(xs_channels[ind].begin()+1)-*(xs_channels[ind].begin())), found_base_lines[ind]);
+		DITERATOR x_max;
+		SignalOperations::get_max(xs_int, ys_int, x_max, _result.PMT_S2_integral.back(), 1);
+
 		//=========================================================================
 		ParameterPile::experiment_area area = curr_area.to_point();
 		area.channels.erase();
@@ -400,10 +386,6 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 		_result.setValid(false);
 	}
 //=============================================================================
-#ifdef _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
-	clearOneRunMPPCs(0);
-	clearOneRunMPPCs(1);
-#endif
 #ifdef _USE_TIME_STATISTICS
 	auto PMT_end_timer = std::chrono::high_resolution_clock::now();
 	all_runs_results->time_stat.n_PMT_proc++;
@@ -471,7 +453,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 		runProcessedProc();
 		return _result;
 	}
-	for (int ch = 0; ch < 2; ch++){
+	for (int ch = 0; ch < 2; ch++) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if (ind < 0)
 			continue;
@@ -487,6 +469,7 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 				}
 			}
 		}
+		clearOneRunMPPCs(ch);
 	}
 
 	int mppc_ind = -1;
@@ -523,10 +506,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs
 #ifdef _USE_TIME_STATISTICS
 		//auto MPPC_filter_start_timer = std::chrono::high_resolution_clock::now();
 #endif
-		/*DVECTOR xs, ys;
-		SGfilter(xs_channels[ind], ys_channels[ind], xs, ys);
-		xs_channels[ind] = xs;
-		ys_channels[ind] = ys;*/
+
+		SGfilter(xs_channels[ind], ys_channels[ind]);
 		
 #ifdef _USE_TIME_STATISTICS
 		/*auto MPPC_filter_end_timer = std::chrono::high_resolution_clock::now();
@@ -574,10 +555,12 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		double root_start_t = *max_signal_pos - ParameterPile::MPPC_ROOTs_bl_from_max_left;
 		double root_finish_t = *max_signal_pos + ParameterPile::MPPC_ROOTs_bl_from_max_right;
 		SignalOperations::apply_time_limits(_result.mppc_baseline_xs[mppc_ind], ys_cut, root_start_t, root_finish_t,delta_x);
+#ifdef _USE_TIME_STATISTICS
 		auto MPPC_filter_end_timer = std::chrono::high_resolution_clock::now();
 		all_runs_results->time_stat.n_MPPC_filtering++;
 		all_runs_results->time_stat.t_MPPC_filtering +=
 			std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_filter_end_timer - MPPC_filter_start_timer).count();
+#endif //_USE_TIME_STATISTICS
 #else //do not use optimal x region
 		double root_start_t = ParameterPile::S2_start_time;
 		double root_finish_t = ParameterPile::S2_finish_time;
@@ -738,14 +721,18 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 		sp_min = *std::min_element(y_peaks_spreaded_v2.begin(), y_peaks_spreaded_v2.end());
 		double sp_approx_thr;
 		double sp_threshold = find_spreaded_peaks_threshold(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_approx_thr);
-		if (sp_threshold < 0)
+		if (sp_threshold < 0){
+			clearOneRunMPPCs(ch);
 			continue;
+		}
 		STD_CONT<peak> sp_peaks;
 		//no fine required here
 		SignalOperations::find_peaks(x_peaks_spreaded_v2, y_peaks_spreaded_v2, sp_peaks, sp_min, sp_threshold, 1);
 		//TODO: don't forget to test this^ place
-		if (sp_peaks.empty())
+		if (sp_peaks.empty()){
+			clearOneRunMPPCs(ch);
 			continue;
+		}
 		STD_CONT<peak>::iterator max_intersection; //search for largest cluster which is above treshold. In 99% if not 100% I 
 		//suspect there will be only single sp_peaks i.e. intersection, but just in case.
 		std::string __exp = curr_area.experiments.back();
@@ -866,30 +853,20 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 				}
 			}*/
 		}
-#ifdef _HOTFIX_CLEAR_MEMORY
-		DVECTOR().swap(_result.mppc_baseline_xs[mppc_ind]);
-		DVECTOR().swap(_result.mppc_baseline_ys[mppc_ind]);
-		//STD_CONT<peak>().swap(_result.mppc_peaks[mppc_ind]); //freed in AllRunsResult->Process, used to get Ss.
-#else
-		_result.mppc_baseline_xs[mppc_ind].clear();
-		_result.mppc_baseline_ys[mppc_ind].clear();
-		//_result.mppc_peaks[mppc_ind].clear();//freed in AllRunsResult->Process, used to get Ss.
-#endif
 		clearOneRunMPPCs(ch);
 	}
+	STD_CONT<DVECTOR>().swap(_result.mppc_baseline_xs);
+	STD_CONT<DVECTOR>().swap(_result.mppc_baseline_ys);
 #ifdef _USE_TIME_STATISTICS
 	auto MPPC_end_timer = std::chrono::high_resolution_clock::now();
 	all_runs_results->time_stat.n_MPPC_proc+=(mppc_ind+1);
 	all_runs_results->time_stat.t_MPPC_proc += std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_end_timer - MPPC_start_timer).count();
 #endif
 
-#ifndef _TEMP_CODE
-	add_draw_baselines("base filtered", graph_manager);
-#endif
-
 #ifdef _PROCESS_GEMS
 	int ind = curr_area.channels.get_order_index_by_index(2);
 	if (ind >= 0){
+		readOneRunMPPCs(2);
 #ifdef GEM_V1_
 		STD_CONT<peak> no_peaks;
 		no_peaks.push_back(peak());
@@ -903,6 +880,7 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 #endif //GEM_V1_
 		_result.xs_GEM = xs_channels[ind];
 		_result.ys_GEM = ys_channels[ind];
+		clearOneRunMPPCs(2);
 	}
 	if (_result.xs_GEM.empty() || _result.ys_GEM.empty() || _result.xs_GEM.size() != _result.ys_GEM.size()){
 		_result._current_status = SingleRunResults::Status::NoGEMsignal;
@@ -1000,18 +978,33 @@ void SingleRunData::runProcessedProc(void)
 {
 	graph_manager.Draw();
 	graph_manager.Clear();
-	//clear_memory();
+	clear_memory();
 }
 
 void SingleRunData::clear_memory(void) //clears only 'input' data, preserves processing results
 {
-#ifdef _HOTFIX_CLEAR_MEMORY
-	STD_CONT<DVECTOR>().swap(xs_channels);
-	STD_CONT<DVECTOR>().swap(ys_channels);
-#else
-	xs_channels.clear();
-	ys_channels.clear();
-#endif
+	for (int ind =0,_end_ = xs_channels.size();ind!=_end_;++ind){
+		DVECTOR().swap(xs_channels[ind]);
+		DVECTOR().swap(ys_channels[ind]);
+	}
 }
 
 ParameterPile::experiment_area SingleRunData::getArea(void) const {	return curr_area;}
+
+std::size_t SingleRunData::real_size(void)
+{
+	std::size_t rsize = sizeof(*this);
+	rsize+=xs_channels.size()*sizeof(DVECTOR);
+	for (std::size_t i=0, _end_ = xs_channels.size();i!=_end_;++i)
+		rsize+=xs_channels[i].capacity()*sizeof(double);
+	rsize+=ys_channels.size()*sizeof(DVECTOR);
+	for (std::size_t i=0, _end_ = ys_channels.size();i!=_end_;++i)
+		rsize+=ys_channels[i].capacity()*sizeof(double);
+
+	rsize+=found_base_lines.capacity()*sizeof(double);
+	rsize+=curr_area.real_size();
+	//rsize+=graph_manager.real_size();
+	return rsize;
+}
+
+

@@ -1663,6 +1663,10 @@ namespace SignalOperations {
 		x_out.clear();
 		if ((xs.size() != ys.size()) || (xs.size() <= 1) || left >= right)
 			return;
+#ifndef _USE_DEQUE
+		x_out.reserve(std::round((right-left)/dx_hint));
+		y_out.reserve(std::round((right-left)/dx_hint));
+#endif
 		double prev = 0;
 		auto _end_ = xs.end();
 		auto _begin_ = xs.begin();
@@ -2100,7 +2104,8 @@ namespace SignalOperations {
 				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, delta_x, base_line);
 				DITERATOR pk_max;
 				SignalOperations::get_max(xs, ys, x_peak_l, x_peak_r + 1, pk_max, pk.A, N_trust);
-				if ((pk_max != _end_) && (pk.S > 0) && (pk.right>=pk.left))
+				pk.t = SignalOperations::Mean(xs,ys,x_peak_l, x_peak_r, base_line);
+				if ((pk_max != _end_) && (pk.S > 0) && (pk.right>=pk.left)&&(pk.t>0))
 					peaks.push_back(pk);
 				x_peak_l = x_peak_r;
 				int delta_i = std::max(N_trust / 3, 1);
@@ -2280,7 +2285,8 @@ namespace SignalOperations {
 				pk.right = *x_peak_r;
 				pk.A = Amp-base_line;
 				SignalOperations::integrate(xs, ys, pk.S, x_peak_l, x_peak_r, delta_x, base_line);
-				if ((pk.S>0) && (pk.A>0)&&(pk.right>=pk.left))
+				pk.t = SignalOperations::Mean(xs,ys,x_peak_l, x_peak_r, base_line);
+				if ((pk.S>0) && (pk.A>0)&&(pk.right>=pk.left)&&(pk.t>0))
 					peaks.push_back(pk);
 				x_peak_l = x_peak_r;
 				int delta_i = std::max(N_trust / 3, 1);
@@ -2674,6 +2680,21 @@ namespace SignalOperations {
 				continue;
 			}
 		}
+	}
+
+	double Mean(DVECTOR &xs, DVECTOR &ws, DITERATOR first, DITERATOR last, double weight_baseline)
+	{
+		if ((ws.size()!=ws.size())||(first>=last))
+			return -1;
+		DITERATOR _end_ = ++last;
+		DITERATOR _begin_ = first;
+		double sum = 0;
+		double sumw = 0;
+		for (auto ix = first, iw = ws.begin() + (first - xs.begin()); (ix != _end_); ++ix, ++iw){
+			sum+=(*ix) * std::abs(*iw-weight_baseline);
+			sumw+=std::abs(*iw-weight_baseline);
+		}
+		return (0==sumw) ? -1 : sum/sumw;
 	}
 
 	double Mean(DITERATOR first, DITERATOR last)

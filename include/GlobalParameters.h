@@ -34,6 +34,8 @@ namespace ParameterPile
 	extern experiment_area exp_area;
 	extern int threads_number;
 
+	extern double dt_quant;
+
 	extern int filter_MPPC_n_points;
 	extern int filter_MPPC_order;
 	extern int filter_MPPC_n_iterations;

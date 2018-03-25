@@ -6,6 +6,10 @@ namespace ParameterPile {
 	{
 		_last_returned_index_left = _vec.end();
 	}
+	std::size_t area_vector::real_size(void)
+	{
+		return sizeof(*this)+sizeof(int)*_vec.size();
+	}
 	int area_vector::get_order_index_by_index(int ind)
 	{
 		if (!_is_valid)
@@ -251,6 +255,17 @@ namespace ParameterPile {
 		if (!channels.empty())
 			out.channels.push_back(channels.back());
 		return out;
+	}
+	std::size_t experiment_area::real_size(void)
+	{
+		std::size_t rsize = sizeof(*this);
+		rsize+=sizeof(STD_CONT<std::string>)*experiments.size();
+		for (std::size_t i = 0, _end_ = experiments.size(); i!=_end_; ++i)
+			rsize+=experiments[i].capacity()*sizeof(char);
+		rsize+=channels.real_size();
+		rsize+=sub_runs.real_size();
+		rsize+=runs.real_size();
+		return rsize;
 	}
 	bool experiment_area::isValid(void)
 	{

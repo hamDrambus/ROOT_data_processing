@@ -22,17 +22,14 @@ protected:
 	STD_CONT<DVECTOR>xs_channels;
 	STD_CONT<DVECTOR>ys_channels;
 	
-	DVECTOR found_base_lines;//TODO: modify to shaped baselines
-	STD_CONT<DVECTOR> xs_integral_ch;
-	STD_CONT<DVECTOR> ys_integral_ch;
-	//std::vector<double> xs_GEM;
-	//std::vector<double> ys_GEM;
+	DVECTOR found_base_lines;
 
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
 	bool PMT_peaks_analysed;
 
 	ParameterPile::experiment_area curr_area; //sets channel area
+	GraphicOutputManager graph_manager;
 
 	//int get_channel_index(int ch);
 	void extract_one_subrun(STD_CONT<DVECTOR> &xxs, STD_CONT<DVECTOR> &yys, int sub_index);
@@ -45,9 +42,7 @@ protected:
 	bool test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, SingleRunResults &results); //returns false if the PMT signal is empty
 	void find_time_limits(void);//TODO: this is much more complicated operation, the most difficult part of this analysis actually
 	double find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, DVECTOR &y_peaks_spreaded, double &apr_threshold);
-	//bool is_valid;
-	//SingleRunResults * _results;
-	GraphicOutputManager graph_manager;
+
 	void readOneRun(SingleRunResults &results);//TODO: rework this function using readOneRunMPPCs (or remove altogether)
 #ifdef _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 	void readOneRunMPPCs(SingleRunResults &results, int channel);//TODO: rename function and get rid of _HOTFIX_DECREASE_MEMORY at all
@@ -64,6 +59,8 @@ public:
 	void runProcessedProc(void);
 	void clear_memory(void); //clears only 'input' data, preserves processing results
 	ParameterPile::experiment_area getArea(void) const;
+
+	std::size_t real_size(void);
 };
 
 #endif

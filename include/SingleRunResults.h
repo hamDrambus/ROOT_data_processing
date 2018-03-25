@@ -34,8 +34,7 @@ protected:
 
 	double PMT3_summed_peaks_area;
 	int PMT3_n_peaks;
-	//STD_CONT<peak> PMT3_peaks;
-	//STD_CONT<peak> PMT1_peaks;
+	DVECTOR PMT_S2_integral; //per pmt channel
 
 	//TODO: combine averaging xs ys for PMTs and gems to a signle DVECTOR<DVECTOR> to_average; STD_CONT<int> channels_to_average;
 	DVECTOR xs_PMT3;
@@ -49,6 +48,7 @@ public:
 	SingleRunResults::Status getStatus(void) const;
 	bool isValid(void) const;
 	void setValid(bool val);
+	std::size_t real_size(void);
 
 friend SingleRunData;
 friend AnalysisManager;

@@ -33,6 +33,7 @@ namespace ParameterPile {
 		void reset(); //clears _last_returned_index etc.
 		void erase(); //clears vector
 		//void refine (void); //e.g. [2,3][3,4] to [2,4] |OR| [4,5] [1,7] to [1,7]
+		std::size_t real_size(void);
 	};
 
 	class experiment_area //done //TODO - make analysis via this class. //->NextFile?
@@ -52,6 +53,7 @@ namespace ParameterPile {
 
 		bool isValid(void);
 		bool contains(ParameterPile::experiment_area what);//new draw_required
+		std::size_t real_size(void);
 	};
 };
 

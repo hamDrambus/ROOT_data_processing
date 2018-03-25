@@ -78,6 +78,8 @@ namespace SignalOperations
 	void substract_baseline(DVECTOR &ys_in, DVECTOR &base_ys);
 	void substract_baseline(DVECTOR& xs_in, DVECTOR &ys_in, DVECTOR &base_xs, DVECTOR &base_ys, double baseline_baseline);
 
+
+	double Mean(DVECTOR &xs, DVECTOR &ws, DITERATOR first, DITERATOR last, double weight_baseline);
 	double Mean(DITERATOR first, DITERATOR last);
 	double RMS(DITERATOR first, DITERATOR last);
 	double Mean(STD_CONT<STD_CONT<peak>>::iterator first, STD_CONT<STD_CONT<peak>>::iterator last, std::function<double (peak& pk)> &value_picker);

@@ -74,8 +74,16 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 		one_run_results.pop_back();
 		one_run_data.pop_back();
 	} else {
-		std::cout<<"processed: "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
-					<< current_under_processing.sub_runs.back() << std::endl;
+		std::size_t results_size = sizeof(one_run_results);
+		for (std::size_t g=0,_end_=one_run_results.size();g!=_end_;++g)
+			results_size += one_run_results[g].real_size();
+		std::size_t data_size =sizeof(one_run_data);
+		for (std::size_t g=0,_end_=one_run_data.size();g!=_end_;++g)
+			data_size += one_run_data[g].real_size();
+
+		std::cout<<"processed"<<_all_results->Iteration()<<": "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
+			<< current_under_processing.sub_runs.back() <<"\tSingleRunResults.size: "<<results_size<<"\tSingleRunData.size: "<<data_size
+			<< "\tN: "<<one_run_results.size()<<"\tN: "<<one_run_data.size()<< std::endl;
 	}
 }
 
@@ -96,8 +104,16 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 	auto j = one_run_data.begin();
 	for (; ((i != one_run_results.end()) && (j != one_run_data.end())); ++i, ++j){
 		*i = j->processSingleRun(_all_results);
-		std::cout << "processed: " << j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
-			<< j->getArea().sub_runs.back() << std::endl;
+
+		std::size_t results_size = sizeof(one_run_results);
+		for (std::size_t g=0,_end_=one_run_results.size();g!=_end_;++g)
+			results_size += one_run_results[g].real_size();
+		std::size_t data_size =sizeof(one_run_data);
+		for (std::size_t g=0,_end_=one_run_data.size();g!=_end_;++g)
+			data_size += one_run_data[g].real_size();
+
+		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
+			<< j->getArea().sub_runs.back() << "\t SingleRunResults.size: "<<results_size<<"\tSingleRunData.size: "<<data_size<<std::endl;
 	}
 }
 
@@ -163,13 +179,8 @@ void AnalysisManager::proceessAllRunsOneThread(void)
 			nextRun();//skip the rest of experiments if any
 
 	if (ParameterPile::Max_iteration_N == all_runs_results.back().Iteration()) {
-#ifdef _HOTFIX_CLEAR_MEMORY
 		STD_CONT<SingleRunData>().swap(one_run_data);
 		STD_CONT<SingleRunResults>().swap(one_run_results);
-#else
-		one_run_data.clear();
-		one_run_results.clear();
-#endif
 	}
 #ifdef _USE_TIME_STATISTICS
 	time(&runs_end_timer);
