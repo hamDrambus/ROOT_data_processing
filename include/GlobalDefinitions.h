@@ -60,9 +60,7 @@
 
 #define OUTPUT_PMTS "PMT_v1/PMT_"
 #define OUTPUT_MPPCS "MPPC_"
-//MPPC_v1 for 4 doubles in peak
-//MPPC_v2 for additional double t;
-#define OUTPUT_MPPCS_PICS "MPPCs_v2/MPPCs_"
+#define OUTPUT_MPPCS_PICS "MPPCs_v1/MPPCs_"
 #define _TEMP_CODE
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY

@@ -866,7 +866,7 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 #ifdef _PROCESS_GEMS
 	int ind = curr_area.channels.get_order_index_by_index(2);
 	if (ind >= 0){
-		readOneRunMPPCs(2);
+		readOneRunMPPCs(_result, 2);
 #ifdef GEM_V1_
 		STD_CONT<peak> no_peaks;
 		no_peaks.push_back(peak());
