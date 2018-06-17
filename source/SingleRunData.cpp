@@ -157,8 +157,8 @@ void SingleRunData::add_draw_data(std::string prefix, GraphicOutputManager& grap
 		if (ParameterPile::draw_required(area)){
 			std::string plot_name = "";
 			plot_name += curr_area.experiments.back() + "_";
-			plot_name += "run_" + std::to_string(curr_area.runs.back()) + "_ch_" + std::to_string(channel)
-				+ "_sub_" + std::to_string(area.sub_runs.back());
+			plot_name += "run" + std::to_string(curr_area.runs.back()) + "_ch" + std::to_string(channel)
+				+ "_sub" + std::to_string(area.sub_runs.back());
 			ind = curr_area.channels.get_order_index_by_index(channel);
 			if (!xs_channels[ind].empty() && !ys_channels[ind].empty()){
 				Drawing *dr = graph_manager.GetDrawing(plot_name, channel, de);
@@ -369,6 +369,8 @@ SingleRunResults SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs
 				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered" + plot_title, "with points pt 1", 0);
 				dr->AddToDraw_baseline(threshold, "threshold");
 				dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
+				dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
+				dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
 			}
 		}
 #ifdef _USE_TIME_STATISTICS
@@ -411,9 +413,9 @@ void SingleRunData::calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &y
 	noise_amp = SignalOperations::RMS(ys_before_S1.begin(), ys_before_S1.end());
 	/*approx*/threshold = noise_amp*ParameterPile::PMT_run_acceptance_threshold_to_noize;
 
-	if (0 == channel){
+	if ((0 == channel)||(1==channel)){
 		SignalOperations::find_peaks_fine(xs_before_S1, ys_before_S1, peaks_before_S1,
-			baseline, threshold + baseline, 0/*noise_amp*0.5 in mppc*/ + baseline, ParameterPile::MPPC_N_trust);
+			baseline, threshold + baseline, 0/*noise_amp*0.5 in mppc*/ + baseline, ParameterPile::PMT_N_of_averaging);
 		double exact_noise = noise_amp;
 		if (!peaks_before_S1.empty()) {
 			/*exact*/baseline = SignalOperations::find_baseline_by_integral(0, xs_before_S1, ys_before_S1,peaks_before_S1);
@@ -819,8 +821,8 @@ std::chrono::duration_cast<std::chrono::nanoseconds>(MPPC_threshold_and_first_ba
 				//dr->AddToDraw(_result.mppc_baseline_xs[mppc_ind], root_baseline_v7, "ROOT baseline V7", "w l lw 2", 0);
 				//dr->AddToDraw(_result.mppc_baseline_xs[mppc_ind], root_baseline_v8, "ROOT baseline V8", "w l lw 2", 0);
 #endif
-				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with points pt 1", 0);
-				dr->AddToDraw_baseline(global_threshold, "threshold");
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#0000FF\"", 0);
+				dr->AddToDraw_baseline(global_threshold, "threshold", "w l lc rgb \"#00FF00\"");
 				dr->AddToDraw_baseline(ROOTs_baseline_baseline, "ROOTs baseline", "w l lc rgb \"#0000FF\"");
 				dr->AddToDraw_baseline(0/*edge_threshold*/, "threshold\\_edges");
 				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");

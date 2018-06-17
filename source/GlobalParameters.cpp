@@ -88,7 +88,7 @@ namespace ParameterPile
 {
 	STD_CONT <experiment_area> areas_to_draw;
 	std::string this_path;
-	int subruns_per_file = 1000;
+	int subruns_per_file = 10;
 	//bool override_analysis = true;
 	experiment_area exp_area;
 	int threads_number = 3; //obv. must be >=1
@@ -103,8 +103,8 @@ namespace ParameterPile
 	std::map<int,int> filter_PMT_n_iterations;
 
 	//these values are approximate, especially S2
-	double S1_start_time = 29; //in us
-	double S1_finish_time = 39; //in us
+	double S1_start_time = 27; //in us
+	double S1_finish_time = 35; //in us
 	std::map<std::string,double> S2_start_time; //in us
 	std::map<std::string,double> S2_finish_time; //in us
 
@@ -184,6 +184,11 @@ namespace ParameterPile
 
 		TThread::Initialize();
 		
+		PMT_SArea_peaks_acceptance = 0.2; //V*us
+		subruns_per_file = 10;
+		MPPC_minimum_peak_A = 0.0128; //
+		MPPC_maximum_peak_A = 0.0128; //
+
 		filter_PMT_n_points.insert		(std::pair<int,int>(0,50));
 		filter_PMT_order.insert			(std::pair<int,int>(0,8));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(0,1));
@@ -197,10 +202,10 @@ namespace ParameterPile
 		filter_PMT_order.insert			(std::pair<int,int>(12,4));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,1));
 
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.08));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.08));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.04));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.04));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.012));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.012));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.024));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.024));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(8,0.00046));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(8,0.00046));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(12,0.00038));
@@ -210,40 +215,91 @@ namespace ParameterPile
 		PMT_use_average.insert(std::pair<int,bool>(1,true));
 
 
-		S2_start_time.insert(std::pair<std::string,double>("x_ray_20kV_PMT550_0dB_coll_2mm",41));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_4_thmV",80));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_5_thmV",78));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_6_thmV",70));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_7_thmV",63));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_8_thmV",55));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_9_thmV",47));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_10_thmV_recalib",44));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_10_thmV",44));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_12_thmV",44));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_14_thmV",44));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_16_thmV",44));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_18_thmV",44));
+		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_20_thmV",44));
 
-		S2_finish_time.insert(std::pair<std::string,double>("x_ray_20kV_PMT550_0dB_coll_2mm",83));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_4_thmV",140));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_5_thmV",120));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_6_thmV",110));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_7_thmV",110));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_8_thmV",105));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_9_thmV",105));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_10_thmV_recalib",105));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_10_thmV",90));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_12_thmV",90));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_14_thmV",90));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_16_thmV",90));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_18_thmV",90));
+		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_20_thmV",90));
 
 		areas_to_draw.push_back(experiment_area());
 		
-		areas_to_draw.back().experiments.push_back("x_ray_20kV_PMT550_0dB_coll_2mm");
+		areas_to_draw.back().experiments.push_back("event_x-ray_4_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_5_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_6_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_7_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_8_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_9_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_10_thmV_recalib");
+		areas_to_draw.back().experiments.push_back("event_x-ray_10_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_12_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_14_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_16_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_18_thmV");
+		areas_to_draw.back().experiments.push_back("event_x-ray_20_thmV");
 
 		areas_to_draw.back().runs.push_pair(0, 0);
 		areas_to_draw.back().channels.push_pair(0, 1);
 		areas_to_draw.back().channels.push_pair(2, 2);
-		//areas_to_draw.back().channels.push_pair(8, 8);
-		//areas_to_draw.back().channels.push_pair(12, 12);
+		areas_to_draw.back().channels.push_pair(8, 8);
+		areas_to_draw.back().channels.push_pair(12, 12);
 
-		//areas_to_draw.back().channels.push_pair(38, 39);
+		areas_to_draw.back().channels.push_pair(37, 38);
+		areas_to_draw.back().channels.push_pair(44, 44);
 
-		areas_to_draw.back().channels.push_pair(32, 44); //13
-		areas_to_draw.back().channels.push_pair(48, 56); //9
-		areas_to_draw.back().channels.push_pair(57, 59); //3 =>25
-		areas_to_draw.back().sub_runs.push_pair(0, 0);
+		//areas_to_draw.back().channels.push_pair(32, 44); //13
+		//areas_to_draw.back().channels.push_pair(48, 56); //9
+		//areas_to_draw.back().channels.push_pair(57, 59); //3 =>25
+
+		areas_to_draw.back().sub_runs.push_pair(3, 5);
 
 		exp_area.runs.push_pair(0, 9999);
 		exp_area.channels.push_pair(0, 1);
-		//exp_area.channels.push_pair(2, 2);
+		exp_area.channels.push_pair(2, 2);
 		//exp_area.channels.push_pair(8, 8);
 		//exp_area.channels.push_pair(12, 12);
 
 		//exp_area.channels.push_pair(56, 56);
 
-		exp_area.channels.push_pair(32, 44); //13
-		exp_area.channels.push_pair(48, 56); //9
-		exp_area.channels.push_pair(57, 59); //3 =>25 channels
+		//exp_area.channels.push_pair(32, 44); //13
+		//exp_area.channels.push_pair(48, 55); //8
+		//exp_area.channels.push_pair(57, 59); //3 =>24 channels
 
-		exp_area.sub_runs.push_pair(0, 999); //subruns_per_file-1);
-		exp_area.experiments.push_back("x_ray_20kV_PMT550_0dB_coll_2mm");
+		exp_area.sub_runs.push_pair(0, 9); //subruns_per_file-1);
+
+		//exp_area.experiments.push_back("event_x-ray_4_thmV");
+		//exp_area.experiments.push_back("event_x-ray_5_thmV");
+		//exp_area.experiments.push_back("event_x-ray_6_thmV");
+		//exp_area.experiments.push_back("event_x-ray_7_thmV");
+		//exp_area.experiments.push_back("event_x-ray_8_thmV");
+		//exp_area.experiments.push_back("event_x-ray_9_thmV");
+		//exp_area.experiments.push_back("event_x-ray_10_thmV_recalib");
+		//exp_area.experiments.push_back("event_x-ray_10_thmV");
+		//exp_area.experiments.push_back("event_x-ray_12_thmV");
+		//exp_area.experiments.push_back("event_x-ray_14_thmV");
+		exp_area.experiments.push_back("event_x-ray_16_thmV");
+		exp_area.experiments.push_back("event_x-ray_18_thmV");
+		exp_area.experiments.push_back("event_x-ray_20_thmV");
 	}
 };

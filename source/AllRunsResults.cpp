@@ -683,29 +683,35 @@ void AllRunsResults::Merged(void)
 		|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size()) || (mppc_peaks_in_S2_area.size() != mppc_peaks.size()))
 		valid = false;
 	if(1==Iteration_N){
+		double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
+		double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
 		if (!_xs_PMT3_sum.empty()){
 			for (auto i= _ys_PMT3_sum.begin(),_end_=_ys_PMT3_sum.end();i!=_end_;++i)
 				*i/=N_of_valid_runs;
 			DVECTOR xs_before_S1 = _xs_PMT3_sum, ys_before_S1=_ys_PMT3_sum;
 			SignalOperations::apply_time_limits(xs_before_S1,ys_before_S1,*xs_before_S1.begin(),ParameterPile::S1_start_time);
-			double baseline = SignalOperations::find_baseline_by_integral(0,xs_before_S1,ys_before_S1);
+			double baseline = SignalOperations::find_baseline_by_median(0,xs_before_S1,ys_before_S1);
 			SignalOperations::substract_baseline(_ys_PMT3_sum, baseline);
 			SignalOperations::integrate(_xs_PMT3_sum,_ys_PMT3_sum,ys_before_S1, 0);
 			Drawing* dr = graph_manager.GetDrawing("3PMT_"+_exp.experiments.back()+"\\_AVR\\_",0,ParameterPile::DrawEngine::Gnuplot);
 			dr->AddToDraw(_xs_PMT3_sum,_ys_PMT3_sum,"3PMT average signal "+_exp.experiments.back());
 			dr->AddToDraw(_xs_PMT3_sum,ys_before_S1,"3PMT I of average signal "+_exp.experiments.back(),"axes x1y2");
+			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
+			dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
 		}
 		if (!_xs_PMT1_sum.empty()){
 			for (auto i= _ys_PMT1_sum.begin(),_end_=_ys_PMT1_sum.end();i!=_end_;++i)
 				*i/=N_of_valid_runs;
 			DVECTOR xs_before_S1 = _xs_PMT1_sum, ys_before_S1=_ys_PMT1_sum;
 			SignalOperations::apply_time_limits(xs_before_S1,ys_before_S1,*xs_before_S1.begin(),ParameterPile::S1_start_time);
-			double baseline = SignalOperations::find_baseline_by_integral(0,xs_before_S1,ys_before_S1);
+			double baseline = SignalOperations::find_baseline_by_median(0,xs_before_S1,ys_before_S1);
 			SignalOperations::substract_baseline(_ys_PMT1_sum, baseline);
 			SignalOperations::integrate(_xs_PMT1_sum,_ys_PMT1_sum,ys_before_S1, 0);
 			Drawing* dr = graph_manager.GetDrawing("PMT#1_"+_exp.experiments.back()+"\\\_AVR\\\_",1,ParameterPile::DrawEngine::Gnuplot);
 			dr->AddToDraw(_xs_PMT1_sum,_ys_PMT1_sum,"PMT#1 average signal "+_exp.experiments.back());
 			dr->AddToDraw(_xs_PMT1_sum,ys_before_S1,"PMT#1 I of average signal "+_exp.experiments.back(),"axes x1y2");
+			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
+			dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
 		}
 	}
 	if (valid && !(mppc_peaks_in_S2_area.empty())) {

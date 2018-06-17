@@ -167,11 +167,14 @@ namespace ParameterPile {
 						new_r = N_accum - (int)((curr_index + 1)*delta) + new_l - 1;
 					out_[curr_index].push_pair(new_l, new_r);
 					new_l = new_r + 1;
-					curr_index++;
+					++curr_index;
 				}
 				new_r = r;
-				if (N_accum <= (int)((curr_index + 1)*delta) && (new_l <= new_r))
+				if (N_accum <= (int)((curr_index + 1)*delta) && (new_l <= new_r)) {
 					out_[curr_index].push_pair(new_l, new_r);
+					if (N_accum == (int)((curr_index + 1)*delta))
+						++curr_index;
+				}
 			}
 		}
 		return out_;

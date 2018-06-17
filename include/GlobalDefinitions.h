@@ -34,7 +34,7 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../../Data/171123/")
+#define DATA_PREFIX std::string("../../Data/170622/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
 #define DATA_EXPERIMENT_FORMAT "^X-ray_\d{1,2}_.*$"
 
@@ -45,10 +45,10 @@
 //in volts
 #define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
 //in volts
-#define OUTPUT_DIR std::string("../../Data/171123/results/")
+#define OUTPUT_DIR std::string("../../Data/170622/results/")
 //GEM_v1 - finding baseline for every event
 //GEM_v2 - finding baseline for averaged signal
-//#define _PROCESS_GEMS
+#define _PROCESS_GEMS
 #define GEM_V2_
 #undef GEM_V1_
 #ifdef GEM_V1_
@@ -58,9 +58,9 @@
 #define OUTPUT_GEMS "GEM_v2"
 #endif
 
-#define OUTPUT_PMTS "PMT_v1/PMT_"
+#define OUTPUT_PMTS "PMT_vt/PMT_"
 #define OUTPUT_MPPCS "MPPC_"
-#define OUTPUT_MPPCS_PICS "MPPCs_v1/MPPCs_"
+#define OUTPUT_MPPCS_PICS "MPPCs_vt/MPPCs_"
 #define _TEMP_CODE
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
