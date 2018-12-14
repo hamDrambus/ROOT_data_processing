@@ -572,8 +572,8 @@ void AllRunsResults::Merged(void)
 				double baseline = SignalOperations::find_baseline_by_median(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
 				SignalOperations::substract_baseline(_ys_sum[ind], baseline);
 
-				Drawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back(), 2, ParameterPile::DrawEngine::Gnuplot);
-				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "GEM_" + _exp.experiments.back(), "", 0);
+				Drawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back()+"_AVR", 2, ParameterPile::DrawEngine::Gnuplot);
+				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "GEM_" + _exp.experiments.back()+"_AVR", "", 0);
 				DVECTOR GEM_int;
 				SignalOperations::integrate(_xs_sum[ind], _ys_sum[ind], GEM_int,0/*baseline*/);
 				dr->AddToDraw(_xs_sum[ind], GEM_int, "GEM_Int_" + _exp.experiments.back(), "axes x1y2", 0);
@@ -627,37 +627,16 @@ void AllRunsResults::Merged(void)
 			no_peaks.push_back(peak());
 			no_peaks.back().left = ParameterPile::S1_start_time;
 			no_peaks.back().right = _xs_sum[ind].back();
-			double baseline = SignalOperations::find_baseline_by_integral(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
+			double baseline = SignalOperations::find_baseline_by_median(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
 			SignalOperations::substract_baseline(_ys_sum[ind], baseline);
+			DVECTOR integral;
+			SignalOperations::integrate(_xs_sum[ind], _ys_sum[ind], integral, 0);
 			vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], PMT_output_prefix+".txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR");
-		}
-		double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
-		double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
-		if (!_xs_PMT3_sum.empty()){
-			for (auto i= _ys_PMT3_sum.begin(),_end_=_ys_PMT3_sum.end();i!=_end_;++i)
-				*i/=N_of_valid_runs;
-			DVECTOR xs_before_S1 = _xs_PMT3_sum, ys_before_S1=_ys_PMT3_sum;
-			SignalOperations::apply_time_limits(xs_before_S1,ys_before_S1,*xs_before_S1.begin(),ParameterPile::S1_start_time);
-			double baseline = SignalOperations::find_baseline_by_median(0,xs_before_S1,ys_before_S1);
-			SignalOperations::substract_baseline(_ys_PMT3_sum, baseline);
-			SignalOperations::integrate(_xs_PMT3_sum,_ys_PMT3_sum,ys_before_S1, 0);
-			Drawing* dr = graph_manager.GetDrawing("3PMT_"+_exp.experiments.back()+"\\_AVR\\_",0,ParameterPile::DrawEngine::Gnuplot);
-			dr->AddToDraw(_xs_PMT3_sum,_ys_PMT3_sum,"3PMT average signal "+_exp.experiments.back());
-			dr->AddToDraw(_xs_PMT3_sum,ys_before_S1,"3PMT I of average signal "+_exp.experiments.back(),"axes x1y2");
-			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
-			dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
-		}
-		if (!_xs_PMT1_sum.empty()){
-			for (auto i= _ys_PMT1_sum.begin(),_end_=_ys_PMT1_sum.end();i!=_end_;++i)
-				*i/=N_of_valid_runs;
-			DVECTOR xs_before_S1 = _xs_PMT1_sum, ys_before_S1=_ys_PMT1_sum;
-			SignalOperations::apply_time_limits(xs_before_S1,ys_before_S1,*xs_before_S1.begin(),ParameterPile::S1_start_time);
-			double baseline = SignalOperations::find_baseline_by_median(0,xs_before_S1,ys_before_S1);
-			SignalOperations::substract_baseline(_ys_PMT1_sum, baseline);
-			SignalOperations::integrate(_xs_PMT1_sum,_ys_PMT1_sum,ys_before_S1, 0);
-			Drawing* dr = graph_manager.GetDrawing("PMT#1_"+_exp.experiments.back()+"\\\_AVR\\\_",1,ParameterPile::DrawEngine::Gnuplot);
-			dr->AddToDraw(_xs_PMT1_sum,_ys_PMT1_sum,"PMT#1 average signal "+_exp.experiments.back());
-			dr->AddToDraw(_xs_PMT1_sum,ys_before_S1,"PMT#1 I of average signal "+_exp.experiments.back(),"axes x1y2");
+			double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
+			double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
+			Drawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR", 0, ParameterPile::DrawEngine::Gnuplot);
+			dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
+			dr->AddToDraw(_xs_sum[ind], integral,"PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_Int_AVR","axes x1y2");
 			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
 			dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
 		}
@@ -863,38 +842,26 @@ void AllRunsResults::Clear(void)
 	//S_peaks_cutoff preserve
 	//Iteration_N preserve;
 	graph_manager.Clear();
-#ifdef _HOTFIX_CLEAR_MEMORY
-	DVECTOR().swap(_Ss);
-	DVECTOR().swap(_ns);
-	if (1!=Iteration()) {
+
+	if (ParameterPile::Max_iteration_N == Iteration()) {
 		STD_CONT<DVECTOR>().swap(_xs_sum);
 		STD_CONT<DVECTOR>().swap(_ys_sum);
 		STD_CONT<DVECTOR>().swap(_ys_disp);
 		STD_CONT<int>().swap(avr_channels);
+		STD_CONT<STD_CONT<double> >().swap(mppc_peaks_in_S2_area);
+		STD_CONT<STD_CONT<double> >().swap(mppc_S2_start_time);
+		STD_CONT<STD_CONT<double> >().swap(mppc_S2_finish_time);
+		STD_CONT<STD_CONT<STD_CONT<peak>>>().swap(mppc_peaks);
+		STD_CONT<STD_CONT<double> >().swap(mppc_double_Is);
+		STD_CONT<int>().swap(mppc_channels);
+
+		DVECTOR().swap(_Ss);
+		DVECTOR().swap(_ns);
+		STD_CONT<STD_CONT<STD_CONT<peak> > >().swap(pmt_peaks);
+		STD_CONT<STD_CONT<double> >().swap(pmt_S2_integral);
+		STD_CONT<int>().swap(pmt_channels);
 	}
-	STD_CONT<DVECTOR>().swap(mppc_peaks_in_S2_area);
-	STD_CONT<DVECTOR>().swap(mppc_S2_start_time);
-	STD_CONT<DVECTOR>().swap(mppc_S2_finish_time);
-	STD_CONT<STD_CONT<STD_CONT<peak>>>().swap(mppc_peaks);
-	STD_CONT<DVECTOR>().swap(mppc_double_Is);
-	STD_CONT<int>().swap(mppc_channels);
-#else
-	_Ss.clear();
-	_ns.clear();
-	if (1!=Iteration()) {
-		_xs_sum.clear();
-		_ys_sum.clear();
-		_ys_disp.clear();
-		avr_channels.clear();
-	}
-	mppc_peaks_in_S2_area.clear();
-	mppc_S2_start_time.clear();
-	mppc_S2_finish_time.clear();
-	//mppc_all_peaks_Ss.clear();
-	mppc_peaks.clear();
-	mppc_double_Is.clear();
-	mppc_channels.clear();
-#endif
+
 #ifdef _USE_TIME_STATISTICS
 	time_stat.t_RUN_proc_single_iter=0;
 	time_stat.n_RUN_proc_single_iter=0;

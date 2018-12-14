@@ -78,26 +78,28 @@ protected:
 	ParameterPile::experiment_area _exp;
 	GraphicOutputManager graph_manager;
 	//AVERAGES:
-	STD_CONT<DVECTOR> _xs_sum; //[channel]
-	STD_CONT<DVECTOR> _ys_sum; //[channel]
+	//TODO: ensure that only event valid in final are used. (N_of_valid_runs can be different for each iteration)
+	STD_CONT<DVECTOR> _xs_sum;  //[channel]
+	STD_CONT<DVECTOR> _ys_sum;  //[channel]
 	STD_CONT<DVECTOR> _ys_disp; //[channel]
 	STD_CONT<int> avr_channels;
+	//TODO: The number of runs in MPPC and PMT blocks is always equal
 	//MPPC:
-	STD_CONT<DVECTOR> mppc_peaks_in_S2_area; //size == mppc channels (depends on experiment area)
-	STD_CONT<DVECTOR> mppc_S2_start_time; //size == mppc channels (depends on experiment area)
-	STD_CONT<DVECTOR> mppc_S2_finish_time; //size == mppc channels (depends on experiment area)
-	STD_CONT<DVECTOR> mppc_double_Is; //size == mppc channels (depends on experiment area)
-	STD_CONT<STD_CONT<STD_CONT<peak> > > mppc_peaks; //[channel][run#][peaks]. The number of runs must be equal to the size of DVECTOR above.
+	STD_CONT<STD_CONT<double> > mppc_peaks_in_S2_area; //[run#][channel], size of mppc channels (depends on experiment area)
+	STD_CONT<STD_CONT<double> > mppc_S2_start_time;	 //[run#][channel]
+	STD_CONT<STD_CONT<double> > mppc_S2_finish_time;	 //[run#][channel]
+	STD_CONT<STD_CONT<double> > mppc_double_Is;		 //[run#][channel]
+	STD_CONT<STD_CONT<STD_CONT<peak> > > mppc_peaks; //[run#][channel][peaks].
 	STD_CONT<int> mppc_channels;
 	//PMT:
 	double S_peaks_cutoff;
 	double N_peaks_cutoff;
 	double S_peaks_max_cutoff;
-	DVECTOR _ns;
-	DVECTOR _Ss;
-	STD_CONT<STD_CONT<STD_CONT<peak> > > pmt_peaks;	//[channel][run#][peaks]
-	STD_CONT<DVECTOR> pmt_S2_integral; //[channel][run]
-	STD_CONT<int> pmt_channels;
+	DVECTOR _ns; //[run#]
+	DVECTOR _Ss; //[run#]
+	STD_CONT<STD_CONT<STD_CONT<peak> > > pmt_peaks;	//[run#][channel][peaks]
+	STD_CONT<STD_CONT<double> > pmt_S2_integral; //[run#][channel]
+	STD_CONT<int> pmt_channels; //[channel]
 
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
