@@ -52,9 +52,9 @@ void SavitzkyGolayFilter::operator ()(DVECTOR &xs_in_out, DVECTOR &ys_in_out) co
 	if ((xs_in_out.size() != ys_in_out.size())||(xs_in_out.size() < _n_points)||(0==_n_iterations))
 		return;
 	DVECTOR ys_out = ys_in_out;
-	for (int iter = 0; iter < _n_iterations; iter++) {
+	for (int iter = 0; iter < _n_iterations; ++iter) {
 		int start_index = 0;
-		for (int h = 0; h < xs_in_out.size(); h++) {
+		for (int h = 0, h_end_ = xs_in_out.size(); h <h_end_ ; ++h) {
 			start_index = h - _n_points / 2;
 			start_index = start_index < 0 ? 0 : start_index;
 			if (start_index > xs_in_out.size() - _n_points)

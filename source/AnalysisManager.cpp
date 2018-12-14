@@ -65,25 +65,20 @@ void AnalysisManager::nextRun(void)
 void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results) //current_under_processing must be preset
 {
 	one_run_data.push_back(SingleRunData(current_under_processing));
-	one_run_results.push_back(one_run_data.back().processSingleRun(_all_results));
-	if (!one_run_results.back().isValid()){
+	one_run_data.back().processSingleRun(_all_results);
+	if (!one_run_data.back()._valid){
 		std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
 			<< current_under_processing.sub_runs.back() << " processed" << std::endl;
-		std::cout << "reason: " << one_run_results.back().getStatus()<<std::endl;
-		//std::cout << "S=" << one_run_results.back().PMT3_summed_peaks_area << "| N = " << one_run_results.back().PMT3_n_peaks << std::endl;
-		one_run_results.pop_back();
-		one_run_data.pop_back();
+		std::cout << "reason: " << one_run_data.back()._status<<std::endl;
+		//one_run_data.pop_back();
 	} else {
-		std::size_t results_size = sizeof(one_run_results);
-		for (std::size_t g=0,_end_=one_run_results.size();g!=_end_;++g)
-			results_size += one_run_results[g].real_size();
 		std::size_t data_size =sizeof(one_run_data);
 		for (std::size_t g=0,_end_=one_run_data.size();g!=_end_;++g)
 			data_size += one_run_data[g].real_size();
 
 		std::cout<<"processed"<<_all_results->Iteration()<<": "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
-			<< current_under_processing.sub_runs.back() <<"\tSingleRunResults.size: "<<results_size<<"\tSingleRunData.size: "<<data_size
-			<< "\tN: "<<one_run_results.size()<<"\tN: "<<one_run_data.size()<< std::endl;
+			<< current_under_processing.sub_runs.back() <<"\tSingleRunData.size: "<<data_size
+			<<"\tN: "<<one_run_data.size()<< std::endl;
 	}
 }
 
@@ -100,26 +95,23 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 {
 	if (0 == _all_results->Iteration())
 		return loopAllRuns_first_iteration(_all_results);
-	auto i = one_run_results.begin();
-	auto j = one_run_data.begin();
-	for (; ((i != one_run_results.end()) && (j != one_run_data.end())); ++i, ++j){
-		*i = j->processSingleRun(_all_results);
-
-		std::size_t results_size = sizeof(one_run_results);
-		for (std::size_t g=0,_end_=one_run_results.size();g!=_end_;++g)
-			results_size += one_run_results[g].real_size();
-		std::size_t data_size =sizeof(one_run_data);
-		for (std::size_t g=0,_end_=one_run_data.size();g!=_end_;++g)
-			data_size += one_run_data[g].real_size();
-
+	std::size_t data_size =sizeof(one_run_data);
+	for (auto j = one_run_data.begin(); (j != one_run_data.end()); ++j){
+		j->processSingleRun(_all_results);
+		if (!j->_valid) {
+			std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
+				<< current_under_processing.sub_runs.back() << " processed" << std::endl;
+			std::cout << "reason: " << j->_status<<std::endl;
+		}
+		data_size += j->real_size();
 		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
-			<< j->getArea().sub_runs.back() << "\t SingleRunResults.size: "<<results_size<<"\tSingleRunData.size: "<<data_size<<std::endl;
+			<< j->getArea().sub_runs.back() << "\tSingleRunData.size: "<<data_size<<std::endl;
 	}
 }
 
 void AnalysisManager::processAllRuns(void)
 {
-	all_runs_results.push_back(AllRunsResults(current_under_processing));
+	all_runs_results.push_back(AllRunsResults(current_under_processing, ParameterPile::ch_use_average));
 	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N){
 #ifdef _USE_TIME_STATISTICS
 		time_t runs_start_timer;
@@ -127,8 +119,6 @@ void AnalysisManager::processAllRuns(void)
 		time(&runs_start_timer);
 #endif
 		loopAllRuns(&all_runs_results.back());
-		all_runs_results.back().Clear();
-		all_runs_results.back().processAllRuns(one_run_results);
 #ifdef _USE_TIME_STATISTICS
 		time(&runs_end_timer);
 		all_runs_results.back().time_stat.n_RUN_proc = all_runs_results.back().N_of_runs;
@@ -137,7 +127,6 @@ void AnalysisManager::processAllRuns(void)
 		all_runs_results.back().Merged();//all in one thread, so it is already joined. Merge == iteration++
 	}
 #ifdef _HOTFIX_CLEAR_MEMORY
-	STD_CONT<SingleRunResults>().swap(one_run_results);
 	STD_CONT<SingleRunData>().swap(one_run_data);
 #else
 	one_run_data.clear();
@@ -152,7 +141,6 @@ void AnalysisManager::processAllExperiments(void)
 		curr_run = NextRunIs::NewSubRun;
 		processAllRuns();
 	}
-	//TODO: average, sumarize over all of the experiments
 }
 
 void AnalysisManager::proceessAllRunsOneThread(void)
@@ -164,15 +152,13 @@ void AnalysisManager::proceessAllRunsOneThread(void)
 #endif
 	if (all_runs_results.empty()){
 		nextRun();
-		all_runs_results.push_back(AllRunsResults(current_under_processing)); //actually MultiThreadManager must set it before call of this method
+		all_runs_results.push_back(AllRunsResults(current_under_processing, ParameterPile::ch_use_average)); //actually MultiThreadManager must set it before call of this method
 	} else {
 		if (0 == all_runs_results.back().Iteration())
 			nextRun();
 	}
 	
 	loopAllRuns(&all_runs_results.back());
-	all_runs_results.back().processAllRuns(one_run_results);
-	//std::cout << "one_run_results.size()==" << one_run_results.size()<<std::endl;
 
 	if (0 == all_runs_results.back().Iteration())
 		while (curr_run != NextRunIs::Null)
@@ -180,7 +166,6 @@ void AnalysisManager::proceessAllRunsOneThread(void)
 
 	if (ParameterPile::Max_iteration_N == all_runs_results.back().Iteration()) {
 		STD_CONT<SingleRunData>().swap(one_run_data);
-		STD_CONT<SingleRunResults>().swap(one_run_results);
 	}
 #ifdef _USE_TIME_STATISTICS
 	time(&runs_end_timer);

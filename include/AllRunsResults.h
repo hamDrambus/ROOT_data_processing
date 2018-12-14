@@ -6,11 +6,10 @@
 #include "TLine.h"
 #include "TStyle.h"
 #include "GlobalParameters.h"
-#include "SingleRunResults.h"
+#include "SingleRunData.h"
 
 class AnalysisManager;
 class SingleRunData;
-class SingleRunResults;
 
 #ifdef _USE_TIME_STATISTICS
 struct time_results {
@@ -72,33 +71,33 @@ struct time_results {
 class AllRunsResults
 {
 protected:
-	DVECTOR _ns;
-	DVECTOR _Ss;
-	DVECTOR _xs_GEM_sum;
-	DVECTOR _ys_GEM_sum;
-	DVECTOR _xs_PMT3_sum;
-	DVECTOR _ys_PMT3_sum;
-	DVECTOR _xs_PMT1_sum;
-	DVECTOR _ys_PMT1_sum;
 	int N_of_runs;
 	int N_of_valid_runs;//i.e. accepted by PMT cut
 	int Iteration_N;
+	ParameterPile::area_vector _to_average;
 	ParameterPile::experiment_area _exp;
 	GraphicOutputManager graph_manager;
-	double S_peaks_cutoff;
-	double N_peaks_cutoff;
-	double S_peaks_max_cutoff;
-
+	//AVERAGES:
+	STD_CONT<DVECTOR> _xs_sum; //[channel]
+	STD_CONT<DVECTOR> _ys_sum; //[channel]
+	STD_CONT<DVECTOR> _ys_disp; //[channel]
+	STD_CONT<int> avr_channels;
+	//MPPC:
 	STD_CONT<DVECTOR> mppc_peaks_in_S2_area; //size == mppc channels (depends on experiment area)
 	STD_CONT<DVECTOR> mppc_S2_start_time; //size == mppc channels (depends on experiment area)
 	STD_CONT<DVECTOR> mppc_S2_finish_time; //size == mppc channels (depends on experiment area)
-	//STD_CONT<DVECTOR> mppc_all_peaks_Ss; //size == mppc channels (depends on experiment area) //depr: now using mppc_peaks
 	STD_CONT<DVECTOR> mppc_double_Is; //size == mppc channels (depends on experiment area)
-	STD_CONT<int> mppc_channels;
-	STD_CONT<int> pmt_channels;
 	STD_CONT<STD_CONT<STD_CONT<peak> > > mppc_peaks; //[channel][run#][peaks]. The number of runs must be equal to the size of DVECTOR above.
+	STD_CONT<int> mppc_channels;
+	//PMT:
+	double S_peaks_cutoff;
+	double N_peaks_cutoff;
+	double S_peaks_max_cutoff;
+	DVECTOR _ns;
+	DVECTOR _Ss;
 	STD_CONT<STD_CONT<STD_CONT<peak> > > pmt_peaks;	//[channel][run#][peaks]
 	STD_CONT<DVECTOR> pmt_S2_integral; //[channel][run]
+	STD_CONT<int> pmt_channels;
 
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
@@ -107,6 +106,7 @@ protected:
 	TH1D* createMPPCHist_peaks_S(STD_CONT<STD_CONT<peak>> &what, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
 	void vector_to_file(DVECTOR &what, std::string fname, std::string title="MPPC");
 	void vector_to_file(STD_CONT<STD_CONT<peak>> &pks, std::string fname, std::string title = "MPPC_peaks");
+	void vector_to_file(DVECTOR &xs, DVECTOR &ys, DVECTOR &ydisps, std::string fname, std::string title = "Average");
 	TF1* createMPPCFitFunc(TH1D* hist, std::string name);
 
 #ifdef _USE_TIME_STATISTICS
@@ -115,8 +115,7 @@ protected:
 #endif
 
 public:
-	AllRunsResults(ParameterPile::experiment_area experiment);//only experiment and channells are important here
-	void processAllRuns(STD_CONT<SingleRunResults> &single_results);
+	AllRunsResults(ParameterPile::experiment_area experiment, ParameterPile::area_vector chs_to_average);//only experiment and channels are important here
 	//For multithreading:
 	void Merge(AllRunsResults* with);
 	void Merged(void);

@@ -91,7 +91,7 @@ namespace ParameterPile
 	int subruns_per_file = 10;
 	//bool override_analysis = true;
 	experiment_area exp_area;
-	int threads_number = 3; //obv. must be >=1
+	int threads_number = 1; //obv. must be >=1
 
 	double dt_quant = 0.1; //us
 
@@ -138,7 +138,7 @@ namespace ParameterPile
 	//TODO: add illustrative pictures to the project for algotithms
 	double PMT_right_cutoff_from_RMS = 4.5;//4.5
 	double PMT_left_cutoff_from_RMS = 2.5;//2
-	std::map<int,bool> PMT_use_average;
+	area_vector ch_use_average;
 
 	double MPPC_peaks_smoothing_time = 5; //us
 	int MPPC_N_trust = 1;
@@ -151,7 +151,7 @@ namespace ParameterPile
 	double MPPC_minimum_peak_A = 0.0128; //
 	double MPPC_maximum_peak_A = 0.0128; //
 
-	int Max_iteration_N = 1;
+	int Max_iteration_N = 2;
 
 	int gnuplot_pad_size = 400;
 	int gnuplot_max_size = 1600;
@@ -185,11 +185,11 @@ namespace ParameterPile
 		TThread::Initialize();
 		
 		PMT_SArea_peaks_acceptance = 0.2; //V*us
-		subruns_per_file = 10;
+		subruns_per_file = 1000;
 		MPPC_minimum_peak_A = 0.0128; //
 		MPPC_maximum_peak_A = 0.0128; //
 
-		filter_PMT_n_points.insert		(std::pair<int,int>(0,50));
+		filter_PMT_n_points.insert		(std::pair<int,int>(0,50));//(channel, value)
 		filter_PMT_order.insert			(std::pair<int,int>(0,8));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(0,1));
 		filter_PMT_n_points.insert		(std::pair<int,int>(1,50));
@@ -202,7 +202,7 @@ namespace ParameterPile
 		filter_PMT_order.insert			(std::pair<int,int>(12,4));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,1));
 
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.012));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.012));//(channel, value)
 		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.012));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.024));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.024));
@@ -211,9 +211,7 @@ namespace ParameterPile
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(12,0.00038));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(12,0.00038));
 
-		PMT_use_average.insert(std::pair<int,bool>(0,true));
-		PMT_use_average.insert(std::pair<int,bool>(1,true));
-
+		ch_use_average.push_pair(0,0);
 
 		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_4_thmV",80));
 		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_5_thmV",78));

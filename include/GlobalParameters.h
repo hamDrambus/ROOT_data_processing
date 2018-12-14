@@ -63,7 +63,7 @@ namespace ParameterPile
 	extern double PMT_mean_above_cutoff_acceptance;
 	extern double PMT_right_cutoff_from_RMS;
 	extern double PMT_left_cutoff_from_RMS;
-	extern std::map<int,bool> PMT_use_average;
+	extern area_vector ch_use_average;
 
 	extern double MPPC_peaks_smoothing_time;
 	extern int MPPC_N_trust;

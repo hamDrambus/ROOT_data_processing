@@ -21,7 +21,7 @@ protected:
 	ParameterPile::experiment_area current_under_processing;
 
 	STD_CONT<SingleRunData> one_run_data;
-	STD_CONT<SingleRunResults> one_run_results;
+	//STD_CONT<SingleRunResults> one_run_results;
 	STD_CONT<AllRunsResults> all_runs_results;
 
 	TCondition* _cond;
