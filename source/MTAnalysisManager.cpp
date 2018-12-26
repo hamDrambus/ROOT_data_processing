@@ -66,11 +66,11 @@ void MTAnalysisManager::processAllRuns(void)
 
 	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N) {
 		for (int n = 0; n < areas.size(); ++n) {
-			_submanagers[n]->setAllRunsResults(&all_runs_results.back());
+			_submanagers[n]->setAllRunsResults(&all_runs_results.back()); //Creates AllRunsResults for each thread at first iteration.
+			//Used for passing parameters determined from all runs to the next iteration. Assignment is overloaded!
 			pThreads[n]->Run(); //if it is the last iteration, submanager (AnalysisManager) clears its data
 		}
 		//TThread::Ps();
-		all_runs_results.back().Clear();
 		for (int n = 0; n<areas.size(); ++n) {
 			if (0 != thread_mutexes[n]->TryLock()) { //thread is already executed, so no wait required
 			} else {
@@ -82,14 +82,15 @@ void MTAnalysisManager::processAllRuns(void)
 				all_runs_results.back().Merge(&res->back());
 		}
 		all_runs_results.back().Merged();
+		all_runs_results.back().ClearMerged();
 	}
 	
 	for (int n = 0; n<areas.size(); ++n) {
 		pThreads[n]->Delete();
 		delete _submanagers[n];
 		conditions[n]->Delete();
-		mutexes[n]->Delete();
-		thread_mutexes[n]->Delete();
+		delete mutexes[n];
+		delete thread_mutexes[n];
 	}
 	nextRun();
 }

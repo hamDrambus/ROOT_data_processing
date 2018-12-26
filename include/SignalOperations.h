@@ -84,6 +84,7 @@ namespace SignalOperations
 	double RMS(DITERATOR first, DITERATOR last);
 	double Mean(STD_CONT<STD_CONT<peak>>::iterator first, STD_CONT<STD_CONT<peak>>::iterator last, std::function<double (peak& pk)> &value_picker);
 	double RMS(STD_CONT<STD_CONT<peak>>::iterator first, STD_CONT<STD_CONT<peak>>::iterator last, std::function<double(peak& pk)> &value_picker);
+
 };
 
 #endif

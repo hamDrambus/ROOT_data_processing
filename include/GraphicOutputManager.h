@@ -13,8 +13,9 @@ protected:
 	std::string _script_fname;
 	STD_CONT<std::string> _script_lines;
 
+	std::string _directory;
 	int get_index_of_pad_marker(int pad);//before which line enter the script;
-
+	std::string process_title (std::string);
 public:
 	//Drawing(void);
 	Drawing(std::string name, ParameterPile::DrawEngine de, int id_index);//can't change DrawEngine - too much of a trouble
@@ -26,6 +27,8 @@ public:
 	void DrawData(DVECTOR &xs, DVECTOR &ys, std::string title = "", std::string extra_txt = "");//draws only this vector
 	void DrawData(void);
 	void Clear(void);
+
+	void SetDirectory(std::string path);
 
 	std::string get_name(void) const;
 	int get_id(void) const;

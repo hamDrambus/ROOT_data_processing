@@ -12,11 +12,7 @@ class TVirtualFFT;
 
 class SingleRunData
 {
-public:
-	enum Status { Ok, Empty, NoPMTsignal, PMT_mismatch, MPPC_mismatch, AVG_mismatch};
 protected:
-	bool _valid;
-	Status _status;
 
 	STD_CONT<DVECTOR>xs_channels;
 	STD_CONT<DVECTOR>ys_channels;
@@ -28,13 +24,6 @@ protected:
 
 	ParameterPile::experiment_area curr_area; //sets channel area
 	GraphicOutputManager graph_manager;
-
-	//int get_channel_index(int ch);
-	void extract_one_subrun(STD_CONT<DVECTOR> &xxs, STD_CONT<DVECTOR> &yys, int sub_index);
-	void add_draw_data(std::string prefix, GraphicOutputManager& graph_manager,
-		ParameterPile::DrawEngine de = ParameterPile::DrawEngine::Gnuplot, int ch = -1); //only draws specified runs
-	void add_draw_baselines(std::string prefix, GraphicOutputManager& graph_manager,
-		ParameterPile::DrawEngine de = ParameterPile::DrawEngine::Gnuplot);
 
 	void file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, int index);
 	bool test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, AllRunsResults *results); //returns false if the PMT signal is empty

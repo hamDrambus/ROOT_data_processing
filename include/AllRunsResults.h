@@ -70,6 +70,8 @@ struct time_results {
 #endif
 class AllRunsResults
 {
+public:
+	enum Status { Ok, Empty, NoPMTsignal, PMT_mismatch, MPPC_mismatch, AVG_mismatch};
 protected:
 	int N_of_runs;
 	int N_of_valid_runs;//i.e. accepted by PMT cut
@@ -77,6 +79,9 @@ protected:
 	ParameterPile::area_vector _to_average;
 	ParameterPile::experiment_area _exp;
 	GraphicOutputManager graph_manager;
+	//[#run]
+	std::vector<bool> _valid;
+	std::vector<Status> _status;
 	//AVERAGES:
 	//TODO: ensure that only event valid in final are used. (N_of_valid_runs can be different for each iteration)
 	STD_CONT<DVECTOR> _xs_sum;  //[channel]
@@ -104,12 +109,17 @@ protected:
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
 	//void find_S_cutoff_v2(void);
-	TH1D* createMPPCHist(DVECTOR &what, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
-	TH1D* createMPPCHist_peaks_S(STD_CONT<STD_CONT<peak>> &what, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
-	void vector_to_file(DVECTOR &what, std::string fname, std::string title="MPPC");
-	void vector_to_file(STD_CONT<STD_CONT<peak>> &pks, std::string fname, std::string title = "MPPC_peaks");
+	TH1D* createMPPCHist(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
+	TH1D* createMPPCHist_peaks_S(STD_CONT<STD_CONT<STD_CONT<peak> > > &what, int ch_ind, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
+	void vector_to_file(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string fname, std::string title="MPPC");
+	void vector_to_file(STD_CONT<STD_CONT<STD_CONT<peak> > > &pks, int ch_ind, std::string fname, std::string title = "MPPC_peaks");
 	void vector_to_file(DVECTOR &xs, DVECTOR &ys, DVECTOR &ydisps, std::string fname, std::string title = "Average");
 	TF1* createMPPCFitFunc(TH1D* hist, std::string name);
+
+	double Mean(STD_CONT<STD_CONT<STD_CONT<peak> > > &peaks, int ch_ind, std::function<double (peak& pk)> &value_picker);
+	double RMS(STD_CONT<STD_CONT<STD_CONT<peak> > > &peaks, int ch_ind, std::function<double (peak& pk)> &value_picker);
+	double Mean(STD_CONT<STD_CONT<double> > &vals, int ch_ind);
+	double RMS(STD_CONT<STD_CONT<double> > &vals, int ch_ind);
 
 #ifdef _USE_TIME_STATISTICS
 	time_results time_stat;
@@ -121,8 +131,11 @@ public:
 	//For multithreading:
 	void Merge(AllRunsResults* with);
 	void Merged(void);
-	void Clear(void);
+	void Clear(void);//called at the end of Merged() and in Merge(with) for 'with'
+	void ClearMerged(void); //called for Merged results in multithread case
 	int Iteration(void) const;
+
+	AllRunsResults& operator=(const AllRunsResults& right);
 
 	friend AnalysisManager;
 	friend SingleRunData;

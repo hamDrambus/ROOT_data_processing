@@ -66,10 +66,10 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 {
 	one_run_data.push_back(SingleRunData(current_under_processing));
 	one_run_data.back().processSingleRun(_all_results);
-	if (!one_run_data.back()._valid){
+	if (!_all_results->_valid[_all_results->N_of_runs-1]){
 		std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
 			<< current_under_processing.sub_runs.back() << " processed" << std::endl;
-		std::cout << "reason: " << one_run_data.back()._status<<std::endl;
+		std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
 		//one_run_data.pop_back();
 	} else {
 		std::size_t data_size =sizeof(one_run_data);
@@ -98,10 +98,10 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 	std::size_t data_size =sizeof(one_run_data);
 	for (auto j = one_run_data.begin(); (j != one_run_data.end()); ++j){
 		j->processSingleRun(_all_results);
-		if (!j->_valid) {
+		if (!_all_results->_valid[_all_results->N_of_runs-1]) {
 			std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
 				<< current_under_processing.sub_runs.back() << " processed" << std::endl;
-			std::cout << "reason: " << j->_status<<std::endl;
+			std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
 		}
 		data_size += j->real_size();
 		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
@@ -256,24 +256,30 @@ ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::e
         std::cout << "Error(" << errno << ") opening " << path << std::endl;
         return out_area;
     }
-	while ((dirp = readdir(dp)) != NULL) {
-        std::string file_name = dirp->d_name;
-       	if (file_name.size() < 4)
-       		continue;
-       	if (file_name[0] == '.')
-       		continue;
-       	file_name.erase(file_name.begin(), file_name.begin() + 4); //erase "run_"
-       	int n_underscore = file_name.find("_");
-       	if (n_underscore == std::string::npos)
-       		continue;
-       		file_name.erase(file_name.begin() + n_underscore, file_name.end());
-       	if (file_name.empty())
-       		continue;
-       	int run = std::stoi(file_name);
-       		if (from < 0){
-      			from = run;
-       			to = run;
-      			continue;
+    std::vector<int> run_vector_sorted;
+    while ((dirp = readdir(dp)) != NULL) {
+		std::string file_name = dirp->d_name;
+		if (file_name.size() < 4)
+			continue;
+		if (file_name[0] == '.')
+			continue;
+		file_name.erase(file_name.begin(), file_name.begin() + 4); //erase "run_"
+		int n_underscore = file_name.find("_");
+		if (n_underscore == std::string::npos)
+			continue;
+			file_name.erase(file_name.begin() + n_underscore, file_name.end());
+		if (file_name.empty())
+			continue;
+		run_vector_sorted.push_back(std::stoi(file_name));
+    }
+    closedir(dp);
+    std::sort(run_vector_sorted.begin(), run_vector_sorted.end());
+	for (std::size_t r=0, r_end_= run_vector_sorted.size(); r!=r_end_; ++r) {
+        int run = run_vector_sorted[r];
+		if (from < 0){
+			from = run;
+			to = run;
+			continue;
      	}
       	if (to == run)
        		continue;
@@ -285,7 +291,7 @@ ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::e
        		to = from;
        	}
 	}
-    closedir(dp);
+
 #endif //__WIN32__
     if ((from >= 0) && (to >= 0))
     		out_area.runs.push_pair(from, to);
