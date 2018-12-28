@@ -195,7 +195,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 #endif
 		STD_CONT<peak> ppeaks;
 		double threshold = 0;
-		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, found_base_lines[ind], ppeaks, ch);
+		double threshold_edges = 0;
+		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, threshold_edges, found_base_lines[ind], ppeaks, ch);
 
 #ifdef _USE_TIME_STATISTICS
 		auto PMT_baseline_end_timer = std::chrono::high_resolution_clock::now();
@@ -206,7 +207,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 #endif
 
 		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], all_runs_results->pmt_peaks[run_index][pmt_index], found_base_lines[ind],
-			threshold,found_base_lines[ind], ParameterPile::PMT_N_of_averaging);
+			threshold, threshold_edges, ParameterPile::PMT_N_of_averaging);
 
 		if (0==ch){
 			double S_sum = 0;
@@ -231,8 +232,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		ParameterPile::experiment_area area = curr_area.to_point();
 		area.channels.erase();
 		area.channels.push_back(ch);
-		std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
-			"\\_ch" + std::to_string(ch) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
+		std::string plot_title = curr_area.experiments.back() + "_run" + std::to_string(curr_area.runs.back()) +
+			"_ch" + std::to_string(ch) + "_sub" + std::to_string(curr_area.sub_runs.back());
 		if (ParameterPile::draw_required(area)) {
 			std::string plot_name = "";
 			plot_name += std::string("PMT_ch") + std::to_string(ch);
@@ -245,6 +246,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 				dr->AddToDraw(xs_channels[ind], ys_raw, "raw" + plot_title, "with lines", 0);
 				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered" + plot_title, "with lines lw 2", 0);
 				dr->AddToDraw_baseline(threshold, "threshold");
+				if (threshold_edges!=found_base_lines[ind])
+					dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
 				dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
 				dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
 				dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
@@ -275,8 +278,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 	return;
 }
 
-//can not be channel independent. In difference to MPPC this one returns threshold shifter by baseline
-void SingleRunData::calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline, STD_CONT<peak> &peaks_before_S1, int channel)
+//can not be channel independent. In difference to MPPC this one returns threshold shifted by baseline
+void SingleRunData::calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &threshold_2, double &baseline, STD_CONT<peak> &peaks_before_S1, int channel)
 {
 	DVECTOR xs_before_S1 = xs;
 	DVECTOR ys_before_S1 = ys;
@@ -311,6 +314,9 @@ void SingleRunData::calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &y
 			threshold = ParameterPile::PMT_maximum_thresh.find(channel)->second;
 	}
 	threshold += baseline;
+	threshold_2 = baseline;
+	if (ParameterPile::PMT_thresh_edges.find(channel)!=ParameterPile::PMT_thresh_edges.end())
+		threshold_2+=ParameterPile::PMT_thresh_edges.find(channel)->second;
 }
 
 void SingleRunData::push_average (int ch, bool is_first_call, AllRunsResults *all_runs_results)

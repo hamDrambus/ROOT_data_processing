@@ -114,6 +114,8 @@ namespace ParameterPile
 	double PMT_run_acceptance_threshold_to_noize = 4;//~ 2-3
 	std::map<int,double> PMT_maximum_thresh;
 	std::map<int,double> PMT_minimum_thresh;
+	std::map<int,double> PMT_thresh_edges;
+
 	int PMT_N_of_averaging = 1; //=== N_trust. PMT signal is already smoothed by filter
 	int PMT_N_peaks_acceptance = 0;//1 //condition is >=1, not >1
 	double PMT_SArea_peaks_acceptance = 0; //V*us
@@ -197,28 +199,29 @@ namespace ParameterPile
 		filter_PMT_n_points.insert		(std::pair<int,int>(1,50));
 		filter_PMT_order.insert			(std::pair<int,int>(1,8));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(1,1));
-		filter_PMT_n_points.insert		(std::pair<int,int>(8,30));
-		filter_PMT_order.insert			(std::pair<int,int>(8,8));
+		filter_PMT_n_points.insert		(std::pair<int,int>(8,25));
+		filter_PMT_order.insert			(std::pair<int,int>(8,10));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(8,1));
-		filter_PMT_n_points.insert		(std::pair<int,int>(9,50));
-		filter_PMT_order.insert			(std::pair<int,int>(9,4));
+		filter_PMT_n_points.insert		(std::pair<int,int>(9,25));
+		filter_PMT_order.insert			(std::pair<int,int>(9,10));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(9,1));
-		filter_PMT_n_points.insert		(std::pair<int,int>(10,50));
-		filter_PMT_order.insert			(std::pair<int,int>(10,4));
+		filter_PMT_n_points.insert		(std::pair<int,int>(10,25));
+		filter_PMT_order.insert			(std::pair<int,int>(10,10));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(10,1));
-		filter_PMT_n_points.insert		(std::pair<int,int>(11,50));
-		filter_PMT_order.insert			(std::pair<int,int>(11,4));
+		filter_PMT_n_points.insert		(std::pair<int,int>(11,25));
+		filter_PMT_order.insert			(std::pair<int,int>(11,10));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(11,1));
-		filter_PMT_n_points.insert		(std::pair<int,int>(12,50));
-		filter_PMT_order.insert			(std::pair<int,int>(12,4));
+		filter_PMT_n_points.insert		(std::pair<int,int>(12,25));
+		filter_PMT_order.insert			(std::pair<int,int>(12,10));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,1));
 
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.0213));//(channel, value)
 		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.0213));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.024));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.024));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(8,0.00046));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(8,0.00046));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(8,0.000662));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(8,0.000662));
+		PMT_thresh_edges.insert		(std::pair<int,double>(8,0.000191));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(9,0.00046));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(9,0.00046));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(10,0.00046));
@@ -269,7 +272,7 @@ namespace ParameterPile
 		areas_to_draw.back().experiments.push_back("Cd_20kV_800V_12dB_48V");
 
 		areas_to_draw.back().runs.push_pair(360, 360);
-		areas_to_draw.back().channels.push_pair(8, 8);
+		areas_to_draw.back().channels.push_pair(9, 9);
 		//areas_to_draw.back().channels.push_pair(2, 2);
 		//areas_to_draw.back().channels.push_pair(8, 8);
 		//areas_to_draw.back().channels.push_pair(12, 12);
@@ -284,7 +287,7 @@ namespace ParameterPile
 		areas_to_draw.back().sub_runs.push_pair(0, 6);
 
 		exp_area.runs.push_pair(360, 360);
-		exp_area.channels.push_pair(8, 8);
+		exp_area.channels.push_pair(9, 9);
 		//exp_area.channels.push_pair(2, 2);
 		//exp_area.channels.push_pair(8, 8);
 		//exp_area.channels.push_pair(12, 12);

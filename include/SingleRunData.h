@@ -32,7 +32,7 @@ protected:
 	void readOneRun(AllRunsResults *results, int channel);
 	void clearOneRun(int channel);
 	void calculate_MPPC_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline,STD_CONT<peak> &peaks_before_S1);
-	void calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &baseline, STD_CONT<peak> &peaks_before_S1, int channel);
+	void calculate_PMT_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &threshold_2, double &baseline, STD_CONT<peak> &peaks_before_S1, int channel);
 	void push_event (AllRunsResults *all_runs_results);
 	void push_average (int ch, bool is_first_call, AllRunsResults *all_runs_results);
 	void push_dispersion (int ch, AllRunsResults *all_runs_results);

@@ -55,6 +55,7 @@ namespace ParameterPile
 	extern double PMT_run_acceptance_threshold_to_noize;
 	extern std::map<int,double> PMT_maximum_thresh;
 	extern std::map<int,double> PMT_minimum_thresh;
+	extern std::map<int,double> PMT_thresh_edges;
 	extern int PMT_N_of_averaging; //=== N_trust
 	extern int PMT_N_peaks_acceptance;
 	extern double PMT_SArea_peaks_acceptance; //V*ms

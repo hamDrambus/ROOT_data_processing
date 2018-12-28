@@ -46,10 +46,12 @@ void PolynomialFit::operator ()(std::vector<double> &xs_in, std::vector<double> 
 	TVectorD Y(N_points);
 	for (int row = 0; row < Y.GetNrows(); row++)
 		Y[row] = ys_in[offset + row];
-	TMatrixD mT = mat;
+	TMatrixD mT(mat);
 	mT.T();
+	TMatrixD In(mT*mat);//because normal assignment like mat = mT*mat does not work! First resizing must be done.
+	In.SetTol(1e-40);
 	_last_coefs.ResizeTo(_order + 1);
-	_last_coefs = ((mT*mat).Invert())*mT*Y;
+	_last_coefs = (In.Invert())*mT*Y;
 	pars_out.ResizeTo(_last_coefs);
 	pars_out = _last_coefs;
 }
