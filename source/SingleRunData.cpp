@@ -140,7 +140,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 	int pmt_index = -1;
 	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
-		if ((ch>=32)||(ind<0)||(2==ch))
+		if ((ch>=32)||(ind<0)||(GEM_CH_==ch))
 			continue;
 		readOneRun(all_runs_results, ch); //read all PMTs, ignore GEM and MPPCs
 		if (xs_channels[ind].empty())
@@ -370,6 +370,14 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 			readOneRun(all_runs_results, ch);
 			if ((8<=ch)&&(12>=ch))
 				SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
+			if ((1==ch)||(0==ch)){
+				STD_CONT<peak> ppeaks;
+				double threshold = 0;
+				double threshold_edges = 0;
+				double baseline =0;
+				calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, threshold_edges, baseline, ppeaks, ch);
+				SignalOperations::substract_baseline(ys_channels[ind], baseline);
+			}
 			push_average(ch, is_first_call_avr, all_runs_results);
 			clearOneRun(ch);
 		}

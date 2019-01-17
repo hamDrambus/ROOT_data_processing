@@ -103,8 +103,8 @@ namespace ParameterPile
 	std::map<int,int> filter_PMT_n_iterations;
 
 	//these values are approximate, especially S2
-	double S1_start_time = 27; //in us
-	double S1_finish_time = 28; //in us
+	double S1_start_time = 20; //in us
+	double S1_finish_time = 20.5; //in us
 	std::map<std::string,double> S2_start_time; //in us
 	std::map<std::string,double> S2_finish_time; //in us
 
@@ -189,9 +189,10 @@ namespace ParameterPile
 		TThread::Initialize();
 		
 		PMT_SArea_peaks_acceptance = 0.2; //V*us
-		subruns_per_file = 1000;
+		subruns_per_file = 100;
 		MPPC_minimum_peak_A = 0.0128; //
 		MPPC_maximum_peak_A = 0.0128; //
+		threads_number = 3;
 
 		filter_PMT_n_points.insert		(std::pair<int,int>(0,50));//(channel, value)
 		filter_PMT_order.insert			(std::pair<int,int>(0,8));
@@ -215,10 +216,10 @@ namespace ParameterPile
 		filter_PMT_order.insert			(std::pair<int,int>(12,10));
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,1));
 
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.0213));//(channel, value)
-		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.0213));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.024));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.024));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.059));//(channel, value)
+		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.059));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.034));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.034));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(8,0.000662));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(8,0.000662));
 		PMT_thresh_edges.insert		(std::pair<int,double>(8,0.000191));
@@ -232,8 +233,8 @@ namespace ParameterPile
 		PMT_maximum_thresh.insert	(std::pair<int,double>(12,0.00038));
 
 		ch_use_average.push_pair(0,1);
-		ch_use_average.push_pair(2,2);
-		ch_use_average.push_pair(8,12);
+		ch_use_average.push_pair(GEM_CH_, GEM_CH_);
+		//ch_use_average.push_pair(8,12);
 
 		/*S2_start_time.insert(std::pair<std::string,double>("event_x-ray_4_thmV",80));
 		S2_start_time.insert(std::pair<std::string,double>("event_x-ray_5_thmV",78));
@@ -263,43 +264,46 @@ namespace ParameterPile
 		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_18_thmV",90));
 		S2_finish_time.insert(std::pair<std::string,double>("event_x-ray_20_thmV",90));*/
 
-		S2_start_time.insert(std::pair<std::string,double>("Cd_20kV_800V_12dB_48V",30));
+		S2_start_time.insert(std::pair<std::string,double>("20kV_550V_0dB_46V_coll14",23));
 
-		S2_finish_time.insert(std::pair<std::string,double>("Cd_20kV_800V_12dB_48V",80));
+		S2_finish_time.insert(std::pair<std::string,double>("20kV_550V_0dB_46V_coll14",140));
 
 		areas_to_draw.push_back(experiment_area());
 
-		areas_to_draw.back().experiments.push_back("Cd_20kV_800V_12dB_48V");
+		areas_to_draw.back().experiments.push_back("20kV_550V_0dB_46V_coll14");
 
-		areas_to_draw.back().runs.push_pair(360, 360);
-		areas_to_draw.back().channels.push_pair(9, 9);
+		areas_to_draw.back().runs.push_pair(25, 25);
+		areas_to_draw.back().channels.push_pair(0, 1);
+
 		//areas_to_draw.back().channels.push_pair(2, 2);
 		//areas_to_draw.back().channels.push_pair(8, 8);
 		//areas_to_draw.back().channels.push_pair(12, 12);
 
-		//areas_to_draw.back().channels.push_pair(37, 38);
-		//areas_to_draw.back().channels.push_pair(44, 44);
+		areas_to_draw.back().channels.push_pair(32, 32);//edge
+		areas_to_draw.back().channels.push_pair(50, 50);//between endge and central
+		areas_to_draw.back().channels.push_pair(38, 38);//central
+		areas_to_draw.back().channels.push_pair(44, 44);
 
 		//areas_to_draw.back().channels.push_pair(32, 44); //13
 		//areas_to_draw.back().channels.push_pair(48, 56); //9
 		//areas_to_draw.back().channels.push_pair(57, 59); //3 =>25
 
-		areas_to_draw.back().sub_runs.push_pair(0, 6);
+		areas_to_draw.back().sub_runs.push_pair(0, 1);
 
-		exp_area.runs.push_pair(360, 360);
-		exp_area.channels.push_pair(9, 9);
-		//exp_area.channels.push_pair(2, 2);
+		exp_area.runs.push_pair(0, 9999);
+		exp_area.channels.push_pair(0, 1);
+		exp_area.channels.push_pair(GEM_CH_, GEM_CH_);
 		//exp_area.channels.push_pair(8, 8);
 		//exp_area.channels.push_pair(12, 12);
 
 		//exp_area.channels.push_pair(56, 56);
 
-		//exp_area.channels.push_pair(32, 44); //13
-		//exp_area.channels.push_pair(48, 55); //8
-		//exp_area.channels.push_pair(57, 59); //3 =>24 channels
+		exp_area.channels.push_pair(32, 44); //13
+		exp_area.channels.push_pair(48, 55); //8
+		exp_area.channels.push_pair(57, 59); //3 =>24 channels
 
 		exp_area.sub_runs.push_pair(0, 9); //subruns_per_file-1);
 
-		exp_area.experiments.push_back("Cd_20kV_800V_12dB_48V");
+		exp_area.experiments.push_back("20kV_550V_0dB_46V_coll14");
 	}
 };

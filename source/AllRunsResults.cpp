@@ -585,7 +585,7 @@ void AllRunsResults::Merged(void)
 				*i/=(double)N_of_valid_runs*(N_of_valid_runs-1);
 				*i = sqrt(*i);
 			}
-			if (2==ch) {
+			if (GEM_CH_==ch) {
 				std::string GEM_output_prefix = std::string(ParameterPile::this_path)+ std::string(OUTPUT_DIR) + OUTPUT_GEMS + "/" + OUTPUT_GEMS +"_"
 						+ _exp.experiments.back()+"_AVR";
 				STD_CONT<peak> no_peaks;
@@ -595,7 +595,7 @@ void AllRunsResults::Merged(void)
 				double baseline = SignalOperations::find_baseline_by_median(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
 				SignalOperations::substract_baseline(_ys_sum[ind], baseline);
 
-				Drawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back()+"_AVR", 2, ParameterPile::DrawEngine::Gnuplot);
+				Drawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back()+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);
 				dr->SetDirectory(OUTPUT_DIR+OUTPUT_GEMS + _exp.experiments.back() + "/");
 				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "GEM_" + _exp.experiments.back()+"_AVR", "", 0);
 				DVECTOR GEM_int;
@@ -658,7 +658,7 @@ void AllRunsResults::Merged(void)
 			vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], PMT_output_prefix+".txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR");
 			double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
 			double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
-			Drawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR", 0, ParameterPile::DrawEngine::Gnuplot);
+			Drawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);
 			dr->SetDirectory(OUTPUT_DIR+OUTPUT_PMTS + _exp.experiments.back() + "/PMT_"  + std::to_string(ch) + "/");
 			dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
 			dr->AddToDraw(_xs_sum[ind], integral,"PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_Int_AVR","axes x1y2");

@@ -96,11 +96,11 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 	if (0 == _all_results->Iteration())
 		return loopAllRuns_first_iteration(_all_results);
 	std::size_t data_size =sizeof(one_run_data);
-	for (auto j = one_run_data.begin(); (j != one_run_data.end()); ++j){
+	for (auto j = one_run_data.begin(); (j != one_run_data.end()); ++j) {
 		j->processSingleRun(_all_results);
 		if (!_all_results->_valid[_all_results->N_of_runs-1]) {
-			std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
-				<< current_under_processing.sub_runs.back() << " processed" << std::endl;
+			std::cout << "invalid: " << j->getArea().experiments.back() << "/run_" << j->getArea().runs.back() << "_sub_"
+				<< j->getArea().sub_runs.back() << " processed" << std::endl;
 			std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
 		}
 		data_size += j->real_size();

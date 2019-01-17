@@ -34,7 +34,8 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../Data/CdTime/180705/")
+#define DATA_PREFIX std::string("../Data/181227/")
+#define OUTPUT_DIR std::string("../Data/181227/results/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
 #define DATA_EXPERIMENT_FORMAT "^X-ray_\d{1,2}_.*$"
 
@@ -45,10 +46,10 @@
 //in volts
 #define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
 //in volts
-#define OUTPUT_DIR std::string("../Data/CdTime/180705/results/")
 //GEM_v1 - finding baseline for every event
 //GEM_v2 - finding baseline for averaged signal
 #define GEM_V2_
+#define GEM_CH_ 4
 #undef GEM_V1_
 #ifdef GEM_V1_
 #define OUTPUT_GEMS "GEM_v1"
