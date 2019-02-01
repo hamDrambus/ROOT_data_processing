@@ -20,6 +20,7 @@ public:
 	//Drawing(void);
 	Drawing(std::string name, ParameterPile::DrawEngine de, int id_index);//can't change DrawEngine - too much of a trouble
 	void AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title = "", std::string extra_txt = "", int pad_index = 0);
+	void AddToDraw(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err, std::string title = "", std::string extra_txt = "", int pad_index = 0);
 	void AddToDraw_baseline(double base_line, std::string title = "baseline", std::string extra_txt = "", int pad_index = 0);//May add more functions to draw, e.g. gauss
 	void AddToDraw_vertical(double x_pos, double from_y, double to_y, std::string extra_txt="", int pad_index = 0);
 	void AddToDraw(std::string definition_lines, std::string f_name, std::string title, std::string extra_txt = "", int pad_index = 0);//any gnuplot function

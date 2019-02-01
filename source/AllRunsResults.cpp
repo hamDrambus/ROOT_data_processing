@@ -73,7 +73,7 @@ void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_
 	DITERATOR x_befS1_max;
 	double noize_amp;
 	SignalOperations::get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
-	Drawing *dr = man.GetDrawing(0);
+	Drawing *dr = man.GetDrawing(GEM_CH_);
 	if (dr)
 		dr->AddToDraw_vertical(*x_befS1_max, -0.4, 0.4, "lc rgb \"#000000\"", 0);
 	noize_amp *= ParameterPile::GEM_threshold_to_noise;
@@ -596,11 +596,11 @@ void AllRunsResults::Merged(void)
 				SignalOperations::substract_baseline(_ys_sum[ind], baseline);
 
 				Drawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back()+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);
-				dr->SetDirectory(OUTPUT_DIR+OUTPUT_GEMS + _exp.experiments.back() + "/");
-				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "GEM_" + _exp.experiments.back()+"_AVR", "", 0);
-				DVECTOR GEM_int;
-				SignalOperations::integrate(_xs_sum[ind], _ys_sum[ind], GEM_int,0/*baseline*/);
-				dr->AddToDraw(_xs_sum[ind], GEM_int, "GEM_Int_" + _exp.experiments.back(), "axes x1y2", 0);
+				dr->SetDirectory(OUTPUT_DIR+OUTPUT_GEMS +"/" +_exp.experiments.back() + "/");
+				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], "GEM_" + _exp.experiments.back()+"_AVR", "", 0);
+				DVECTOR GEM_int, integral_variance;
+				SignalOperations::integrate_with_variance(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], GEM_int, integral_variance, 0/*baseline*/);
+				dr->AddToDraw(_xs_sum[ind], GEM_int, integral_variance, "GEM_Int_" + _exp.experiments.back(), "axes x1y2", 0);
 
 				//find start GEM time
 				DITERATOR x_start = _xs_sum[ind].begin();
@@ -630,7 +630,7 @@ void AllRunsResults::Merged(void)
 					std::cout << "GEM x-y size mismatch" << std::endl;
 				}
 				vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], GEM_output_prefix+".txt", std::string(OUTPUT_GEMS) +"_" + _exp.experiments.back()+"_AVR");
-				//TODO: save integral as well + its error.
+				vector_to_file(_xs_sum[ind], GEM_int, integral_variance, GEM_output_prefix+"_INT.txt", std::string(OUTPUT_GEMS) +"_" + _exp.experiments.back()+"_AVR_INT");
 				continue;
 			}
 			if (ch>=32) {
@@ -642,7 +642,10 @@ void AllRunsResults::Merged(void)
 				no_peaks.back().right = _xs_sum[ind].back();
 				double baseline = SignalOperations::find_baseline_by_integral(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
 				SignalOperations::substract_baseline(_ys_sum[ind], baseline);
+				DVECTOR integral, integral_variance;
+				SignalOperations::integrate_with_variance(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], integral, integral_variance, 0);
 				vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], MPPC_output_prefix+".txt", std::string(OUTPUT_MPPCS_PICS) +"_" + _exp.experiments.back()+"_AVR");
+				vector_to_file(_xs_sum[ind], integral, integral_variance, MPPC_output_prefix+"_INT.txt", std::string(OUTPUT_MPPCS_PICS) +"_" + _exp.experiments.back()+"_AVR_INT");
 				continue;
 			}
 			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
@@ -653,15 +656,16 @@ void AllRunsResults::Merged(void)
 			no_peaks.back().right = _xs_sum[ind].back();
 			double baseline = SignalOperations::find_baseline_by_median(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
 			SignalOperations::substract_baseline(_ys_sum[ind], baseline);
-			DVECTOR integral;
-			SignalOperations::integrate(_xs_sum[ind], _ys_sum[ind], integral, 0);
+			DVECTOR integral, integral_variance;
+			SignalOperations::integrate_with_variance(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], integral, integral_variance, 0);
 			vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], PMT_output_prefix+".txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR");
+			vector_to_file(_xs_sum[ind], integral, integral_variance, PMT_output_prefix+"_INT.txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR_INT");
 			double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
 			double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
 			Drawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);
 			dr->SetDirectory(OUTPUT_DIR+OUTPUT_PMTS + _exp.experiments.back() + "/PMT_"  + std::to_string(ch) + "/");
-			dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
-			dr->AddToDraw(_xs_sum[ind], integral,"PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_Int_AVR","axes x1y2");
+			dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
+			dr->AddToDraw(_xs_sum[ind], integral, integral_variance, "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_Int_AVR","axes x1y2");
 			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
 			dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
 		}
@@ -998,7 +1002,6 @@ void AllRunsResults::Clear(void)
 
 void AllRunsResults::ClearMerged(void)
 {
-	Clear();
 	std::vector<bool>().swap(_valid);
 	std::vector<Status>().swap(_status);
 }
@@ -1014,6 +1017,10 @@ AllRunsResults& AllRunsResults::operator=(const AllRunsResults& right)
 	S_peaks_max_cutoff = right.S_peaks_max_cutoff;
 	_to_average = right._to_average;
 	_exp = right._exp;
+	_ys_sum = right._ys_sum;
+	_xs_sum = right._xs_sum;
+	_ys_disp = right._ys_disp;
+	avr_channels = right.avr_channels;
 	return *this;
 }
 

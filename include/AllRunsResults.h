@@ -88,7 +88,7 @@ protected:
 	STD_CONT<DVECTOR> _ys_sum;  //[channel]
 	STD_CONT<DVECTOR> _ys_disp; //[channel]
 	STD_CONT<int> avr_channels;
-	//TODO: The number of runs in MPPC and PMT blocks is always equal
+	//DONE: The number of runs in MPPC and PMT blocks is always equal
 	//MPPC:
 	STD_CONT<STD_CONT<double> > mppc_peaks_in_S2_area; //[run#][channel], size of mppc channels (depends on experiment area)
 	STD_CONT<STD_CONT<double> > mppc_S2_start_time;	 //[run#][channel]

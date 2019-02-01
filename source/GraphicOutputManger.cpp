@@ -11,7 +11,7 @@ _name(name), _id_index(id_index), _de(de), _directory(OUTPUT_DIR+"gnuplot/")
 	_script_lines.push_back("set multiplot");
 	_script_lines.push_back("set ytics nomirror");
 	_script_lines.push_back("set y2tics");
-	_script_lines.push_back("set key top left");
+	_script_lines.push_back("set key top right");
 	_script_lines.push_back("###");
 	_script_lines.push_back("###");
 	_script_lines.push_back("unset multiplot");
@@ -76,6 +76,25 @@ void Drawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std::string
 	open_output_file(line, f_data);
 	for (auto i = xs.begin(), j = ys.begin(); (i != xs.end()) && (j != ys.end()); i++, j++)
 		f_data<< *i << '\t' << *j << std::endl;
+	f_data.close();
+}
+
+void Drawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err, std::string title, std::string extra_txt, int pad_index)
+{
+	int off = get_index_of_pad_marker(pad_index);
+	if (off < 0)
+		return;
+	title = process_title(title);
+	_data_fnames.push_back(_directory+_name +"_"+ std::to_string(_data_fnames.size()));
+	std::string line = "plot '"+ParameterPile::this_path + _data_fnames.back() +"' u 1:2:3 with errorbars title '"+title+"' " + extra_txt;
+	_script_lines.insert(_script_lines.begin() + off, line);
+
+	line = _data_fnames.back();
+	std::ofstream f_data;
+	open_output_file(line, f_data);
+	for (auto i = xs.begin(), j = ys.begin(), e = ys_err.begin(), i_end_ = xs.end(), j_end_=ys.end(), e_end_ = ys_err.end();
+			(i != i_end_) && (j != j_end_) && (e != e_end_); ++i, ++j, ++e)
+		f_data<< *i << '\t' << *j << '\t' << *e <<std::endl;
 	f_data.close();
 }
 

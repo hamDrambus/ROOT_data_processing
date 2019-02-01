@@ -26,11 +26,6 @@ protected:
 
 	TCondition* _cond;
 	TMutex* _thread_mutex;
-#ifdef _TEMP_CODE
-	void* all_exps_data;
-
-	//void* all_exps_result;
-#endif
 
 	enum NextRunIs { FirstRun, NewSubRun, NewRun, NewExperiment, Null} curr_run;
 	virtual void processOneRun_first_iteration(AllRunsResults *_all_results);

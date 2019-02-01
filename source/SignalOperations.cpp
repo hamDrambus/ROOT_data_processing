@@ -182,6 +182,27 @@ namespace SignalOperations {
 #endif
 	}
 
+	void find_baseline_by_ROOT_v1(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+		int _size_ = ys.size();
+#ifndef _USE_DEQUE
+		ys_out = ys;
+		double *f_ys = &ys_out[0];
+#else
+		ys_out.resize(ys.size());
+		double *f_ys = new double[_size_];
+		for (int h = 0; h != _size_; ++h)
+			f_ys[h] = ys[h];
+#endif
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V1
+#ifdef _USE_DEQUE
+		for (int h = 0; h != _size_; ++h)
+			ys_out[h] = f_ys[h];
+		delete[] f_ys;
+#endif
+	}
+
 	void find_baseline_by_ROOT_v2(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
 	{
 		int _size_ = ys.size();
@@ -197,8 +218,8 @@ namespace SignalOperations {
 		//TODO: ? ParameterPile and as input parameters?
 		ROOT_BL_CALL_V2
 #ifdef _USE_DEQUE
-		for (int h = 0; h != _size_; ++h)
-			ys_out[h] = f_ys[h];
+			for (int h = 0; h != _size_; ++h)
+				ys_out[h] = f_ys[h];
 		delete[] f_ys;
 #endif
 	}
@@ -226,23 +247,18 @@ namespace SignalOperations {
 
 	void find_baseline_by_ROOT_v4(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
 	{
-		int _size_ = ys.size();
-#ifndef _USE_DEQUE
-		ys_out = ys;
-		double *f_ys = &ys_out[0];
-#else
 		ys_out.resize(ys.size());
-		double *f_ys = new double[_size_];
-		for (int h = 0; h != _size_; ++h)
+
+		TSpectrum *spec = new TSpectrum();
+		double *f_ys = new double[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
-#endif
 		//TODO: ? ParameterPile and as input parameters?
 		ROOT_BL_CALL_V4
-#ifdef _USE_DEQUE
-			for (int h = 0; h != _size_; ++h)
-				ys_out[h] = f_ys[h];
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out[h]=f_ys[h];
 		delete[] f_ys;
-#endif
+		spec->Delete();
 	}
 
 	void find_baseline_by_ROOT_v5(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
@@ -255,22 +271,6 @@ namespace SignalOperations {
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
 		ROOT_BL_CALL_V5
-		for (int h = 0; h != ys.size(); ++h)
-			ys_out[h]=f_ys[h];
-		delete[] f_ys;
-		spec->Delete();
-	}
-
-	void find_baseline_by_ROOT_v6(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		ys_out.resize(ys.size());
-
-		TSpectrum *spec = new TSpectrum();
-		double *f_ys = new double[ys.size()];
-		for (int h = 0; h != ys.size(); ++h)
-			f_ys[h] = ys[h];
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V6
 		for (int h = 0; h != ys.size(); ++h)
 			ys_out[h] = f_ys[h];
 		delete[] f_ys;
@@ -294,6 +294,22 @@ namespace SignalOperations {
 			ys_out[xx - xs.begin()] = y_cut_from + (*xx - *x_cut_from)*(y_min - y_cut_from) / (*x_min - *x_cut_from);//line
 	}
 
+	void find_baseline_by_ROOT_v6(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	{
+		ys_out.resize(ys.size());
+
+		TSpectrum *spec = new TSpectrum();
+		double *f_ys = new double[ys.size()];
+		for (int h = 0; h != ys.size(); ++h)
+			f_ys[h] = ys[h];
+		//TODO: ? ParameterPile and as input parameters?
+		ROOT_BL_CALL_V6
+		for (int h = 0; h != ys.size(); ++h)
+			ys_out[h]=f_ys[h];
+		delete[] f_ys;
+		spec->Delete();
+	}
+
 	void find_baseline_by_ROOT_v7(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
 	{
 		ys_out.resize(ys.size());
@@ -304,22 +320,6 @@ namespace SignalOperations {
 			f_ys[h] = ys[h];
 		//TODO: ? ParameterPile and as input parameters?
 		ROOT_BL_CALL_V7
-		for (int h = 0; h != ys.size(); ++h)
-			ys_out[h]=f_ys[h];
-		delete[] f_ys;
-		spec->Delete();
-	}
-
-	void find_baseline_by_ROOT_v8(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		ys_out.resize(ys.size());
-
-		TSpectrum *spec = new TSpectrum();
-		double *f_ys = new double[ys.size()];
-		for (int h = 0; h != ys.size(); ++h)
-			f_ys[h] = ys[h];
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V8
 		for (int h = 0; h != ys.size(); ++h)
 			ys_out[h]=f_ys[h];
 		delete[] f_ys;
@@ -1638,6 +1638,29 @@ namespace SignalOperations {
 				(ix == _begin_) ? (*(ix + 1) - *ix) : (*(ix + 1) - *(ix - 1)) / 2;
 			prev = dx*(*iy - baseline) + prev;
 			y_out[ix-_begin_]=prev;
+		}
+	}
+
+	void integrate_with_variance(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err,  DVECTOR &y_out, DVECTOR &y_out_err, double baseline)
+	{
+		if ((xs.size() != ys.size()) || (xs.size() <= 1)||(xs.size()!=ys_err.size())){
+			y_out.clear();
+			y_out_err.clear();
+			return;
+		}
+		y_out.resize(ys.size());
+		y_out_err.resize(ys.size());
+		long double variance = 0;
+		double prev = 0, dx;
+		auto _begin_ = xs.begin();
+		auto _end_ = xs.end();
+		for (auto ix = xs.begin(), iy = ys.begin(); (ix != _end_); ++ix, ++iy) {
+			dx = (ix == (_end_ - 1)) ? (*ix - *(ix - 1)) :
+				(ix == _begin_) ? (*(ix + 1) - *ix) : (*(ix + 1) - *(ix - 1)) / 2;
+			prev = dx*(*iy - baseline) + prev;
+			variance += (long double) dx*dx*ys_err[ix-_begin_]*ys_err[ix-_begin_];
+			y_out[ix-_begin_]=prev;
+			y_out_err[ix-_begin_] = sqrt(variance);
 		}
 	}
 

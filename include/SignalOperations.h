@@ -13,13 +13,13 @@ namespace SignalOperations
 	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
 	void find_baseline_by_ROOT (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
+	void find_baseline_by_ROOT_v1 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v2 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v3 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v4 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v5 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v6 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	void find_baseline_by_ROOT_v7 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v8 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
 	const char *find_background_v_raw(double *spectrum, int ssize,
 		int numberIterations,
 		int direction, int filterOrder,
@@ -32,6 +32,7 @@ namespace SignalOperations
 		bool compton, int sparse = 1);
 
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double baseline);
+	void integrate_with_variance(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err,  DVECTOR &y_out, DVECTOR &y_out_err, double baseline);
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &y_out, double dx_hint, double baseline);
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double baseline);
 	void integrate(DVECTOR &xs, DVECTOR &ys, DVECTOR &x_out, DVECTOR &y_out, double left, double right, double dx_hint, double baseline);

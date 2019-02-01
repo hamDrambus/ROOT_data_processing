@@ -71,7 +71,7 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 			<< current_under_processing.sub_runs.back() << " processed" << std::endl;
 		std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
 		//one_run_data.pop_back();
-	} else {
+	} else {/*
 		std::size_t data_size =sizeof(one_run_data);
 		for (std::size_t g=0,_end_=one_run_data.size();g!=_end_;++g)
 			data_size += one_run_data[g].real_size();
@@ -79,6 +79,7 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 		std::cout<<"processed"<<_all_results->Iteration()<<": "<< current_under_processing.experiments.back() << "_run_" << current_under_processing.runs.back() << "_sub_"
 			<< current_under_processing.sub_runs.back() <<"\tSingleRunData.size: "<<data_size
 			<<"\tN: "<<one_run_data.size()<< std::endl;
+		*/
 	}
 }
 
@@ -95,7 +96,7 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 {
 	if (0 == _all_results->Iteration())
 		return loopAllRuns_first_iteration(_all_results);
-	std::size_t data_size =sizeof(one_run_data);
+	//std::size_t data_size =sizeof(one_run_data);
 	for (auto j = one_run_data.begin(); (j != one_run_data.end()); ++j) {
 		j->processSingleRun(_all_results);
 		if (!_all_results->_valid[_all_results->N_of_runs-1]) {
@@ -103,9 +104,9 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 				<< j->getArea().sub_runs.back() << " processed" << std::endl;
 			std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
 		}
-		data_size += j->real_size();
-		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
-			<< j->getArea().sub_runs.back() << "\tSingleRunData.size: "<<data_size<<std::endl;
+		//data_size += j->real_size();
+		//std::cout << "processed"<<_all_results->Iteration()<<": "<< j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"
+		//	<< j->getArea().sub_runs.back() << "\tSingleRunData.size: "<<data_size<<std::endl;
 	}
 }
 
