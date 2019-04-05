@@ -157,7 +157,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		DVECTOR pmt_baseline_ys1, pmt_baseline_ys2, pmt_baseline_ys3, pmt_baseline_ys4, pmt_baseline_ys5, pmt_baseline_ys6, pmt_baseline_ys7;
 #endif
 
-		if ((2<=ch)&&(5>=ch))
+		if ((8<=ch)&&(12>=ch))
 			SignalOperations::invert_y(xs_channels[ind],ys_channels[ind]); //invert fast PMT signals
 		ys_raw = ys_channels[ind];
 
@@ -175,7 +175,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		STD_CONT<peak> peaks_before_S1;
 		double threshold = 0, threshold_edges = 0;
 		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, threshold_edges, found_base_lines[ind], peaks_before_S1, ch);
-		if ((2<=ch)&&(5>=ch)) {//((2<=ch)&&(5>=ch)) {
+		if (12==ch || 9==ch || 10==ch) {//((2<=ch)&&(5>=ch)) { //TODO: ParameterPile
 			pmt_baseline_xs = xs_channels[ind];
 			DVECTOR ys_cut = ys_channels[ind];
 
@@ -240,7 +240,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 			}
 
 		//================================================================================
-			//So in result I have to do 2 baseline substractions no matter what.
+			//So in result I have to do 2 baseline subtractions no matter what.
 			//One of them is hidden in SignalOperations::substract_baseline(DV&,DV&,DV&,DV&,double), so it doesn't cost anything
 			SignalOperations::substract_baseline(xs_channels[ind], ys_channels[ind], pmt_baseline_xs,
 				pmt_baseline_ys, ROOTs_baseline_baseline); //handles that 2 signals have different x spans
@@ -250,7 +250,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], all_runs_results->pmt_peaks[run_index][pmt_index], found_base_lines[ind],
 			threshold, threshold_edges, ParameterPile::PMT_N_of_averaging);
 
-		if (0==ch){
+		if (0==ch) {
 			double S_sum = 0;
 			for (auto i = all_runs_results->pmt_peaks[run_index][pmt_index].begin(), _end_ = all_runs_results->pmt_peaks[run_index][pmt_index].end(); i != _end_; ++i)
 				if ((i->t >= ParameterPile::S2_start_time.find(curr_area.experiments.back())->second)&&(i->t <= ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second)){
@@ -288,7 +288,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "with lines", 0);
 					if (!ys_filtered.empty())
 						dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered_" + plot_title, "with lines lw 2", 0);
-					dr->AddToDraw_baseline(threshold, "threshold");
+					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#FF0000\"");
 					if (threshold_edges!=found_base_lines[ind])
 						dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
 					dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
@@ -310,11 +310,11 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys7, "ROOT baseline V7", "w l lw 2", 0);
 #endif
 					dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#000000\"", 0);
-					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#00FF00\"");
+					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#FF0000\"");
 					dr->AddToDraw_baseline(ROOTs_baseline_baseline, "ROOTs baseline", "w l lc rgb \"#FF33FF\"");
 					dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
 					if (threshold_edges!=found_base_lines[ind])
-						dr->AddToDraw_baseline(0/*edge_threshold*/, "threshold\\_2nd");
+						dr->AddToDraw_baseline(threshold_edges, "threshold\\_2nd");
 					dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#FF0000\"");
 					dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#FF0000\"");
 					dr->AddToDraw_vertical(middle_left, -1, 1, "lc rgb \"#0000FF\"");
@@ -424,7 +424,7 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 			continue;
 		if (all_runs_results->_to_average.contains(ch)) {
 			readOneRun(all_runs_results, ch);
-			if ((2<=ch)&&(5>=ch))
+			if ((8<=ch)&&(12>=ch))
 				SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
 			if ((1==ch)||(0==ch)){
 				STD_CONT<peak> ppeaks;
@@ -664,7 +664,7 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys7, "ROOT baseline V7", "w l lw 2", 0);
 #endif
 				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#000000\"", 0);
-				dr->AddToDraw_baseline(global_threshold, "threshold", "w l lc rgb \"#00FF00\"");
+				dr->AddToDraw_baseline(global_threshold, "threshold", "w l lc rgb \"#FF0000\"");
 				dr->AddToDraw_baseline(ROOTs_baseline_baseline, "ROOTs baseline", "w l lc rgb \"#FF33FF\"");
 				dr->AddToDraw_baseline(0/*edge_threshold*/, "threshold\\_edges");
 				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");

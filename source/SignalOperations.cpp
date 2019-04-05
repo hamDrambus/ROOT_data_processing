@@ -87,13 +87,13 @@ namespace SignalOperations {
 		for (auto i = xs.begin(), j = ys.begin(); (i != _end_); ++i, ++j){
 			do_account = true;
 			for (auto pp = peaks.begin(); pp != pks_end_; ++pp)
-				if (!(*i<(*pp).left) && !(*i>(*pp).right)) {
+				if ((*i>=(*pp).left) && (*i<=(*pp).right)) {
 					do_account = false;
 					break;
 				}
 			if (do_account&&!one_vector) {
 				if ((x_cut_right!=_end_)&&(x_cut_right-x_cut_left>= 1)){
-					Sum_dx += *x_cut_right - *x_cut_left;
+					Sum_dx += *x_cut_right - *x_cut_left + delta_x;
 					double val;
 					integrate(xs, ys, val, x_cut_left, x_cut_right, delta_x, 0);
 					Sum_int += val;
@@ -111,10 +111,11 @@ namespace SignalOperations {
 		//if ((one_vector && (x_cut_right == _end_))/*last interval before end*/
 			//|| ((x_cut_right != _end_) && !one_vector)/*last peak overlaps with end, and the last area has not been added*/) {
 			x_cut_right = (x_cut_right == _end_) ? x_cut_right-1 : x_cut_right;
-			if (x_cut_right - x_cut_left >= 1){
-				Sum_dx += *x_cut_right - *x_cut_left;
+			if (x_cut_right - x_cut_left >= 1) {
+				Sum_dx += *x_cut_right - *x_cut_left + delta_x;
 				double val;
-				integrate(xs, ys, val, x_cut_left, x_cut_right,delta_x, 0);
+				int temp = x_cut_right - x_cut_left;
+				integrate(xs, ys, val, x_cut_left, x_cut_right, delta_x, 0);
 				Sum_int += val;
 			}
 		//}
@@ -1769,8 +1770,8 @@ namespace SignalOperations {
 			return;
 		DITERATOR _end_ = ++right;
 		DITERATOR _begin_ = left;
-		for (auto ix = left, iy = ys.begin() + (left - xs.begin()); (ix != _end_); ++ix, ++iy){
-			y_out = dx_hint*(*iy - baseline) + y_out;
+		for (auto ix = _begin_, iy = ys.begin() + (_begin_ - xs.begin()); (ix != _end_); ++ix, ++iy){
+			y_out += dx_hint*(*iy - baseline);
 		}
 	}
 
@@ -2143,7 +2144,7 @@ namespace SignalOperations {
 		double thresh_finder, double thresh_edges, int N_trust)
 	{
 		if (thresh_edges >= thresh_finder)
-			thresh_edges = 0;
+			thresh_edges = 0; //TODO: this is error case
 		x_finish = xs.end();
 		DITERATOR minimal_iterator = x_start;
 		DITERATOR pk_max;
@@ -2292,7 +2293,7 @@ namespace SignalOperations {
 	void find_peaks_fine(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust)
 	{
 		if (threshold_edges >= threshold)
-			threshold_edges = 0;
+			threshold_edges = base_line;
 		peaks.clear();
 		if (xs.size() <= 1)
 			return;

@@ -34,13 +34,13 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../Data/190124/")
-#define OUTPUT_DIR std::string("../Data/190124/results/")
+#define DATA_PREFIX std::string("../Data/CdTime/180705/")
+#define OUTPUT_DIR std::string("../Data/CdTime/180705/results/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
 #define DATA_EXPERIMENT_FORMAT "^X-ray_\d{1,2}_.*$"
 
-//#define DATA_TIME_CONSTANT 1.6e-2
-#define DATA_TIME_CONSTANT 4e-3
+#define DATA_TIME_CONSTANT 1.6e-2
+//#define DATA_TIME_CONSTANT 4e-3
 //^in microseconds
 #define DATA_VOLTAGE_CHANNELS 4095
 #define DATA_VOLTAGE_AMPLITUDE 2.0
@@ -85,7 +85,7 @@
 #if defined(__WIN32__)
 #define INVOKE_GNUPLOT(a) system(("start \"\" \"%GNUPLOT%\\gnuplot.exe\" --persist \"" + a + "\"").c_str())
 #else
-#define INVOKE_GNUPLOT(a) system(("gnome-terminal -- bash -c \"gnuplot \"" + a +"\"\"").c_str());
+#define INVOKE_GNUPLOT(a) system(("gnome-terminal -- bash -c \"cd \""+OUTPUT_DIR+"\"; gnuplot \"" + a +"\"\"").c_str());
 #endif //__WIN32__
 
 
