@@ -76,14 +76,13 @@ protected:
 	int N_of_runs;
 	int N_of_valid_runs;//i.e. accepted by PMT cut
 	int Iteration_N;
-	ParameterPile::area_vector _to_average;
 	ParameterPile::experiment_area _exp;
 	GraphicOutputManager graph_manager;
 	//[#run]
 	std::vector<bool> _valid;
 	std::vector<Status> _status;
 	//AVERAGES:
-	//TODO: ensure that only event valid in final are used. (N_of_valid_runs can be different for each iteration)
+	//TODO: ensure that only events which is valid in final are used. (N_of_valid_runs can be different for each iteration)
 	STD_CONT<DVECTOR> _xs_sum;  //[channel]
 	STD_CONT<DVECTOR> _ys_sum;  //[channel]
 	STD_CONT<DVECTOR> _ys_disp; //[channel]
@@ -103,8 +102,10 @@ protected:
 	DVECTOR _ns; //[run#]
 	DVECTOR _Ss; //[run#]
 	STD_CONT<STD_CONT<STD_CONT<peak> > > pmt_peaks;	//[run#][channel][peaks]
-	STD_CONT<STD_CONT<double> > pmt_S2_integral; //[run#][channel]
 	STD_CONT<int> pmt_channels; //[channel]
+
+	STD_CONT<STD_CONT<double> > pmt_S2_integral; //[run#][channel]
+	STD_CONT<int> pmt_integrated_channels; //[channel]
 
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
 	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
@@ -125,9 +126,8 @@ protected:
 	time_results time_stat;
 	void report_time_statistics();
 #endif
-
 public:
-	AllRunsResults(ParameterPile::experiment_area experiment, ParameterPile::area_vector chs_to_average);//only experiment and channels are important here
+	AllRunsResults(ParameterPile::experiment_area experiment);//only experiment and channels are important here
 	//For multithreading:
 	void Merge(AllRunsResults* with);
 	void Merged(void);

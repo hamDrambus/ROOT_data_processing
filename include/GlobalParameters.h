@@ -83,6 +83,9 @@ namespace ParameterPile
 	extern double PMT_ROOTs_bl_trim;
 
 	extern area_vector ch_use_average;
+	extern area_vector ch_integrate_S2;
+	extern area_vector ch_use_curved_baseline;
+	extern area_vector ch_inverse;
 
 	extern double MPPC_peaks_smoothing_time;
 	extern int MPPC_N_trust;

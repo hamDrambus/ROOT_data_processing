@@ -52,7 +52,7 @@ void MTAnalysisManager::processAllRuns(void)
 	
 	ParameterPile::experiment_area actual_area = refine_exp_area(current_under_processing);
 	STD_CONT<ParameterPile::experiment_area> areas = split_exp_area(actual_area, ParameterPile::threads_number);
-	all_runs_results.push_back(AllRunsResults(actual_area, ParameterPile::ch_use_average));
+	all_runs_results.push_back(AllRunsResults(actual_area));
 	for (int n =0;n<areas.size(); ++n) {
 		mutexes.push_back(new TMutex());
 		conditions.push_back(new TCondition(mutexes[n]));

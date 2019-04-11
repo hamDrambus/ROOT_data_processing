@@ -4,9 +4,9 @@
 //done TODO: 0 add constructor of experiment_area point
 //done TODO: 1 clean up cutoff algorithms (comment them?)
 //done (not tested) TODO: 2 add peak amplitude and refine peak finding operations
-//TODO: 3 global: analyse MPPCs :
+//TODO: 3 global: analyze MPPCs :
 	// done 1) fix spread peaks function
-	// done 2) improve find peak function: thresh1 for finding peak as currenly + 
+	// done 2) improve find peak function: thresh1 for finding peak as currently +
 	//		thresh2 for finding actual peak edges
 	// 3) Tweak filter's + ROOT background function parameters
 	// 4) It's time to analyse MPPC for low fields:
@@ -25,6 +25,18 @@
 	//		Same as for low fields: {S1,S2,noise} peaks ->histograms
 	//		+ shaped baseline as function of peaks! determine non linearities
 //TODO: 4 add description of programm structure as well as algorithms
+
+//09.04.2019 UPD TODO: so much rework is required
+//	0) Simplify (delete) fancy unnecessary algorithms. Thresholds are selected by hand anyways, and post processing is done separately
+//	!!!1) ParameterPile--->gSettings
+//	2) make area_vector to be thread-save
+//	!!!3) .xml containing ALL analysis settings
+//	4) support writing data in ROOT trees, not only in my custom files (too cumbersome hierarchy)
+//	5) drawing manager grouping by channel, not in order of processing
+//	6) DrawSignals mode for choosing thresholds and filters and such
+//	*7) Qt (Python?) interactive signal displaying and on-the run selection of processing parameters (like oscilloscope)
+//	8) MPPC-PMT separation is unnecessary.
+//	9) Implement pre-selection (empty PMT signal) via xml settings.
 
 int main(int argc, char *argv[])
 {

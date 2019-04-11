@@ -112,8 +112,8 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 
 void AnalysisManager::processAllRuns(void)
 {
-	all_runs_results.push_back(AllRunsResults(current_under_processing, ParameterPile::ch_use_average));
-	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N){
+	all_runs_results.push_back(AllRunsResults(current_under_processing));
+	while (all_runs_results.back().Iteration() <= ParameterPile::Max_iteration_N) {
 #ifdef _USE_TIME_STATISTICS
 		time_t runs_start_timer;
 		time_t runs_end_timer;
@@ -153,7 +153,7 @@ void AnalysisManager::proceessAllRunsOneThread(void)
 #endif
 	if (all_runs_results.empty()){
 		nextRun();
-		all_runs_results.push_back(AllRunsResults(current_under_processing, ParameterPile::ch_use_average)); //actually MultiThreadManager must set it before call of this method
+		all_runs_results.push_back(AllRunsResults(current_under_processing)); //actually MultiThreadManager must set it before call of this method
 	} else {
 		if (0 == all_runs_results.back().Iteration())
 			nextRun();
@@ -268,7 +268,7 @@ ParameterPile::experiment_area AnalysisManager::refine_exp_area(ParameterPile::e
 		int n_underscore = file_name.find("_");
 		if (n_underscore == std::string::npos)
 			continue;
-			file_name.erase(file_name.begin() + n_underscore, file_name.end());
+		file_name.erase(file_name.begin() + n_underscore, file_name.end());
 		if (file_name.empty())
 			continue;
 		run_vector_sorted.push_back(std::stoi(file_name));

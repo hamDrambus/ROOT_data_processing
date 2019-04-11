@@ -34,10 +34,9 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../Data/CdTime/180705/")
-#define OUTPUT_DIR std::string("../Data/CdTime/180705/results/")
+#define DATA_PREFIX std::string("../Data/190404/")
+#define OUTPUT_DIR std::string("../Data/190404/results/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
-#define DATA_EXPERIMENT_FORMAT "^X-ray_\d{1,2}_.*$"
 
 #define DATA_TIME_CONSTANT 1.6e-2
 //#define DATA_TIME_CONSTANT 4e-3
@@ -59,7 +58,7 @@
 #define OUTPUT_GEMS "GEM_v2"
 #endif
 
-#define OUTPUT_PMTS "PMT_v2/PMT_"
+#define OUTPUT_PMTS "PMT_v1/PMT_"
 #define OUTPUT_MPPCS "MPPC_"
 #define OUTPUT_MPPCS_PICS "MPPCs_v1/MPPCs_"
 //#define _TEMP_CODE
@@ -91,6 +90,10 @@
 
 DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end);
 void open_output_file(std::string name, std::ofstream &str, std::ios_base::openmode _mode = std::ios_base::trunc);
+void ensure_file(std::string fname); //makes sure file can be created later on
+void ensure_folder(std::string folder);
+bool isSameChannels(const STD_CONT<int>& a, const STD_CONT<int>& b);
+int getIndex(const STD_CONT<int>& channels, int ch);
 
 class peak
 {

@@ -1,8 +1,7 @@
 #include "AllRunsResults.h"
 
-AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment, ParameterPile::area_vector chs_to_average)
+AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 {
-	_to_average = chs_to_average;
 	_exp = experiment;
 	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
 	S_peaks_max_cutoff = S_peaks_cutoff - 1;
@@ -198,15 +197,8 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		bool empty = false, valid = true;
 		if (pmt_channels.empty())
 			empty = true;
-		if (pmt_channels.size() != with->pmt_channels.size())
-			valid = false;
-		else {
-			for (int ind = 0, ind_end_ = pmt_channels.size(); ind<ind_end_; ++ind)
-				if (pmt_channels[ind]!=with->pmt_channels[ind]) {
-					valid = false;
-					break;
-				}
-		}
+		valid = isSameChannels(pmt_channels, with->pmt_channels);
+		valid = valid && isSameChannels(pmt_integrated_channels, with->pmt_integrated_channels);
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have PMT channels' size mismatches: not Merging" << std::endl;
 			return;
@@ -215,6 +207,7 @@ void AllRunsResults::Merge(AllRunsResults* with)
 			pmt_channels = with->pmt_channels;
 			pmt_peaks = with->pmt_peaks;
 			pmt_S2_integral = with->pmt_S2_integral;
+			pmt_integrated_channels = with->pmt_integrated_channels;
 		} else {
 			pmt_peaks.insert(pmt_peaks.end(), with->pmt_peaks.begin(), with->pmt_peaks.end());
 			pmt_S2_integral.insert(pmt_S2_integral.end(), with->pmt_S2_integral.begin(), with->pmt_S2_integral.end());
@@ -226,15 +219,7 @@ void AllRunsResults::Merge(AllRunsResults* with)
 			empty = true;
 		//if ((avr_channels.size() != _xs_sum.size())||(avr_channels.size() != _ys_sum.size())||(avr_channels.size() != _ys_disp.size()))
 		//	valid = false;
-		if (avr_channels.size() != with->avr_channels.size())
-			valid = false;
-		else {
-			for (int ind = 0, ind_end_ = avr_channels.size(); ind<ind_end_; ++ind)
-				if (avr_channels[ind]!=with->avr_channels[ind]) {
-					valid = false;
-					break;
-				}
-		}
+		valid = isSameChannels(avr_channels, with->avr_channels);
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have averaging channels' size mismatches: not Merging" << std::endl;
 			return;
@@ -264,15 +249,7 @@ void AllRunsResults::Merge(AllRunsResults* with)
 			|| (mppc_peaks_in_S2_area.size() != mppc_peaks.size()))
 			valid = false;
 		*/
-		if (mppc_channels.size() != with->mppc_channels.size())
-			valid = false;
-		else {
-			for (int ind = 0, ind_end_ = mppc_channels.size(); ind<ind_end_; ++ind)
-				if (mppc_channels[ind]!=with->mppc_channels[ind]) {
-					valid = false;
-					break;
-				}
-		}
+		valid = isSameChannels(mppc_channels, with->mppc_channels);
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
 			return;
@@ -296,15 +273,7 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		bool empty = false, valid = true;
 		if (avr_channels.empty())
 			empty = true;
-		if (avr_channels.size() != with->avr_channels.size())
-			valid = false;
-		else {
-			for (int ind = 0, ind_end_ = avr_channels.size(); ind<ind_end_; ++ind)
-				if (avr_channels[ind]!=with->avr_channels[ind]) {
-					valid = false;
-					break;
-				}
-		}
+		valid = isSameChannels(avr_channels, with->avr_channels);
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have averaging channels' size mismatches: not Merging" << std::endl;
 			return;
@@ -403,11 +372,38 @@ void AllRunsResults::Merged(void)
 	}
 
 	if (2==Iteration_N) {//Save PMT only at the end (with final _valid vector)
-		for (std::size_t ch=0; ch<pmt_channels.size();++ch) {
+		for (std::size_t ch=0; ch<pmt_channels.size(); ++ch) {
+			std::stringstream ch_str;
+			ch_str<<pmt_channels[ch];
+			int ch_int = getIndex(pmt_integrated_channels, pmt_channels[ch]);
 			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
-						+ "/" + "PMT_" + std::to_string(pmt_channels[ch]) + "/" + "PMT_" + std::to_string(pmt_channels[ch]) +"_";
+						+ "/" + "PMT_" + ch_str.str() + "/" + "PMT_" + ch_str.str() +"_";
 			vector_to_file(pmt_peaks, ch, PMT_output_prefix + "peaks.dat");
-			vector_to_file(pmt_S2_integral, ch, PMT_output_prefix + "S2_int.dat");
+			if (ch_int >= 0) {
+				vector_to_file(pmt_S2_integral, ch_int, PMT_output_prefix + "S2_int.dat");
+				double S2int_min = 0, S2int_max = 0;
+				for (std::size_t run = 0, run_end_ = pmt_S2_integral.size(); run!=run_end_; ++run) {
+					if (_valid[run]) {
+						S2int_min = std::min(pmt_S2_integral[run][ch_int], S2int_min);
+						S2int_max = std::max(pmt_S2_integral[run][ch_int], S2int_max);
+					}
+				}
+				unsigned int N_bins = 80;
+				S2int_max += (S2int_max-S2int_min)/N_bins;
+				std::string hist_name = "PMT"+ch_str.str()+"_S2_integral " + _exp.experiments.back();
+				TH1D *hist_S2int = new TH1D(hist_name.c_str(), hist_name.c_str(), N_bins, S2int_min, S2int_max);
+				for (std::size_t run = 0, run_end_ = pmt_S2_integral.size(); run!=run_end_; ++run) {
+					if (_valid[run]) {
+						hist_S2int->Fill(pmt_S2_integral[run][ch_int]);
+					}
+				}
+				std::string can_name = "PMT"+ch_str.str()+"_S2_integral_distribution " + _exp.experiments.back();
+				TCanvas *c1 = new TCanvas(can_name.c_str(), can_name.c_str());
+				c1->cd();
+				hist_S2int->Draw();
+				c1->Update();
+				c1->SaveAs((PMT_output_prefix+"S2_int.png").c_str(),"png");
+			}
 			if (0==pmt_channels[ch]) {
 				DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
 				double hist_S2_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S2_max) : *S2_max;
@@ -1015,7 +1011,6 @@ AllRunsResults& AllRunsResults::operator=(const AllRunsResults& right)
 	S_peaks_cutoff = right.S_peaks_cutoff;
 	N_peaks_cutoff = right.N_peaks_cutoff;
 	S_peaks_max_cutoff = right.S_peaks_max_cutoff;
-	_to_average = right._to_average;
 	_exp = right._exp;
 	_ys_sum = right._ys_sum;
 	_xs_sum = right._xs_sum;

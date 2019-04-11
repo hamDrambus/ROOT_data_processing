@@ -10,7 +10,7 @@ SingleRunData::SingleRunData(ParameterPile::experiment_area area)
 	curr_area.sub_runs.push_back(area.sub_runs.back()); //only one subrun is in this class
 
 	//curr_area.channels.clear(); - not really required unless break is used in the cycle with following for(;;)
-	for (int ch = curr_area.channels.get_next_index(); !(ch<0);ch = curr_area.channels.get_next_index()){
+	for (int ch = curr_area.channels.get_next_index(); !(ch<0);ch = curr_area.channels.get_next_index()) {
 		found_base_lines.push_back(0);
 		xs_channels.push_back(DVECTOR());
 		ys_channels.push_back(DVECTOR());
@@ -130,6 +130,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 	int run_index = all_runs_results->N_of_runs;
 	bool first_pmt_processed = all_runs_results->pmt_channels.empty();
 	int pmt_index = -1;
+	int pmt_integrated_index = -1;
 	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if ((ch>=32)||(ind<0)||(GEM_CH_==ch))
@@ -138,26 +139,34 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		if (xs_channels[ind].empty())
 			continue;
 		++pmt_index;
+		if (ParameterPile::ch_integrate_S2.contains(ch))
+			++pmt_integrated_index;
 		if (first_pmt_processed) {
 			all_runs_results->pmt_channels.push_back(ch);
+			if (ParameterPile::ch_integrate_S2.contains(ch))
+				all_runs_results->pmt_integrated_channels.push_back(ch);
 		} else {
-			if (all_runs_results->pmt_channels.size()>pmt_index)
-				if (all_runs_results->pmt_channels[pmt_index]==ch)
-					goto l_valid;
-			all_runs_results->_status[run_index] = AllRunsResults::Status::PMT_mismatch;
-			all_runs_results->_valid[run_index] = false;
-			break;
-			l_valid:;
+			bool valid = (all_runs_results->pmt_channels.size()>pmt_index ? (all_runs_results->pmt_channels[pmt_index]==ch) : false);
+			if (ParameterPile::ch_integrate_S2.contains(ch)) {
+				valid = valid && (all_runs_results->pmt_integrated_channels.size()>pmt_integrated_index ?
+						(all_runs_results->pmt_integrated_channels[pmt_integrated_index]==ch) : false);
+			}
+			if (!valid) {
+				all_runs_results->_status[run_index] = AllRunsResults::Status::PMT_mismatch;
+				all_runs_results->_valid[run_index] = false;
+				break;
+			}
 		}
 		all_runs_results->pmt_peaks[run_index].push_back(STD_CONT<peak>());
-		all_runs_results->pmt_S2_integral[run_index].push_back(-1);
+		if (ParameterPile::ch_integrate_S2.contains(ch))
+			all_runs_results->pmt_S2_integral[run_index].push_back(-1);
 		DVECTOR ys_raw, ys_filtered, pmt_baseline_ys, pmt_baseline_xs;
 		double ROOTs_baseline_baseline = 0, middle_left, middle_right;
 #ifdef _TEMP_CODE
 		DVECTOR pmt_baseline_ys1, pmt_baseline_ys2, pmt_baseline_ys3, pmt_baseline_ys4, pmt_baseline_ys5, pmt_baseline_ys6, pmt_baseline_ys7;
 #endif
 
-		if ((8<=ch)&&(12>=ch))
+		if (ParameterPile::ch_inverse.contains(ch))
 			SignalOperations::invert_y(xs_channels[ind],ys_channels[ind]); //invert fast PMT signals
 		ys_raw = ys_channels[ind];
 
@@ -175,7 +184,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		STD_CONT<peak> peaks_before_S1;
 		double threshold = 0, threshold_edges = 0;
 		calculate_PMT_threshold_and_baseline(xs_channels[ind], ys_channels[ind], threshold, threshold_edges, found_base_lines[ind], peaks_before_S1, ch);
-		if (12==ch || 9==ch || 10==ch) {//((2<=ch)&&(5>=ch)) { //TODO: ParameterPile
+		if (ParameterPile::ch_use_curved_baseline.contains(ch)) {
 			pmt_baseline_xs = xs_channels[ind];
 			DVECTOR ys_cut = ys_channels[ind];
 
@@ -264,11 +273,12 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 		double S2_st = ParameterPile::S2_start_time.find(curr_area.experiments.back())->second;
 		double S2_ft = ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second;
 		DVECTOR ys_int, xs_int;
-		SignalOperations::integrate(xs_channels[ind],ys_channels[ind],xs_int, ys_int, S2_st, S2_ft,
-				(*(xs_channels[ind].begin()+1)-*(xs_channels[ind].begin())), found_base_lines[ind]);
-		DITERATOR x_max;
-		SignalOperations::get_max(xs_int, ys_int, x_max, all_runs_results->pmt_S2_integral[run_index][pmt_index], 1);
-
+		if (ParameterPile::ch_integrate_S2.contains(ch)) {
+			SignalOperations::integrate(xs_channels[ind],ys_channels[ind],xs_int, ys_int, S2_st, S2_ft,
+					(*(xs_channels[ind].begin()+1)-*(xs_channels[ind].begin())), found_base_lines[ind]);
+			DITERATOR x_max;
+			SignalOperations::get_max(xs_int, ys_int, x_max, all_runs_results->pmt_S2_integral[run_index][pmt_integrated_index], 1);
+		}
 		//=========================================================================
 		ParameterPile::experiment_area area = curr_area.to_point();
 		area.channels.erase();
@@ -294,6 +304,9 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
 					dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
 					dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
+					if (!ys_int.empty()) {
+						dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
+					}
 				} else { //curved baseline case
 					if (!ys_filtered.empty())
 						dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
@@ -319,6 +332,9 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#FF0000\"");
 					dr->AddToDraw_vertical(middle_left, -1, 1, "lc rgb \"#0000FF\"");
 					dr->AddToDraw_vertical(middle_right, -1, 1, "lc rgb \"#0000FF\"");
+					if (!ys_int.empty()) {
+						dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
+					}
 				}
 			}
 		}
@@ -422,11 +438,11 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 		int ind =  curr_area.channels.get_order_index_by_index(ch);
 		if ((ind<0)||(ch>=32)) //process only GEM and PMTs
 			continue;
-		if (all_runs_results->_to_average.contains(ch)) {
+		if (ParameterPile::ch_use_average.contains(ch)) {
 			readOneRun(all_runs_results, ch);
-			if ((8<=ch)&&(12>=ch))
+			if (ParameterPile::ch_inverse.contains(ch))
 				SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
-			if ((1==ch)||(0==ch)){
+			if ((1==ch)||(0==ch)){ //TODO: ParameterPile
 				STD_CONT<peak> ppeaks;
 				double threshold = 0;
 				double threshold_edges = 0;
@@ -474,87 +490,99 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 #ifdef _TEMP_CODE
 		DVECTOR mppc_baseline_ys1, mppc_baseline_ys2, mppc_baseline_ys3, mppc_baseline_ys4, mppc_baseline_ys5, mppc_baseline_ys6, mppc_baseline_ys7;
 #endif
-
+		double ROOTs_baseline_baseline = 0, middle_left, middle_right;
+		double delta_x = *(xs_channels[ind].begin() + 1) - *(xs_channels[ind].begin());
 //==========================================================================
-		// invert MPPCs
-		SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
-		if (all_runs_results->_to_average.contains(ch)){
+		if (ParameterPile::ch_inverse.contains(ch))
+			SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
+		if (ParameterPile::ch_use_average.contains(ch)){
 			push_average(ch, is_first_call_avr, all_runs_results);
 		}
 
-		SGfilter(xs_channels[ind], ys_channels[ind]);
-		
 		DVECTOR xs_raw = xs_channels[ind];
 		DVECTOR ys_raw = ys_channels[ind];
+		DVECTOR ys_filtered = ys_channels[ind];
+		SGfilter(xs_channels[ind], ys_channels[ind]);
+		if (SGfilter.getNIter()!=0)
+			ys_filtered = ys_channels[ind];
 
 		double global_threshold;
-		double raw_signal_baseline = 0;
 		STD_CONT<peak> peaks_before_S1;
-		calculate_MPPC_threshold_and_baseline(xs_channels[ind], ys_channels[ind], global_threshold, raw_signal_baseline, peaks_before_S1);
-//================================================================================
-		DVECTOR ys_cut = ys_channels[ind];
-		double delta_x = *(mppc_baseline_xs.begin() + 1) - *(mppc_baseline_xs.begin());
-		DITERATOR _end_ = mppc_baseline_xs.end() - 1;
-		DITERATOR _begin_ = mppc_baseline_xs.begin();
-		DITERATOR S2_start_i = SignalOperations::find_x_iterator_by_value(_begin_,
-			_end_, ParameterPile::S2_start_time.find(curr_area.experiments.back())->second, delta_x);
-		DITERATOR S2_finish_i = SignalOperations::find_x_iterator_by_value(S2_start_i,
-			_end_, ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second, delta_x);
-		DITERATOR max_signal_pos;
-		double max_signal_val;
-		//TODO: ParameterPile
-		++S2_finish_i;
-		SignalOperations::get_max(mppc_baseline_xs, ys_cut, S2_start_i, S2_finish_i, max_signal_pos, max_signal_val, 1);
-		double root_start_t = *max_signal_pos - ParameterPile::MPPC_ROOTs_bl_from_max_left;
-		double root_finish_t = *max_signal_pos + ParameterPile::MPPC_ROOTs_bl_from_max_right;
-		SignalOperations::apply_time_limits(mppc_baseline_xs, ys_cut, root_start_t, root_finish_t,delta_x);
-
-		SignalOperations::find_baseline_by_ROOT_v1(mppc_baseline_xs, ys_cut, mppc_baseline_ys);
-		root_start_t+=ParameterPile::MPPC_ROOTs_bl_trim;
-		root_finish_t -=ParameterPile::MPPC_ROOTs_bl_trim;
-#ifdef _TEMP_CODE
-		SignalOperations::find_baseline_by_ROOT(mppc_baseline_xs, ys_cut, mppc_baseline_ys1);
-		SignalOperations::find_baseline_by_ROOT_v2(mppc_baseline_xs, ys_cut, mppc_baseline_ys2);
-		SignalOperations::find_baseline_by_ROOT_v3(mppc_baseline_xs, ys_cut, mppc_baseline_ys3);
-		SignalOperations::find_baseline_by_ROOT_v4(mppc_baseline_xs, ys_cut, mppc_baseline_ys4);
-		SignalOperations::find_baseline_by_ROOT_v5(mppc_baseline_xs, ys_cut, mppc_baseline_ys5);
-		SignalOperations::find_baseline_by_ROOT_v6(mppc_baseline_xs, ys_cut, mppc_baseline_ys6);
-		SignalOperations::find_baseline_by_ROOT_v7(mppc_baseline_xs, ys_cut, mppc_baseline_ys7);
-		DVECTOR temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys1, root_start_t, root_finish_t, delta_x);
-		temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys2, root_start_t, root_finish_t, delta_x);
-		temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys3, root_start_t, root_finish_t, delta_x);
-		temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys4, root_start_t, root_finish_t, delta_x);
-		temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys5, root_start_t, root_finish_t, delta_x);
-		temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys6, root_start_t, root_finish_t, delta_x);
-		temp_xs = mppc_baseline_xs;
-		SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys7, root_start_t, root_finish_t, delta_x);
-#endif
-		SignalOperations::apply_time_limits(mppc_baseline_xs, mppc_baseline_ys, root_start_t, root_finish_t, delta_x);
-//================================================================================
-		double ROOTs_baseline_baseline = 0;
-		STD_CONT<peak> exclude_middle;
-		peak middle;
-		middle.left = root_start_t + ParameterPile::MPPC_ROOTs_bl_left_offset;
-		middle.right = root_finish_t - ParameterPile::MPPC_ROOTs_bl_right_offset;
-		exclude_middle.push_back(middle);
-		ROOTs_baseline_baseline = SignalOperations::find_baseline_by_integral(0, mppc_baseline_xs, mppc_baseline_ys, exclude_middle);
-//================================================================================
-		//So in result I have to do 3 baseline substractions no matter what. 
-		//One of them is hidden in SignalOperations::substract_baseline(DV&,DV&,DV&,DV&,double), so it doesn't cost anything
-		SignalOperations::substract_baseline(ys_channels[ind], raw_signal_baseline);
+		calculate_MPPC_threshold_and_baseline(xs_channels[ind], ys_channels[ind], global_threshold, found_base_lines[ind], peaks_before_S1);
+		SignalOperations::substract_baseline(ys_channels[ind], found_base_lines[ind]);
+		found_base_lines[ind] = 0;
 		DVECTOR xs_raw_0bl = xs_channels[ind];
 		DVECTOR ys_raw_0bl = ys_channels[ind];//I need this one for double integral.
-		SignalOperations::substract_baseline(xs_channels[ind], ys_channels[ind], mppc_baseline_xs,
-			mppc_baseline_ys, ROOTs_baseline_baseline); //handles that 2 signals have different x spans
-		//TODO: optimize this function, using the fact that the ROOT's baseline has definite x points [from, to] (- [xs.begin(),xs.end())
-		//and rework _result.mppc_baseline_xs[mppc_ind]
-		found_base_lines[ind] = 0;
+//================================================================================
+		if (ParameterPile::ch_use_curved_baseline.contains(ch)) {
+			DVECTOR ys_cut = ys_channels[ind];
+			DITERATOR _end_ = mppc_baseline_xs.end() - 1;
+			DITERATOR _begin_ = mppc_baseline_xs.begin();
+			DITERATOR S2_start_i = SignalOperations::find_x_iterator_by_value(_begin_,
+				_end_, ParameterPile::S2_start_time.find(curr_area.experiments.back())->second, delta_x);
+			DITERATOR S2_finish_i = SignalOperations::find_x_iterator_by_value(S2_start_i,
+				_end_, ParameterPile::S2_finish_time.find(curr_area.experiments.back())->second, delta_x);
+			DITERATOR max_signal_pos;
+			double max_signal_val;
+			//TODO: ParameterPile
+			++S2_finish_i;
+			SignalOperations::get_max(mppc_baseline_xs, ys_cut, S2_start_i, S2_finish_i, max_signal_pos, max_signal_val, 1);
+			double root_start_t = *max_signal_pos - ParameterPile::MPPC_ROOTs_bl_from_max_left;
+			double root_finish_t = *max_signal_pos + ParameterPile::MPPC_ROOTs_bl_from_max_right;
+			SignalOperations::apply_time_limits(mppc_baseline_xs, ys_cut, root_start_t, root_finish_t,delta_x);
+
+			SignalOperations::find_baseline_by_ROOT_v1(mppc_baseline_xs, ys_cut, mppc_baseline_ys);
+			root_start_t+=ParameterPile::MPPC_ROOTs_bl_trim;
+			root_finish_t -=ParameterPile::MPPC_ROOTs_bl_trim;
+	#ifdef _TEMP_CODE
+			SignalOperations::find_baseline_by_ROOT(mppc_baseline_xs, ys_cut, mppc_baseline_ys1);
+			SignalOperations::find_baseline_by_ROOT_v2(mppc_baseline_xs, ys_cut, mppc_baseline_ys2);
+			SignalOperations::find_baseline_by_ROOT_v3(mppc_baseline_xs, ys_cut, mppc_baseline_ys3);
+			SignalOperations::find_baseline_by_ROOT_v4(mppc_baseline_xs, ys_cut, mppc_baseline_ys4);
+			SignalOperations::find_baseline_by_ROOT_v5(mppc_baseline_xs, ys_cut, mppc_baseline_ys5);
+			SignalOperations::find_baseline_by_ROOT_v6(mppc_baseline_xs, ys_cut, mppc_baseline_ys6);
+			SignalOperations::find_baseline_by_ROOT_v7(mppc_baseline_xs, ys_cut, mppc_baseline_ys7);
+			DVECTOR temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys1, root_start_t, root_finish_t, delta_x);
+			temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys2, root_start_t, root_finish_t, delta_x);
+			temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys3, root_start_t, root_finish_t, delta_x);
+			temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys4, root_start_t, root_finish_t, delta_x);
+			temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys5, root_start_t, root_finish_t, delta_x);
+			temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys6, root_start_t, root_finish_t, delta_x);
+			temp_xs = mppc_baseline_xs;
+			SignalOperations::apply_time_limits(temp_xs, mppc_baseline_ys7, root_start_t, root_finish_t, delta_x);
+	#endif
+			SignalOperations::apply_time_limits(mppc_baseline_xs, mppc_baseline_ys, root_start_t, root_finish_t, delta_x);
+	//================================================================================
+			STD_CONT<peak> exclude_middle;
+			peak middle;
+			middle_left =middle.left = root_start_t + ParameterPile::MPPC_ROOTs_bl_left_offset;
+			middle_right =middle.right = root_finish_t - ParameterPile::MPPC_ROOTs_bl_right_offset;
+			exclude_middle.push_back(middle);
+			ROOTs_baseline_baseline = SignalOperations::find_baseline_by_integral(0, mppc_baseline_xs, mppc_baseline_ys, exclude_middle);
+	//================================================================================
+			//This fixes baseline of signal when ROOT's baseline is subtracted
+			SignalOperations::get_min(mppc_baseline_xs, mppc_baseline_ys, mppc_baseline_xs.begin(), mppc_baseline_xs.end(), max_signal_pos, max_signal_val, 1);
+			for (auto iy = mppc_baseline_ys.begin(), ix = mppc_baseline_xs.begin(), iy_end_ = mppc_baseline_ys.end(), ix_end_ = mppc_baseline_xs.end();
+					(iy!=iy_end_)&&(ix!=ix_end_)&&(ix!=max_signal_pos); ++ix, ++iy) {
+				if ((*iy>ROOTs_baseline_baseline)&&(*ix<middle_right)&&(*ix>middle_left))
+					*iy = ROOTs_baseline_baseline;
+			}
+	//================================================================================
+			//So in result I have to do 3 baseline substractions no matter what.
+			//One of them is hidden in SignalOperations::substract_baseline(DV&,DV&,DV&,DV&,double), so it doesn't cost anything
+
+			SignalOperations::substract_baseline(xs_channels[ind], ys_channels[ind], mppc_baseline_xs,
+				mppc_baseline_ys, ROOTs_baseline_baseline); //handles that 2 signals have different x spans
+			//TODO: optimize this function, using the fact that the ROOT's baseline has definite x points [from, to] (- [xs.begin(),xs.end())
+			//and rework _result.mppc_baseline_xs[mppc_ind]
+		}
+
 //================================================================================
 		SignalOperations::find_peaks_fine(xs_channels[ind], ys_channels[ind], all_runs_results->mppc_peaks[run_index][mppc_ind],
 				0, global_threshold, 0/*edge_threshold*/, ParameterPile::MPPC_N_trust);
@@ -653,6 +681,9 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 			if (NULL != dr) {
 				dr->SetDirectory(OUTPUT_DIR+OUTPUT_MPPCS_PICS + curr_area.experiments.back() + "/" + OUTPUT_MPPCS + std::to_string(ch) + "/");
 				dr->AddToDraw(xs_raw, ys_raw, "raw" + plot_title, "w l lc rgb \"#0000FF\"", 0);
+				if (!ys_filtered.empty())
+					dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
+				if (!mppc_baseline_ys.empty())
 				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"", 0);
 #ifdef _TEMP_CODE
 				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys1, "ROOT baseline V1", "w l lw 2 lc rgb \"#BB0000\"", 0);
@@ -669,8 +700,8 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 				dr->AddToDraw_baseline(0/*edge_threshold*/, "threshold\\_edges");
 				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");
 				dr->AddToDraw_vertical(S2_finish_t, -1, 1, "lc rgb \"#FF0000\"");
-				dr->AddToDraw_vertical(middle.left, -1, 1, "lc rgb \"#0000FF\"");
-				dr->AddToDraw_vertical(middle.right, -1, 1, "lc rgb \"#0000FF\"");
+				dr->AddToDraw_vertical(middle_left, -1, 1, "lc rgb \"#0000FF\"");
+				dr->AddToDraw_vertical(middle_right, -1, 1, "lc rgb \"#0000FF\"");
 			}
 			#ifdef _DRAW_CLUSTER_FINDING
 			dr = graph_manager.GetDrawing(plot_name + "peaks", ch + 100, ParameterPile::DrawEngine::Gnuplot);
@@ -743,7 +774,7 @@ double SingleRunData::find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, D
 	double n_below = 0, n_above = 0;
 	double mean_below = 0, mean_above = 0;
 	for (auto i = y_peaks_spreaded.begin(); i != y_peaks_spreaded.end(); ++i) {
-		if (*i < sp_approx_thr){
+		if (*i < sp_approx_thr) {
 			n_below++;
 			mean_below += *i;
 		} else {
@@ -804,7 +835,7 @@ void SingleRunData::processSingleRun_Iter_2(AllRunsResults *all_runs_results)
 		int ind =  curr_area.channels.get_order_index_by_index(ch);
 		if (ind<0)
 			continue;
-		if (all_runs_results->_to_average.contains(ch)) {
+		if (ParameterPile::ch_use_average.contains(ch)) {
 			readOneRun(all_runs_results, ch);
 			if ((ch>=2)&&(ch!=GEM_CH_))
 				SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);

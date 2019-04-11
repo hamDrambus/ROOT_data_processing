@@ -6,11 +6,11 @@ namespace ParameterPile {
 	{
 		_last_returned_index_left = _vec.end();
 	}
-	std::size_t area_vector::real_size(void)
+	std::size_t area_vector::real_size(void) const
 	{
 		return sizeof(*this)+sizeof(int)*_vec.size();
 	}
-	int area_vector::get_order_index_by_index(int ind)
+	int area_vector::get_order_index_by_index(int ind) const
 	{
 		if (!_is_valid)
 			return -1;
@@ -28,7 +28,7 @@ namespace ParameterPile {
 		}
 		return -1;
 	}
-	int area_vector::get_index_by_order_index(int ind)
+	int area_vector::get_index_by_order_index(int ind) const
 	{
 		if (!_is_valid)
 			return -1;
@@ -47,7 +47,7 @@ namespace ParameterPile {
 		return -1;
 	}
 
-	int area_vector::get_next_index(void) //for running through all indices
+	int area_vector::get_next_index(void) //for running through all indices. Not thread safe!
 	{
 		if (!_is_valid)
 			return -1;
@@ -115,12 +115,12 @@ namespace ParameterPile {
 		reset();
 	}
 
-	bool area_vector::contains(int index)
+	bool area_vector::contains(int index) const
 	{
 		return !(get_order_index_by_index(index) < 0);
 	}
 
-	bool area_vector::empty(void)
+	bool area_vector::empty(void) const
 	{
 		return _vec.empty();
 	}
@@ -130,7 +130,7 @@ namespace ParameterPile {
 	int &area_vector::front(void)
 	{	return *_vec.begin();}
 
-	STD_CONT<area_vector> area_vector::split_area(int N)
+	STD_CONT<area_vector> area_vector::split_area(int N) const
 	{
 		STD_CONT <area_vector> out_;
 		int N_runs = 0;
@@ -240,7 +240,7 @@ namespace ParameterPile {
 		_is_valid = false;
 		reset();
 	}
-	bool area_vector::isValid(void)
+	bool area_vector::isValid(void) const
 	{
 		return _is_valid;
 	}

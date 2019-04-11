@@ -17,23 +17,27 @@ namespace ParameterPile {
 		STD_CONT<int>::iterator _last_returned_index_left;
 	public:
 		area_vector(void);
-		int get_order_index_by_index(int ind);
-		int get_index_by_order_index(int ind);
+		//area_vector(STD_CONT<int> channels); //TODO:
+		int get_order_index_by_index(int ind) const;
+		int get_index_by_order_index(int ind) const;
+		//TODO: rework in thread-save manner. (via size, get[] or altogether as iterator)
+		//TODO: actually mb all settings objects should be copied for each thread?
 		int get_next_index(void); //for running through all indices
 		int get_next_index(int after);
 		void push_pair(int left, int right);
 		void push_back(int val);
-		bool contains(int index);
-		bool empty(void);
-		bool isValid(void);
+		bool contains(int index) const;
+		bool empty(void) const;
+		bool isValid(void) const;
 		int &back(void);
 		int &front(void);
-		STD_CONT<area_vector> split_area(int N);
+		STD_CONT<area_vector> split_area(int N) const;
 		area_vector intersect(area_vector with);
 		void reset(); //clears _last_returned_index etc.
 		void erase(); //clears vector
 		//void refine (void); //e.g. [2,3][3,4] to [2,4] |OR| [4,5] [1,7] to [1,7]
-		std::size_t real_size(void);
+		std::size_t real_size(void) const;
+		//bool operator == (const area_vector& with) const;
 	};
 
 	class experiment_area //done //TODO - make analysis via this class. //->NextFile?
