@@ -378,9 +378,11 @@ void AllRunsResults::Merged(void)
 			int ch_int = getIndex(pmt_integrated_channels, pmt_channels[ch]);
 			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
 						+ "/" + "PMT_" + ch_str.str() + "/" + "PMT_" + ch_str.str() +"_";
-			vector_to_file(pmt_peaks, ch, PMT_output_prefix + "peaks.dat");
+			if (!ParameterPile::draw_only)
+				vector_to_file(pmt_peaks, ch, PMT_output_prefix + "peaks.dat");
 			if (ch_int >= 0) {
-				vector_to_file(pmt_S2_integral, ch_int, PMT_output_prefix + "S2_int.dat");
+				if (!ParameterPile::draw_only)
+					vector_to_file(pmt_S2_integral, ch_int, PMT_output_prefix + "S2_int.dat");
 				double S2int_min = 0, S2int_max = 0;
 				for (std::size_t run = 0, run_end_ = pmt_S2_integral.size(); run!=run_end_; ++run) {
 					if (_valid[run]) {
@@ -402,7 +404,8 @@ void AllRunsResults::Merged(void)
 				c1->cd();
 				hist_S2int->Draw();
 				c1->Update();
-				c1->SaveAs((PMT_output_prefix+"S2_int.png").c_str(),"png");
+				if (!ParameterPile::draw_only)
+					c1->SaveAs((PMT_output_prefix+"S2_int.png").c_str(),"png");
 			}
 			if (0==pmt_channels[ch]) {
 				DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
@@ -423,7 +426,8 @@ void AllRunsResults::Merged(void)
 				cutoff->SetLineColor(kRed);
 				cutoff->Draw();
 				c1->Update();
-				c1->SaveAs((PMT_output_prefix+"S2s.png").c_str(),"png");
+				if (!ParameterPile::draw_only)
+					c1->SaveAs((PMT_output_prefix+"S2s.png").c_str(),"png");
 
 				double S_tot_max =0;
 				for (std::size_t i=0, i_end_ = pmt_peaks.size(); i!=i_end_; ++i) {
@@ -449,7 +453,8 @@ void AllRunsResults::Merged(void)
 				c2->cd();
 				hist_S_tot->Draw();
 				c2->Update();
-				c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
+				if (!ParameterPile::draw_only)
+					c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
 			}
 			if (1==pmt_channels[ch]) {
 				double S2_max =0;
@@ -479,7 +484,8 @@ void AllRunsResults::Merged(void)
 				c1->cd();
 				hist_S2->Draw();
 				c1->Update();
-				c1->SaveAs((PMT_output_prefix+"S2.png").c_str(),"png");
+				if (!ParameterPile::draw_only)
+					c1->SaveAs((PMT_output_prefix+"S2.png").c_str(),"png");
 
 				double S_tot_max = 0;
 				for (std::size_t i= 0, i_end_ = pmt_peaks.size(); i!=i_end_; ++i) {
@@ -505,7 +511,8 @@ void AllRunsResults::Merged(void)
 				c2->cd();
 				hist_S_tot->Draw();
 				c2->Update();
-				c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
+				if (!ParameterPile::draw_only)
+					c2->SaveAs((PMT_output_prefix+"S_tot.png").c_str(),"png");
 			}
 		}
 	}
@@ -555,17 +562,21 @@ void AllRunsResults::Merged(void)
 			c5->Update();
 			std::string output_prefix =std::string(ParameterPile::this_path)+ std::string(OUTPUT_DIR) + OUTPUT_MPPCS_PICS + _exp.experiments.back()
 				+ "/" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "/" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "_";
-			vector_to_file(mppc_peaks_in_S2_area, ch, output_prefix + "S2_S.dat","MPPC_S2");
-			vector_to_file(mppc_S2_start_time, ch, output_prefix + "S2_start_t.dat", "MPPC_st");
-			vector_to_file(mppc_S2_finish_time, ch, output_prefix + "S2_finish_t.dat", "MPPC_fin");
-			vector_to_file(mppc_double_Is, ch, output_prefix + "double_I.dat", "MPPC_II");
-			vector_to_file(mppc_peaks, ch, output_prefix + "peaks.dat","MPPC_peaks");
+			if (!ParameterPile::draw_only) {
+				vector_to_file(mppc_peaks_in_S2_area, ch, output_prefix + "S2_S.dat","MPPC_S2");
+				vector_to_file(mppc_S2_start_time, ch, output_prefix + "S2_start_t.dat", "MPPC_st");
+				vector_to_file(mppc_S2_finish_time, ch, output_prefix + "S2_finish_t.dat", "MPPC_fin");
+				vector_to_file(mppc_double_Is, ch, output_prefix + "double_I.dat", "MPPC_II");
+				vector_to_file(mppc_peaks, ch, output_prefix + "peaks.dat","MPPC_peaks");
+			}
 	#ifdef OUTPUT_MPPCS_PICS
-			c1->SaveAs((output_prefix + "Ss.png").c_str(),"png");
-			c2->SaveAs((output_prefix + "S2_S.png").c_str(),"png");
-			c3->SaveAs((output_prefix + "S2_stat_t.png").c_str(),"png");
-			c4->SaveAs((output_prefix + "S2_finish_t.png").c_str(),"png");
-			c5->SaveAs((output_prefix + "double_I.png").c_str(),"png");
+			if (!ParameterPile::draw_only) {
+				c1->SaveAs((output_prefix + "Ss.png").c_str(),"png");
+				c2->SaveAs((output_prefix + "S2_S.png").c_str(),"png");
+				c3->SaveAs((output_prefix + "S2_stat_t.png").c_str(),"png");
+				c4->SaveAs((output_prefix + "S2_finish_t.png").c_str(),"png");
+				c5->SaveAs((output_prefix + "double_I.png").c_str(),"png");
+			}
 	#endif
 			c1->Close();
 			c2->Close();
@@ -625,8 +636,10 @@ void AllRunsResults::Merged(void)
 				} else {
 					std::cout << "GEM x-y size mismatch" << std::endl;
 				}
-				vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], GEM_output_prefix+".txt", std::string(OUTPUT_GEMS) +"_" + _exp.experiments.back()+"_AVR");
-				vector_to_file(_xs_sum[ind], GEM_int, integral_variance, GEM_output_prefix+"_INT.txt", std::string(OUTPUT_GEMS) +"_" + _exp.experiments.back()+"_AVR_INT");
+				if (!ParameterPile::draw_only) {
+					vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], GEM_output_prefix+".txt", std::string(OUTPUT_GEMS) +"_" + _exp.experiments.back()+"_AVR");
+					vector_to_file(_xs_sum[ind], GEM_int, integral_variance, GEM_output_prefix+"_INT.txt", std::string(OUTPUT_GEMS) +"_" + _exp.experiments.back()+"_AVR_INT");
+				}
 				continue;
 			}
 			if (ch>=32) {
@@ -640,8 +653,10 @@ void AllRunsResults::Merged(void)
 				SignalOperations::substract_baseline(_ys_sum[ind], baseline);
 				DVECTOR integral, integral_variance;
 				SignalOperations::integrate_with_variance(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], integral, integral_variance, 0);
-				vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], MPPC_output_prefix+".txt", std::string(OUTPUT_MPPCS_PICS) +"_" + _exp.experiments.back()+"_AVR");
-				vector_to_file(_xs_sum[ind], integral, integral_variance, MPPC_output_prefix+"_INT.txt", std::string(OUTPUT_MPPCS_PICS) +"_" + _exp.experiments.back()+"_AVR_INT");
+				if (!ParameterPile::draw_only) {
+					vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], MPPC_output_prefix+".txt", std::string(OUTPUT_MPPCS_PICS) +"_" + _exp.experiments.back()+"_AVR");
+					vector_to_file(_xs_sum[ind], integral, integral_variance, MPPC_output_prefix+"_INT.txt", std::string(OUTPUT_MPPCS_PICS) +"_" + _exp.experiments.back()+"_AVR_INT");
+				}
 				continue;
 			}
 			std::string PMT_output_prefix = std::string(ParameterPile::this_path) + std::string(OUTPUT_DIR) + OUTPUT_PMTS + _exp.experiments.back()
@@ -654,8 +669,10 @@ void AllRunsResults::Merged(void)
 			SignalOperations::substract_baseline(_ys_sum[ind], baseline);
 			DVECTOR integral, integral_variance;
 			SignalOperations::integrate_with_variance(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], integral, integral_variance, 0);
-			vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], PMT_output_prefix+".txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR");
-			vector_to_file(_xs_sum[ind], integral, integral_variance, PMT_output_prefix+"_INT.txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR_INT");
+			if (!ParameterPile::draw_only) {
+				vector_to_file(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], PMT_output_prefix+".txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR");
+				vector_to_file(_xs_sum[ind], integral, integral_variance, PMT_output_prefix+"_INT.txt", std::string(OUTPUT_PMTS) +"_" + _exp.experiments.back()+"_AVR_INT");
+			}
 			double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
 			double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
 			Drawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);

@@ -45,6 +45,7 @@ namespace ParameterPile
 	//extern bool override_analysis;
 	extern experiment_area exp_area;
 	extern int threads_number;
+	extern bool draw_only;
 
 	extern double dt_quant;
 

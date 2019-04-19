@@ -146,6 +146,7 @@ namespace ParameterPile
 	//bool override_analysis = true;
 	experiment_area exp_area;
 	int threads_number = 1; //obv. must be >=1
+	bool draw_only = false;
 
 	double dt_quant = 0.1; //us
 
@@ -258,6 +259,7 @@ namespace ParameterPile
 		MPPC_minimum_peak_A = 0.0070; //
 		MPPC_maximum_peak_A = 0.0070; //
 		threads_number = 4;
+		draw_only = false;
 		S1_start_time = 18.5; //in us
 		S1_finish_time = 19; //in us
 
@@ -336,30 +338,26 @@ namespace ParameterPile
 		ch_inverse.push_pair(8, 11);
 		ch_inverse.push_pair(32, 65);
 
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_20kV_850V_46V_th250mV_0", 20));
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_20kV_850V_46V_th250mV", 20));
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_18kV_850V_46V_th230mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_14kV_850V_46V_th200mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_12kV_850V_46V_th160mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_10kV_850V_46V_th150mV", 20));
 		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_16kV_850V_46V_th210mV", 20));
 
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_20kV_850V_46V_th250mV_0",70));
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_20kV_850V_46V_th250mV",70));
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_18kV_850V_46V_th230mV",70));
+		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_14kV_850V_46V_th200mV",70));
+		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_12kV_850V_46V_th160mV",70));
+		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_10kV_850V_46V_th150mV",70));
 		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_16kV_850V_46V_th210mV",70));
 
 		areas_to_draw.push_back(experiment_area());
 
-		//areas_to_draw.back().experiments.push_back("190404_Cd_20kV_850V_46V_th250mV_0");
+		//areas_to_draw.back().experiments.push_back("190404_Cd_16kV_850V_46V_th210mV");
 
-		areas_to_draw.back().runs.push_pair(1, 1);
+		areas_to_draw.back().runs.push_pair(96, 96);
 
-		//areas_to_draw.back().channels.push_pair(38, 38);
+		areas_to_draw.back().channels.push_pair(8, 8);
 
-		//areas_to_draw.back().channels.push_pair(12, 12);
-		//areas_to_draw.back().channels.push_pair(36, 36);
-		//areas_to_draw.back().channels.push_pair(38, 38);
-		//areas_to_draw.back().channels.push_pair(44, 44);
-		areas_to_draw.back().channels.push_pair(32, 44); //13
-		areas_to_draw.back().channels.push_pair(48, 59); //12 =>25 channels
+		//areas_to_draw.back().channels.push_pair(32, 44); //13
+		//areas_to_draw.back().channels.push_pair(48, 59); //12 =>25 channels
 
 		areas_to_draw.back().sub_runs.push_pair(0, 9);
 
@@ -372,9 +370,9 @@ namespace ParameterPile
 
 		exp_area.sub_runs.push_pair(0, 999); //subruns_per_file-1);
 
-		exp_area.experiments.push_back("190404_Cd_20kV_850V_46V_th250mV_0");
-		exp_area.experiments.push_back("190404_Cd_20kV_850V_46V_th250mV");
-		exp_area.experiments.push_back("190404_Cd_18kV_850V_46V_th230mV");
 		exp_area.experiments.push_back("190404_Cd_16kV_850V_46V_th210mV");
+		//exp_area.experiments.push_back("190404_Cd_12kV_850V_46V_th160mV");
+		//exp_area.experiments.push_back("190404_Cd_10kV_850V_46V_th150mV");
+		//exp_area.experiments.push_back("190404_Cd_8kV_850V_46V_th140mV");
 	}
 };
