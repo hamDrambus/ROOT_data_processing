@@ -150,9 +150,11 @@ namespace ParameterPile
 
 	double dt_quant = 0.1; //us
 
-	int filter_MPPC_n_points = 15;
-	int filter_MPPC_order = 4;
-	int filter_MPPC_n_iterations = 1;
+	//int filter_MPPC_n_points = 15;	//62.5 MHz
+	//int filter_MPPC_order = 4;		//62.5 MHz
+	int filter_MPPC_n_points = 32;	//250 MHz
+	int filter_MPPC_order = 8;		//250 MHz
+	int filter_MPPC_n_iterations = 0;
 	std::map<int,int> filter_PMT_n_points;
 	std::map<int,int> filter_PMT_order;
 	std::map<int,int> filter_PMT_n_iterations;
@@ -256,123 +258,98 @@ namespace ParameterPile
 		
 		PMT_SArea_peaks_acceptance = -1; //V*us
 		subruns_per_file = 1000;
-		MPPC_minimum_peak_A = 0.0070; //
-		MPPC_maximum_peak_A = 0.0070; //
-		threads_number = 4;
+		MPPC_minimum_peak_A = 0.0120; //
+		MPPC_maximum_peak_A = 0.0120; //
+		threads_number = 9;
 		draw_only = false;
 		S1_start_time = 18.5; //in us
 		S1_finish_time = 19; //in us
 
 		filter_PMT_n_points.insert		(std::pair<int,int>(0,50));//(channel, value)
 		filter_PMT_order.insert			(std::pair<int,int>(0,8));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(0,1));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(0,0));
 		filter_PMT_n_points.insert		(std::pair<int,int>(1,50));
 		filter_PMT_order.insert			(std::pair<int,int>(1,8));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(1,1));
-		filter_PMT_n_points.insert		(std::pair<int,int>(8,25));
-		filter_PMT_order.insert			(std::pair<int,int>(8,10));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(8,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(9,25));
-		filter_PMT_order.insert			(std::pair<int,int>(9,10));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(9,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(10,25));
-		filter_PMT_order.insert			(std::pair<int,int>(10,10));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(10,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(11,25));
-		filter_PMT_order.insert			(std::pair<int,int>(11,10));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(11,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(12,50));
-		filter_PMT_order.insert			(std::pair<int,int>(12,8));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(13,50));
-		filter_PMT_order.insert			(std::pair<int,int>(13,8));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(13,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(14,50));
-		filter_PMT_order.insert			(std::pair<int,int>(14,8));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(14,0));
-		filter_PMT_n_points.insert		(std::pair<int,int>(15,50));
-		filter_PMT_order.insert			(std::pair<int,int>(15,8));
-		filter_PMT_n_iterations.insert	(std::pair<int,int>(15,0));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(1,0));
+		filter_PMT_n_points.insert		(std::pair<int,int>(2,32));
+		filter_PMT_order.insert			(std::pair<int,int>(2,10));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(2,1));
+		filter_PMT_n_points.insert		(std::pair<int,int>(3,32));
+		filter_PMT_order.insert			(std::pair<int,int>(3,10));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(3,1));
+		filter_PMT_n_points.insert		(std::pair<int,int>(4,32));
+		filter_PMT_order.insert			(std::pair<int,int>(4,10));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(4,1));
+		filter_PMT_n_points.insert		(std::pair<int,int>(5,32));
+		filter_PMT_order.insert			(std::pair<int,int>(5,10));
+		filter_PMT_n_iterations.insert	(std::pair<int,int>(5,1));
 
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(0,0.027));//(channel, value)
 		PMT_maximum_thresh.insert	(std::pair<int,double>(0,0.027));
+		PMT_thresh_edges.insert		(std::pair<int,double>(0,0.0044));
 		PMT_minimum_thresh.insert 	(std::pair<int,double>(1,0.046));
 		PMT_maximum_thresh.insert	(std::pair<int,double>(1,0.046));
+		PMT_thresh_edges.insert		(std::pair<int,double>(1,0.0044));
 
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(8,0.0031));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(8,0.0031));
-		PMT_thresh_edges.insert		(std::pair<int,double>(8,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(9,0.0040));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(9,0.0040));
-		PMT_thresh_edges.insert		(std::pair<int,double>(9,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(10,0.0031));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(10,0.0031));
-		PMT_thresh_edges.insert		(std::pair<int,double>(10,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(11,0.0060));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(11,0.0060));
-		PMT_thresh_edges.insert		(std::pair<int,double>(11,0.0));
-
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(12,0.020));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(12,0.020));
-		PMT_thresh_edges.insert		(std::pair<int,double>(12,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(13,0.020));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(13,0.020));
-		PMT_thresh_edges.insert		(std::pair<int,double>(13,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(14,0.020));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(14,0.020));
-		PMT_thresh_edges.insert		(std::pair<int,double>(14,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(15,0.020));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(15,0.020));
-		PMT_thresh_edges.insert		(std::pair<int,double>(15,0.0));
-		PMT_minimum_thresh.insert 	(std::pair<int,double>(16,0.080));
-		PMT_maximum_thresh.insert	(std::pair<int,double>(16,0.080));
-		PMT_thresh_edges.insert		(std::pair<int,double>(16,0.0));
-
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(2,0.0038));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(2,0.0038));
+		PMT_thresh_edges.insert		(std::pair<int,double>(2,0.0));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(3,0.0040));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(3,0.0040));
+		PMT_thresh_edges.insert		(std::pair<int,double>(3,0.0));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(4,0.0040));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(4,0.0040));
+		PMT_thresh_edges.insert		(std::pair<int,double>(4,0.0));
+		PMT_minimum_thresh.insert 	(std::pair<int,double>(5,0.0040));
+		PMT_maximum_thresh.insert	(std::pair<int,double>(5,0.0040));
+		PMT_thresh_edges.insert		(std::pair<int,double>(5,0.0));
 		//ch_use_average.push_pair(0, 1);
 		//ch_use_average.push_pair(8, 12);
-		ch_use_average.push_pair(GEM_CH_, GEM_CH_);
+		//ch_use_average.push_pair(GEM_CH_, GEM_CH_);
 
-		ch_integrate_S2.push_pair(12, 16);
-		ch_use_curved_baseline.push_pair(12, 15);
-		//ch_use_curved_baseline.push_pair(32, 65);
-		ch_inverse.push_pair(8, 11);
-		ch_inverse.push_pair(32, 65);
+		//ch_integrate_S2.push_pair(12, 16);
+		ch_use_curved_baseline.push_pair(0, 1);
+		//ch_use_curved_baseline.push_pair(7, 7);
+		ch_inverse.push_pair(2, 7);
 
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_14kV_850V_46V_th200mV", 20));
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_12kV_850V_46V_th160mV", 20));
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_10kV_850V_46V_th150mV", 20));
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_16kV_850V_46V_th210mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190307_Bkg_20kV_850V_46V_coll6mm_th430mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190307_Cd_20kV_850V_46V_coll6mm_th430mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190307_Cd_18kV_850V_46V_coll6mm_th430mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190307_Cd_16kV_850V_46V_coll6mm_th400mV", 20));
+		S2_start_time.insert(std::pair<std::string,double>("190307_Cd_14kV_850V_46V_coll6mm_th350mV", 20));
 
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_14kV_850V_46V_th200mV",70));
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_12kV_850V_46V_th160mV",70));
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_10kV_850V_46V_th150mV",70));
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_16kV_850V_46V_th210mV",70));
+		S2_finish_time.insert(std::pair<std::string,double>("190307_Bkg_20kV_850V_46V_coll6mm_th430mV", 80));
+		S2_finish_time.insert(std::pair<std::string,double>("190307_Cd_20kV_850V_46V_coll6mm_th430mV", 80));
+		S2_finish_time.insert(std::pair<std::string,double>("190307_Cd_18kV_850V_46V_coll6mm_th430mV", 80));
+		S2_finish_time.insert(std::pair<std::string,double>("190307_Cd_16kV_850V_46V_coll6mm_th400mV", 80));
+		S2_finish_time.insert(std::pair<std::string,double>("190307_Cd_14kV_850V_46V_coll6mm_th350mV", 80));
 
 		areas_to_draw.push_back(experiment_area());
 
-		//areas_to_draw.back().experiments.push_back("190404_Cd_16kV_850V_46V_th210mV");
+		//areas_to_draw.back().experiments.push_back("190307_Cd_14kV_850V_46V_coll6mm_th350mV");
 
-		areas_to_draw.back().runs.push_pair(96, 96);
+		areas_to_draw.back().runs.push_pair(94, 94);
 
-		areas_to_draw.back().channels.push_pair(8, 8);
+		areas_to_draw.back().channels.push_pair(0, 7);
 
 		//areas_to_draw.back().channels.push_pair(32, 44); //13
 		//areas_to_draw.back().channels.push_pair(48, 59); //12 =>25 channels
 
-		areas_to_draw.back().sub_runs.push_pair(0, 9);
+		areas_to_draw.back().sub_runs.push_pair(0, 4);
 
 		exp_area.runs.push_pair(0, 9999);
-		exp_area.channels.push_pair(8, 16);
+		exp_area.channels.push_pair(0, 7);
 		//exp_area.channels.push_pair(GEM_CH_, GEM_CH_);
 
-		exp_area.channels.push_pair(32, 44); //13
-		exp_area.channels.push_pair(48, 59); //12 =>25 channels
+		//exp_area.channels.push_pair(32, 44); //13
+		//exp_area.channels.push_pair(48, 59); //12 =>25 channels
 
-		exp_area.sub_runs.push_pair(0, 999); //subruns_per_file-1);
+		exp_area.sub_runs.push_pair(0, subruns_per_file-1); //subruns_per_file-1);
 
-		exp_area.experiments.push_back("190404_Cd_16kV_850V_46V_th210mV");
-		//exp_area.experiments.push_back("190404_Cd_12kV_850V_46V_th160mV");
-		//exp_area.experiments.push_back("190404_Cd_10kV_850V_46V_th150mV");
-		//exp_area.experiments.push_back("190404_Cd_8kV_850V_46V_th140mV");
+		exp_area.experiments.push_back("190307_Bkg_20kV_850V_46V_coll6mm_th430mV");
+		//exp_area.experiments.push_back("190307_Cd_20kV_850V_46V_coll6mm_th430mV");
+		//exp_area.experiments.push_back("190307_Cd_18kV_850V_46V_coll6mm_th430mV");
+		//exp_area.experiments.push_back("190307_Cd_16kV_850V_46V_coll6mm_th400mV");
+		exp_area.experiments.push_back("190307_Cd_14kV_850V_46V_coll6mm_th350mV");
 	}
 };

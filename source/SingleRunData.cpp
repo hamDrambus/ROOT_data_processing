@@ -133,7 +133,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 	int pmt_integrated_index = -1;
 	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
-		if ((ch>=32)||(ind<0)||(GEM_CH_==ch))
+		//if ((ch>=32)||(ind<0)||(GEM_CH_==ch))
+		if ((ch>=7)||(ind<0)||(GEM_CH_==ch))
 			continue;
 		readOneRun(all_runs_results, ch); //read all PMTs, ignore GEM and MPPCs
 		if (xs_channels[ind].empty())
@@ -308,9 +309,10 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 						dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
 					}
 				} else { //curved baseline case
-					if (!ys_filtered.empty())
+					if (!ys_filtered.empty()) {
 						dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
-					else
+						//dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#FF00FF\"", 0);
+					} else
 						dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
 					dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"", 0);
 #ifdef _TEMP_CODE
@@ -463,7 +465,8 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 	curr_area.channels.reset();
 	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
-		if ((ind < 0)||(ch<32)) //process only mppc
+		//if ((ind < 0)||(ch<32)) //process only mppc
+		if ((ind < 0)||(ch<7)) //process only mppc
 			continue;
 		++mppc_ind;
 		readOneRun(all_runs_results, ch);
@@ -682,7 +685,7 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 				dr->SetDirectory(OUTPUT_DIR+OUTPUT_MPPCS_PICS + curr_area.experiments.back() + "/" + OUTPUT_MPPCS + std::to_string(ch) + "/");
 				dr->AddToDraw(xs_raw, ys_raw, "raw" + plot_title, "w l lc rgb \"#0000FF\"", 0);
 				if (!ys_filtered.empty())
-					dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
+					dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#FF00FF\"", 0);
 				if (!mppc_baseline_ys.empty())
 				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"", 0);
 #ifdef _TEMP_CODE
