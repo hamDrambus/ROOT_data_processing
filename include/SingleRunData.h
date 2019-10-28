@@ -26,7 +26,6 @@ protected:
 	GraphicOutputManager graph_manager;
 
 	void file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, int index);
-	bool test_PMT_signal(int _N_threshold, double _S_threshold, double _S_max_threshold, AllRunsResults *results); //returns false if the PMT signal is empty
 	double find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, DVECTOR &y_peaks_spreaded, double &apr_threshold);
 
 	void readOneRun(AllRunsResults *results, int channel);

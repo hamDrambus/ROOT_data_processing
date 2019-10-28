@@ -26,6 +26,8 @@ namespace ParameterPile {
 		int get_next_index(int after);
 		void push_pair(int left, int right);
 		void push_back(int val);
+		void push (int left, int right);
+		void push (int val);
 		bool contains(int index) const;
 		bool empty(void) const;
 		bool isValid(void) const;

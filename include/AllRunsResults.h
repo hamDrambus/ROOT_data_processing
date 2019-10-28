@@ -89,16 +89,13 @@ protected:
 	STD_CONT<int> avr_channels;
 	//DONE: The number of runs in MPPC and PMT blocks is always equal
 	//MPPC:
-	STD_CONT<STD_CONT<double> > mppc_peaks_in_S2_area; //[run#][channel], size of mppc channels (depends on experiment area)
-	STD_CONT<STD_CONT<double> > mppc_S2_start_time;	 //[run#][channel]
-	STD_CONT<STD_CONT<double> > mppc_S2_finish_time;	 //[run#][channel]
+	//STD_CONT<STD_CONT<double> > mppc_peaks_in_S2_area; //[run#][channel], size of mppc channels (depends on experiment area)
+	//STD_CONT<STD_CONT<double> > mppc_S2_start_time;	 //[run#][channel]
+	//STD_CONT<STD_CONT<double> > mppc_S2_finish_time;	 //[run#][channel]
 	STD_CONT<STD_CONT<double> > mppc_double_Is;		 //[run#][channel]
 	STD_CONT<STD_CONT<STD_CONT<peak> > > mppc_peaks; //[run#][channel][peaks].
 	STD_CONT<int> mppc_channels;
 	//PMT:
-	double S_peaks_cutoff;
-	double N_peaks_cutoff;
-	double S_peaks_max_cutoff;
 	DVECTOR _ns; //[run#]
 	DVECTOR _Ss; //[run#]
 	STD_CONT<STD_CONT<STD_CONT<peak> > > pmt_peaks;	//[run#][channel][peaks]
@@ -108,8 +105,6 @@ protected:
 	STD_CONT<int> pmt_integrated_channels; //[channel]
 
 	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
-	void find_S_cutoff(void); //in: _Ss, out: S_peaks_cutoff
-	//void find_S_cutoff_v2(void);
 	TH1D* createMPPCHist(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
 	TH1D* createMPPCHist_peaks_S(STD_CONT<STD_CONT<STD_CONT<peak> > > &what, int ch_ind, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
 	void vector_to_file(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string fname, std::string title="MPPC");

@@ -34,12 +34,12 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../Data/190307/")
-#define OUTPUT_DIR std::string("../Data/190307/results/")
+#define DATA_PREFIX std::string("../Data/180705/")
+#define OUTPUT_DIR std::string("../Data/180705/results/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
 
-//#define DATA_TIME_CONSTANT 1.6e-2
-#define DATA_TIME_CONSTANT 4e-3
+#define DATA_TIME_CONSTANT 1.6e-2
+//#define DATA_TIME_CONSTANT 4e-3
 //^in microseconds
 #define DATA_VOLTAGE_CHANNELS 4095
 #define DATA_VOLTAGE_AMPLITUDE 2.0

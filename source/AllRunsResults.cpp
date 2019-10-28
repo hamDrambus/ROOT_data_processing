@@ -3,9 +3,6 @@
 AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 {
 	_exp = experiment;
-	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
-	S_peaks_max_cutoff = S_peaks_cutoff - 1;
-	N_peaks_cutoff = ParameterPile::PMT_N_peaks_acceptance;
 	N_of_runs = 0;
 	N_of_valid_runs = 0;
 	Iteration_N = 0;
@@ -112,81 +109,8 @@ void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_
 	x_start = x_S1_left;
 }
 
-void AllRunsResults::find_S_cutoff(void)//TODO: explain the algorithm and maybe test it
-//"maybe" because the actual test is S histograms pictures with cutoffs. If pictures are ok, there is no need to
-//test the algorithm excessively
-{
-	if (_Ss.size() < ParameterPile::PMT_min_statistics) //not statistically significant. TODO: figure out the number,
-		//and ParameterPile, however this is not important
-		return;
-#if defined(_NO_AUTO_PMT_SELECTION)||defined(_NO_PMT_SELECTION)
-	S_peaks_cutoff = ParameterPile::PMT_SArea_peaks_acceptance;
-	S_peaks_max_cutoff = S_peaks_cutoff - 1;
-	return;
-#endif
-	DVECTOR areas = _Ss;
-	std::sort(areas.begin(), areas.end());
-	double G_mean = TMath::Mean(areas.begin(), areas.end());
-	double G_rms = TMath::RMS(areas.begin(), areas.end());
-	double G_min = *(areas.begin());
-	double G_max = areas.back();
-	//max_cutoff:
-	double max_cutoff = G_mean + ParameterPile::PMT_right_cutoff_from_RMS * G_rms;
-	S_peaks_max_cutoff = max_cutoff;
-	DITERATOR erase_from;
-	for (erase_from = areas.begin(); erase_from != areas.end(); ++erase_from)
-		if ((*erase_from) > max_cutoff)
-			break;
-	areas.erase(erase_from, areas.end());
-	G_max = areas.back();
-	G_mean = TMath::Mean(areas.begin(), areas.end());
-	G_rms = TMath::RMS(areas.begin(), areas.end());
-	//applied max cutoff
-
-	int N_min_above_cutoff = areas.size()*ParameterPile::PMT_min_fraction_above_cutoff;
-	int N_above_global_mean_acceptable = areas.size()*ParameterPile::PMT_mean_above_cutoff_acceptance; //see usage below for meaning
-	DVECTOR areas_full = areas;
-	
-	double max_ds = 0;
-	DITERATOR i_max_ds = areas.begin();
-	bool found_max_delta_S = false;
-	while (!found_max_delta_S){
-		for (auto i = areas.begin(); i != (areas.end() - 1); ++i) {
-			if ((*(i + 1) - *i) > max_ds){
-				max_ds = (*(i + 1) - *i);
-				i_max_ds = i + 1;
-			}
-		}
-		if ((areas.end() - i_max_ds) < N_min_above_cutoff) {//it is not the max of interest
-			areas.erase(i_max_ds, areas.end());
-			max_ds = 0;
-			i_max_ds = areas.begin();
-		} else {
-			found_max_delta_S = true;
-		}
-		if (areas.size() < N_min_above_cutoff){
-			i_max_ds = areas.begin();
-			break;
-		}
-	}
-	double mean = TMath::Mean(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
-	double rms = TMath::RMS(areas_full.begin() + (i_max_ds - areas.begin()), areas_full.end());
-	double cutoff = mean - rms * ParameterPile::PMT_left_cutoff_from_RMS;
-	DITERATOR _last = areas.end()-1;
-	DITERATOR _begin = areas.begin();
-	DITERATOR i_mean = SignalOperations::find_x_iterator_by_value(_begin, _last, G_mean);
-	DITERATOR i_cutoff = SignalOperations::find_x_iterator_by_value(_begin, _last, cutoff);
-	if (G_mean < cutoff)
-		if ((i_cutoff - i_mean) >= N_above_global_mean_acceptable)
-			cutoff = G_mean;//or set to S_peaks_cutoff ?
-	S_peaks_cutoff = std::max(cutoff, S_peaks_cutoff);
-
-}
-
 void AllRunsResults::Merge(AllRunsResults* with)
 {
-	N_peaks_cutoff = with->N_peaks_cutoff;
-	S_peaks_cutoff = with->S_peaks_cutoff;
 	_valid.insert(_valid.end(), with->_valid.begin(), with->_valid.end());
 	_status.insert(_status.end(), with->_status.begin(), with->_status.end());
 	N_of_runs += with->N_of_runs;
@@ -217,8 +141,6 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		bool empty = false, valid = true;
 		if (avr_channels.empty())
 			empty = true;
-		//if ((avr_channels.size() != _xs_sum.size())||(avr_channels.size() != _ys_sum.size())||(avr_channels.size() != _ys_disp.size()))
-		//	valid = false;
 		valid = isSameChannels(avr_channels, with->avr_channels);
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have averaging channels' size mismatches: not Merging" << std::endl;
@@ -242,29 +164,16 @@ void AllRunsResults::Merge(AllRunsResults* with)
 		}
 
 		empty = false, valid = true;
-		if (mppc_peaks_in_S2_area.empty())
-			empty = true;
-		/*if ((mppc_peaks_in_S2_area.size() != mppc_S2_start_time.size()) || (mppc_peaks_in_S2_area.size() != mppc_S2_finish_time.size())
-			|| (mppc_peaks_in_S2_area.size() != mppc_channels.size())	|| (mppc_peaks_in_S2_area.size() != mppc_double_Is.size())
-			|| (mppc_peaks_in_S2_area.size() != mppc_peaks.size()))
-			valid = false;
-		*/
 		valid = isSameChannels(mppc_channels, with->mppc_channels);
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
 			return;
 		}
 		if (empty) {
-			mppc_peaks_in_S2_area = with->mppc_peaks_in_S2_area;
-			mppc_S2_start_time = with->mppc_S2_start_time;
-			mppc_S2_finish_time = with->mppc_S2_finish_time;
 			mppc_channels = with->mppc_channels;
 			mppc_double_Is = with->mppc_double_Is;
 			mppc_peaks = with->mppc_peaks;
 		} else {
-			mppc_peaks_in_S2_area.insert(mppc_peaks_in_S2_area.end(), with->mppc_peaks_in_S2_area.begin(), with->mppc_peaks_in_S2_area.end());
-			mppc_S2_start_time.insert(mppc_S2_start_time.end(), with->mppc_S2_start_time.begin(), with->mppc_S2_start_time.end());
-			mppc_S2_finish_time.insert(mppc_S2_finish_time.end(), with->mppc_S2_finish_time.begin(), with->mppc_S2_finish_time.end());
 			mppc_peaks.insert(mppc_peaks.end(), with->mppc_peaks.begin(), with->mppc_peaks.end());
 			mppc_double_Is.insert(mppc_double_Is.end(), with->mppc_double_Is.begin(), with->mppc_double_Is.end());
 		}
@@ -361,10 +270,6 @@ void AllRunsResults::Merged(void)
 	std::cout << "Iteration " << Iteration_N << std::endl;
 	std::cout << "N of runs " << N_of_runs << std::endl;
 	std::cout << "N of valid runs " << N_of_valid_runs << std::endl;
-	if (0==Iteration_N) {//only PMT are processed. No average signals yet
-		if (!_Ss.empty())
-			find_S_cutoff();
-	}
 	if(1==Iteration_N) {
 		for (std::size_t ch = 0, ch_end_=avr_channels.size(); ch!=ch_end_; ++ch)
 			for (auto i = _ys_sum[ch].begin(), i_end_ = _ys_sum[ch].end(); i!=i_end_; ++i)
@@ -409,11 +314,11 @@ void AllRunsResults::Merged(void)
 			}
 			if (0==pmt_channels[ch]) {
 				DITERATOR S2_max = std::max_element(_Ss.begin(), _Ss.end());
-				double hist_S2_max = (S_peaks_max_cutoff > S_peaks_cutoff) ? std::min(S_peaks_max_cutoff, *S2_max) : *S2_max;
+				double hist_S2_max = *S2_max;
 				TH1D *hist_S2 = new TH1D("3PMT_S2_peaks", "3PMT_S2_peaks", 60, 0, hist_S2_max);
 
 				for (std::size_t _n = 0, _s = 0; (_n < _ns.size()) && (_s < _Ss.size()); ++_s, ++_n) {
-					if ((!_valid[_s])||((S_peaks_max_cutoff > S_peaks_cutoff) && (_Ss[_s] > S_peaks_max_cutoff)))
+					if (!_valid[_s])
 						continue; //do not draw if maximum limit is imposed && element exceeds it
 					hist_S2->Fill(_Ss[_s]);
 				}
@@ -422,9 +327,6 @@ void AllRunsResults::Merged(void)
 					("3PMT_S2_peaks_distribution " + _exp.experiments.back()).c_str());
 				c1->cd();
 				hist_S2->Draw();
-				TLine *cutoff = new TLine(S_peaks_cutoff, c1->GetUymin(), S_peaks_cutoff, c1->GetUymax());
-				cutoff->SetLineColor(kRed);
-				cutoff->Draw();
 				c1->Update();
 				if (!ParameterPile::draw_only)
 					c1->SaveAs((PMT_output_prefix+"S2s.png").c_str(),"png");
@@ -526,9 +428,6 @@ void AllRunsResults::Merged(void)
 
 			//TODO: ParameterPile
 			TH1D *hist_S = createMPPCHist_peaks_S(mppc_peaks, ch, Ss_name, 0, 4.0, 100);
-			TH1D *hist_S2_S = createMPPCHist(mppc_peaks_in_S2_area, ch, S2_S_name, 0, 4.0, 100);
-			TH1D *hist_S2_start_t = createMPPCHist(mppc_S2_start_time, ch, S2_start_t_name, ParameterPile::S2_start_time.find(_exp.experiments.back())->second, 4.0, 100);
-			TH1D *hist_S2_finish_t = createMPPCHist(mppc_S2_finish_time, ch, S2_finish_t_name, ParameterPile::S2_start_time.find(_exp.experiments.back())->second, 6.0, 100);
 			TH1D *hist_double_I = createMPPCHist(mppc_double_Is, ch, double_I_name, -1.1, 6.0, 100);
 
 			TCanvas *c1 = new TCanvas(Ss_name.c_str(), Ss_name.c_str());
@@ -536,24 +435,6 @@ void AllRunsResults::Merged(void)
 			if (hist_S)
 				hist_S->Draw();
 			c1->Update();
-
-			TCanvas *c2 = new TCanvas(S2_S_name.c_str(), S2_S_name.c_str());
-			c2->cd();
-			if (hist_S2_S)
-				hist_S2_S->Draw();
-			c2->Update();
-
-			TCanvas *c3 = new TCanvas(S2_start_t_name.c_str(), S2_start_t_name.c_str());
-			c3->cd();
-			if (hist_S2_start_t)
-				hist_S2_start_t->Draw();
-			c3->Update();
-
-			TCanvas *c4 = new TCanvas(S2_finish_t_name.c_str(), S2_finish_t_name.c_str());
-			c4->cd();
-			if (hist_S2_finish_t)
-				hist_S2_finish_t->Draw();
-			c4->Update();
 
 			TCanvas *c5 = new TCanvas(double_I_name.c_str(), double_I_name.c_str());
 			c5->cd();
@@ -563,25 +444,16 @@ void AllRunsResults::Merged(void)
 			std::string output_prefix =std::string(ParameterPile::this_path)+ std::string(OUTPUT_DIR) + OUTPUT_MPPCS_PICS + _exp.experiments.back()
 				+ "/" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "/" + OUTPUT_MPPCS + std::to_string(mppc_channels[ch]) + "_";
 			if (!ParameterPile::draw_only) {
-				vector_to_file(mppc_peaks_in_S2_area, ch, output_prefix + "S2_S.dat","MPPC_S2");
-				vector_to_file(mppc_S2_start_time, ch, output_prefix + "S2_start_t.dat", "MPPC_st");
-				vector_to_file(mppc_S2_finish_time, ch, output_prefix + "S2_finish_t.dat", "MPPC_fin");
 				vector_to_file(mppc_double_Is, ch, output_prefix + "double_I.dat", "MPPC_II");
 				vector_to_file(mppc_peaks, ch, output_prefix + "peaks.dat","MPPC_peaks");
 			}
 	#ifdef OUTPUT_MPPCS_PICS
 			if (!ParameterPile::draw_only) {
 				c1->SaveAs((output_prefix + "Ss.png").c_str(),"png");
-				c2->SaveAs((output_prefix + "S2_S.png").c_str(),"png");
-				c3->SaveAs((output_prefix + "S2_stat_t.png").c_str(),"png");
-				c4->SaveAs((output_prefix + "S2_finish_t.png").c_str(),"png");
 				c5->SaveAs((output_prefix + "double_I.png").c_str(),"png");
 			}
 	#endif
 			c1->Close();
-			c2->Close();
-			c3->Close();
-			c4->Close();
 			c5->Close();
 		}
 	}
@@ -993,9 +865,6 @@ void AllRunsResults::Clear(void)
 		STD_CONT<DVECTOR>().swap(_ys_sum);
 		STD_CONT<DVECTOR>().swap(_ys_disp);
 		STD_CONT<int>().swap(avr_channels);
-		STD_CONT<STD_CONT<double> >().swap(mppc_peaks_in_S2_area);
-		STD_CONT<STD_CONT<double> >().swap(mppc_S2_start_time);
-		STD_CONT<STD_CONT<double> >().swap(mppc_S2_finish_time);
 		STD_CONT<STD_CONT<STD_CONT<peak>>>().swap(mppc_peaks);
 		STD_CONT<STD_CONT<double> >().swap(mppc_double_Is);
 		STD_CONT<int>().swap(mppc_channels);
@@ -1025,9 +894,6 @@ AllRunsResults& AllRunsResults::operator=(const AllRunsResults& right)
 	N_of_runs = right.N_of_runs;
 	N_of_valid_runs = right.N_of_valid_runs ;
 	Iteration_N = right.Iteration_N;
-	S_peaks_cutoff = right.S_peaks_cutoff;
-	N_peaks_cutoff = right.N_peaks_cutoff;
-	S_peaks_max_cutoff = right.S_peaks_max_cutoff;
 	_exp = right._exp;
 	_ys_sum = right._ys_sum;
 	_xs_sum = right._xs_sum;

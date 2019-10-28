@@ -107,6 +107,15 @@ namespace ParameterPile {
 		reset();
 	}
 
+	void area_vector::push (int left, int right)
+	{
+		push_pair(left, right);
+	}
+	void area_vector::push (int val)
+	{
+		push_pair(val, val);
+	}
+
 	void area_vector::push_back(int val)
 	{
 		if (!_vec.empty())
