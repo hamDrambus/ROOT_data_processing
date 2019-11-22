@@ -232,7 +232,7 @@ namespace ParameterPile
 		subruns_per_file = 1000;
 		MPPC_threshold = 0.0080; //
 		threads_number = 9;
-		draw_only = false;
+		draw_only = true;
 		S1_start_time = 17.5; //in us
 		S1_finish_time = 18.0; //in us
 
@@ -259,7 +259,7 @@ namespace ParameterPile
 		filter_PMT_n_iterations.insert	(std::pair<int,int>(12,0));
 
 		PMT_thresh.insert 	(std::pair<int,double>(0,0.038));//(channel, value)
-		PMT_thresh_edges.insert		(std::pair<int,double>(0,0.0044));
+		PMT_thresh_edges.insert		(std::pair<int,double>(0,0.0038));
 		PMT_thresh.insert 	(std::pair<int,double>(1,0.065));
 		PMT_thresh_edges.insert		(std::pair<int,double>(1,0.008));
 
@@ -307,36 +307,66 @@ namespace ParameterPile
 
 		areas_to_draw.push_back(experiment_area());
 
-		areas_to_draw.back().experiments.push_back("180705_Cd_20kV_800V_12bB_48V");
+		areas_to_draw.back().experiments.push_back("180705_Cd_10kV_800V_6bB_48V");
 
-		areas_to_draw.back().runs.push_pair(0, 0);
+		areas_to_draw.back().runs.push_pair(259, 259);
 
-		areas_to_draw.back().channels.push_pair(38, 38);
+		areas_to_draw.back().channels.push_pair(10, 10);
 
 		//areas_to_draw.back().channels.push_pair(32, 44); //13
 		//areas_to_draw.back().channels.push_pair(48, 59); //12 =>25 channels
 
-		//areas_to_draw.back().sub_runs.push(0, 10);
+		areas_to_draw.back().sub_runs.push(0);
+		areas_to_draw.back().sub_runs.push(1);
+		areas_to_draw.back().sub_runs.push(3);
+		areas_to_draw.back().sub_runs.push(4);
+		areas_to_draw.back().sub_runs.push(5);
+		areas_to_draw.back().sub_runs.push(7);
+		areas_to_draw.back().sub_runs.push(8);
+		areas_to_draw.back().sub_runs.push(9);
+		areas_to_draw.back().sub_runs.push(11);
+		areas_to_draw.back().sub_runs.push(13);
+		areas_to_draw.back().sub_runs.push(14);
+		areas_to_draw.back().sub_runs.push(15);
+		areas_to_draw.back().sub_runs.push(16);
+		areas_to_draw.back().sub_runs.push(17);
+		areas_to_draw.back().sub_runs.push(18);
+		areas_to_draw.back().sub_runs.push(22);
+		areas_to_draw.back().sub_runs.push(23);
+		areas_to_draw.back().sub_runs.push(28);
+		areas_to_draw.back().sub_runs.push(29);
+		areas_to_draw.back().sub_runs.push(30);
+		areas_to_draw.back().sub_runs.push(31);
+		areas_to_draw.back().sub_runs.push(34);
+		areas_to_draw.back().sub_runs.push(37);
+		areas_to_draw.back().sub_runs.push(38);
+		areas_to_draw.back().sub_runs.push(40);
+		areas_to_draw.back().sub_runs.push(43);
+		areas_to_draw.back().sub_runs.push(44);
+		areas_to_draw.back().sub_runs.push(45);
+		areas_to_draw.back().sub_runs.push(47);
+		areas_to_draw.back().sub_runs.push(48);
 
-		exp_area.runs.push_pair(0, 9999);
-		exp_area.channels.push_pair(0, 1);
-		exp_area.channels.push_pair(8, 12);
+		exp_area.runs.push_pair(259, 259);
+		exp_area.channels.push_pair(10, 10);
+		//exp_area.channels.push_pair(8, 12);
 		//exp_area.channels.push_pair(GEM_CH_, GEM_CH_);
 
-		exp_area.channels.push_pair(32, 44); //13
-		exp_area.channels.push_pair(48, 59); //12 =>25 channels
+		//exp_area.channels.push_pair(32, 44); //13
+		//exp_area.channels.push_pair(48, 59); //12 =>25 channels
 
-		exp_area.sub_runs.push(0, subruns_per_file-1);
+		//exp_area.sub_runs.push(0, subruns_per_file-1);
+		exp_area.sub_runs = areas_to_draw.back().sub_runs;
 
 		//exp_area.experiments.push_back("180705_Cd_8kV_800V_0bB_48V");
 		//exp_area.experiments.push_back("180705_Cd_9kV_800V_0bB_48V");
-		//exp_area.experiments.push_back("180705_Cd_10kV_800V_6bB_48V");
+		exp_area.experiments.push_back("180705_Cd_10kV_800V_6bB_48V");
 		//exp_area.experiments.push_back("180705_Cd_11kV_800V_6bB_48V");
 		//exp_area.experiments.push_back("180705_Cd_12kV_800V_6bB_48V");
-		exp_area.experiments.push_back("180705_Cd_13kV_800V_12bB_48V");
-		exp_area.experiments.push_back("180705_Cd_14kV_800V_12bB_48V");
-		exp_area.experiments.push_back("180705_Cd_16kV_800V_12bB_48V");
-		exp_area.experiments.push_back("180705_Cd_18kV_800V_12bB_48V");
-		exp_area.experiments.push_back("180705_Cd_20kV_800V_12bB_48V");
+		//exp_area.experiments.push_back("180705_Cd_13kV_800V_12bB_48V");
+		//exp_area.experiments.push_back("180705_Cd_14kV_800V_12bB_48V");
+		//exp_area.experiments.push_back("180705_Cd_16kV_800V_12bB_48V");
+		//exp_area.experiments.push_back("180705_Cd_18kV_800V_12bB_48V");
+		//exp_area.experiments.push_back("180705_Cd_20kV_800V_12bB_48V");
 	}
 };

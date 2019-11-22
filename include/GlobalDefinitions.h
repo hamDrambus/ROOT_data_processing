@@ -35,7 +35,7 @@
 #undef min
 
 #define DATA_PREFIX std::string("../Data/180705/")
-#define OUTPUT_DIR std::string("../Data/180705/results/")
+#define OUTPUT_DIR std::string("../Post_processing/180705/results/Cd_48V_10kV_800V/forms_14-45pe/events_14-45pe_0-55pe/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
 
 #define DATA_TIME_CONSTANT 1.6e-2

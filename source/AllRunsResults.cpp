@@ -165,6 +165,8 @@ void AllRunsResults::Merge(AllRunsResults* with)
 
 		empty = false, valid = true;
 		valid = isSameChannels(mppc_channels, with->mppc_channels);
+		if (mppc_peaks.empty())
+			empty = true;
 		if (!empty && !valid){
 			std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
 			return;
