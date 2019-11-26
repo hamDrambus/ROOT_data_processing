@@ -75,6 +75,27 @@ void ensure_folder(std::string folder)
 #endif //_WIN32__
 }
 
+std::string strtoken(std::string &in, std::string break_symbs)
+{
+	std::string out;
+	while (!in.empty()) {
+		char a = in.front();
+		in.erase(in.begin());
+		bool break_ = false;
+		for (auto h = break_symbs.begin(); h != break_symbs.end(); ++h)
+			if (a == *h) {
+				break_ = true;
+				break;
+			}
+		if ((break_) && (out.empty()))
+			continue;
+		if (break_)
+			return out;
+		out.push_back(a);
+	}
+	return out;
+}
+
 bool isSameChannels(const STD_CONT<int>& a, const STD_CONT<int>& b)
 {
 	if (a.size() != b.size())
@@ -147,6 +168,7 @@ namespace ParameterPile
 	experiment_area exp_area;
 	int threads_number = 1; //obv. must be >=1
 	bool draw_only = false;
+	accepted_events<double> events_to_process;
 
 	double dt_quant = 0.1; //us
 
@@ -208,6 +230,43 @@ namespace ParameterPile
 		return false;
 	}
 
+	bool read_accepted_events(std::string file, ParameterPile::accepted_events<double> &info)
+	{
+		std::ifstream str;
+		str.open(file);
+		if (!str.is_open()) {
+			std::cerr << "ParameterPile::read_accepted_events: Error: Failed to open \"" << file << "\"" << std::endl;
+			return false;
+		}
+		std::string line, word;
+		int line_n = 0;
+		while (!str.eof() && str.is_open()) {
+			std::getline(str, line);
+			++line_n;
+			if (line.size() >= 2) //Ignore simple c style comment
+				if ((line[0] == '/') && (line[1] == '/'))
+					continue;
+			try {
+				word = strtoken(line, "\t ");
+				int run = std::stoi(word);
+				word = strtoken(line, "\t ");
+				int subrun = std::stoi(word);
+				word = strtoken(line, "\t ");
+				double trigger = 0;
+				if (!word.empty())
+					trigger = std::stod(word);
+				info.push(run, subrun, trigger);
+			}
+			catch (std::exception &e) {
+				std::cerr << "ParameterPile::read_accepted_events: Error: Exception in \"" << file << "\"" << std::endl
+					<< "\ton line " << line_n << std::endl;
+				std::cerr << "\t" << e.what() << std::endl;
+				continue;
+			}
+		}
+		return true;
+	}
+
 	void Init_globals(void)
 	{
 		char path[FILENAME_MAX];
@@ -233,6 +292,8 @@ namespace ParameterPile
 		MPPC_threshold = 0.0080; //
 		threads_number = 9;
 		draw_only = true;
+		std::string accepted_events_fname = "events.txt";
+		read_accepted_events(accepted_events_fname, events_to_process);
 		S1_start_time = 17.5; //in us
 		S1_finish_time = 18.0; //in us
 

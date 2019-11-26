@@ -94,6 +94,7 @@ DITERATOR iter_add(DITERATOR& to, int what, DITERATOR& end);
 void open_output_file(std::string name, std::ofstream &str, std::ios_base::openmode _mode = std::ios_base::trunc);
 void ensure_file(std::string fname); //makes sure file can be created later on
 void ensure_folder(std::string folder);
+std::string strtoken(std::string &in, std::string break_symbs);
 bool isSameChannels(const STD_CONT<int>& a, const STD_CONT<int>& b);
 int getIndex(const STD_CONT<int>& channels, int ch);
 

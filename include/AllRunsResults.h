@@ -71,7 +71,7 @@ struct time_results {
 class AllRunsResults
 {
 public:
-	enum Status { Ok, Empty, NoPMTsignal, PMT_mismatch, MPPC_mismatch, AVG_mismatch};
+	enum Status {Ok, Empty, NoPMTsignal, PMT_mismatch, MPPC_mismatch, AVG_mismatch, ExternalRejected};
 protected:
 	int N_of_runs;
 	int N_of_valid_runs;//i.e. accepted by PMT cut

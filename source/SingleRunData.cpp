@@ -10,13 +10,14 @@ SingleRunData::SingleRunData(ParameterPile::experiment_area area)
 	curr_area.sub_runs.push_back(area.sub_runs.back()); //only one subrun is in this class
 
 	//curr_area.channels.clear(); - not really required unless break is used in the cycle with following for(;;)
-	for (int ch = curr_area.channels.get_next_index(); !(ch<0);ch = curr_area.channels.get_next_index()) {
+	for (int ch = curr_area.channels.get_next_index(); !(ch<0); ch = curr_area.channels.get_next_index()) {
 		found_base_lines.push_back(0);
 		xs_channels.push_back(DVECTOR());
 		ys_channels.push_back(DVECTOR());
 	}
 	PMT3_summed_peaks_area = 0;
 	PMT3_n_peaks = 0;
+	trigger_offset = 0;
 }
 
 void SingleRunData::readOneRun(AllRunsResults *results, int channel)
@@ -68,9 +69,9 @@ void SingleRunData::file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, 
 			unsigned char b2_ = static_cast<unsigned char>(bytes[0]);
 			unsigned int val_ = ((b1_ << 8) | b2_);
 			double val = val_;
-			//depr: it is ok as it is //TODO: move to per channel processing
+			//TODO: use ParameterPile instead of #defines
 			val = DATA_VOLTAGE_AMPLITUDE*(val / DATA_VOLTAGE_CHANNELS) + DATA_VOLTAGE_OF_ZERO_CHANNEL;
-			xs.push_back(read_N*DATA_TIME_CONSTANT);
+			xs.push_back(read_N*DATA_TIME_CONSTANT + trigger_offset);
 			ys.push_back(val);
 			++read_N;
 		}
@@ -128,7 +129,14 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 	bool first_pmt_processed = all_runs_results->pmt_channels.empty();
 	int pmt_index = -1;
 	int pmt_integrated_index = -1;
-	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
+	if (all_runs_results->_valid[run_index] && !ParameterPile::events_to_process.empty()) {
+		trigger_offset = ParameterPile::events_to_process(curr_area.runs.back(), curr_area.sub_runs.back());
+		if (std::numeric_limits<double>::max() == trigger_offset) {
+			all_runs_results->_status[run_index] = AllRunsResults::Status::ExternalRejected;
+			all_runs_results->_valid[run_index] = false;
+		}
+	}
+	for (int ch = curr_area.channels.get_next_index(); ch != -1 && all_runs_results->_valid[run_index]; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
 		if ((ch>=32)||(ind<0)||(GEM_CH_==ch))
 		//if ((ch>=7)||(ind<0)||(GEM_CH_==ch))

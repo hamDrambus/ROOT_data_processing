@@ -13,6 +13,7 @@ class TVirtualFFT;
 class SingleRunData
 {
 protected:
+	double trigger_offset;
 
 	STD_CONT<DVECTOR>xs_channels;
 	STD_CONT<DVECTOR>ys_channels;

@@ -38,6 +38,7 @@ namespace ParameterPile
 	enum DrawEngine { Gnuplot, ROOT };
 
 	bool draw_required(ParameterPile::experiment_area what);
+	bool read_accepted_events(std::string file, ParameterPile::accepted_events<double> &info); //does not erase present data in info
 
 	extern STD_CONT <experiment_area> areas_to_draw;
 	extern std::string this_path;
@@ -46,6 +47,7 @@ namespace ParameterPile
 	extern experiment_area exp_area;
 	extern int threads_number;
 	extern bool draw_only;
+	extern accepted_events<double> events_to_process; //TODO: make it to be for each experiment
 
 	extern double dt_quant;
 
