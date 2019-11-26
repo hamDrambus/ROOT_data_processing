@@ -40,7 +40,7 @@ class GraphicOutputManager
 public:
 	STD_CONT<Drawing> _graphs;
 	GraphicOutputManager(void);
-	Drawing* GetDrawing(int index); //if does not exist, doest not create it
+	Drawing* GetDrawing(int index); //if does not exist, does not create it
 	Drawing* GetDrawing(std::string name, int index, ParameterPile::DrawEngine de);//if does not exist, creates it
 	Drawing* CreateDrawing(std::string name, int index, ParameterPile::DrawEngine de);
 	void Draw (void);

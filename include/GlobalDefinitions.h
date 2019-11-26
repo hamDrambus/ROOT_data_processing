@@ -11,7 +11,9 @@
 #include <sstream>
 #include <functional>
 #if defined(__WIN32__)
+#include <sehmap.h>
 #include <direct.h>
+#include <Windows4Root.h>
 #else
 #include <dirent.h>
 #include <errno.h>

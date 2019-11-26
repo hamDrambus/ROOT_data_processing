@@ -12,7 +12,7 @@ _name(name), _id_index(id_index), _de(de), _directory(OUTPUT_DIR+"gnuplot/")
 	_script_lines.push_back("set ytics nomirror");
 	_script_lines.push_back("set y2tics");
 	_script_lines.push_back("set key top right");
-	_script_lines.push_back("###");
+	_script_lines.push_back("###"); //pad-specific commands are between ### lines
 	_script_lines.push_back("###");
 	_script_lines.push_back("unset multiplot");
 #if !defined(__WIN32__)
