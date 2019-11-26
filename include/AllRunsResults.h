@@ -77,7 +77,7 @@ protected:
 	int N_of_valid_runs;//i.e. accepted by PMT cut
 	int Iteration_N;
 	ParameterPile::experiment_area _exp;
-	GraphicOutputManager graph_manager;
+	GraphCollection graph_manager;
 	//[#run]
 	std::vector<bool> _valid;
 	std::vector<Status> _status;
@@ -104,7 +104,7 @@ protected:
 	STD_CONT<STD_CONT<double> > pmt_S2_integral; //[run#][channel]
 	STD_CONT<int> pmt_integrated_channels; //[channel]
 
-	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man);
+	void find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphCollection &man);
 	TH1D* createMPPCHist(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
 	TH1D* createMPPCHist_peaks_S(STD_CONT<STD_CONT<STD_CONT<peak> > > &what, int ch_ind, std::string name, double left_cutoff, double right_cutoff_from_RMS, int N_bins = 0);
 	void vector_to_file(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string fname, std::string title="MPPC");

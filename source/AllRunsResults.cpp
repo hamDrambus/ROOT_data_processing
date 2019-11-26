@@ -62,19 +62,19 @@ AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 #endif
 }
 
-void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphicOutputManager &man)
+void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphCollection &man)
 {
 	DVECTOR xs_before_S1 = xs, ys_before_S1 = ys;
 	SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_start_time);
 	DITERATOR x_befS1_max;
 	double noize_amp;
 	SignalOperations::get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
-	Drawing *dr = man.GetDrawing(GEM_CH_);
+	GnuplotDrawing *dr = man.GetDrawing(0);
 	if (dr)
-		dr->AddToDraw_vertical(*x_befS1_max, -0.4, 0.4, "lc rgb \"#000000\"", 0);
+		dr->AddToDraw_vertical(*x_befS1_max, -0.4, 0.4, "lc rgb \"#000000\"");
 	noize_amp *= ParameterPile::GEM_threshold_to_noise;
 	if (dr)
-		dr->AddToDraw_baseline(noize_amp, "threshold", "lc rgb \"#000000\"", 0);
+		dr->AddToDraw_baseline(noize_amp, "threshold", "lc rgb \"#000000\"");
 	DITERATOR x_S1_left = xs.begin();
 	DITERATOR x_S1_right = xs.begin();
 	SignalOperations::find_next_peak(xs, ys, x_S1_left, x_S1_right, noize_amp, N_trust);
@@ -84,15 +84,15 @@ void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_
 		return;
 	}
 	if (dr)
-		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#00AA00\"", 0);
+		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#00AA00\"");
 	//x_S1_right += N_trust;
 	SignalOperations::find_next_extremum(xs, ys, x_S1_right, N_trust);
 	if (dr)
-		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#0000AA\"", 0);
+		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#0000AA\"");
 	x_S1_right += N_trust;
 	SignalOperations::find_next_extremum(xs, ys, x_S1_right, N_trust);
 	if (dr)
-		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#00AAAA\"", 0);
+		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#00AAAA\"");
 	x_S1_right += N_trust;
 	SignalOperations::find_next_extremum(xs, ys, x_S1_right, N_trust);
 	if (x_S1_right == xs.end()){
@@ -476,18 +476,18 @@ void AllRunsResults::Merged(void)
 				double baseline = SignalOperations::find_baseline_by_median(0, _xs_sum[ind], _ys_sum[ind], no_peaks);
 				SignalOperations::substract_baseline(_ys_sum[ind], baseline);
 
-				Drawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back()+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);
-				dr->SetDirectory(OUTPUT_DIR+OUTPUT_GEMS +"/" +_exp.experiments.back() + "/");
-				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], "GEM_" + _exp.experiments.back()+"_AVR", "", 0);
+				GnuplotDrawing *dr = graph_manager.GetDrawing("GEM_" + _exp.experiments.back()+"_AVR");
+				dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_GEMS +"/" +_exp.experiments.back() + "/");
+				dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], "GEM_" + _exp.experiments.back()+"_AVR", "");
 				DVECTOR GEM_int, integral_variance;
 				SignalOperations::integrate_with_variance(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], GEM_int, integral_variance, 0/*baseline*/);
-				dr->AddToDraw(_xs_sum[ind], GEM_int, integral_variance, "GEM_Int_" + _exp.experiments.back(), "axes x1y2", 0);
+				dr->AddToDraw(_xs_sum[ind], GEM_int, integral_variance, "GEM_Int_" + _exp.experiments.back(), "axes x1y2");
 
 				//find start GEM time
 				DITERATOR x_start = _xs_sum[ind].begin();
 				find_GEM_start_time(_xs_sum[ind], _ys_sum[ind], x_start, ParameterPile::GEM_N_of_averaging, graph_manager);
 				if (x_start != _xs_sum[ind].end()) {
-					dr->AddToDraw_vertical(*x_start, -1, 1, "lc rgb \"#FF0000\"", 0);
+					dr->AddToDraw_vertical(*x_start, -1, 1, "lc rgb \"#FF0000\"");
 					//find finish GEM time
 					DITERATOR x_finish = _xs_sum[ind].begin();
 					double temp_y_max;
@@ -495,7 +495,7 @@ void AllRunsResults::Merged(void)
 					SignalOperations::apply_time_limits(temp_xs, temp_ys_I, *x_start, _xs_sum[ind].back());
 					SignalOperations::get_max(temp_xs, temp_ys_I, x_finish, temp_y_max, ParameterPile::GEM_N_of_averaging);
 					if (x_finish != temp_xs.end())
-						dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"", 0);
+						dr->AddToDraw_vertical(*x_finish, -1, 1, "lc rgb \"#FF0000\"");
 
 					if (x_finish != temp_xs.end() && x_start != _xs_sum[ind].end()){
 						DITERATOR _begin_ =_xs_sum[ind].begin();
@@ -549,8 +549,8 @@ void AllRunsResults::Merged(void)
 			}
 			double S2_st = ParameterPile::S2_start_time.find(_exp.experiments.back())->second;
 			double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
-			Drawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR", ch, ParameterPile::DrawEngine::Gnuplot);
-			dr->SetDirectory(OUTPUT_DIR+OUTPUT_PMTS + _exp.experiments.back() + "/PMT_"  + std::to_string(ch) + "/");
+			GnuplotDrawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
+			dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_PMTS + _exp.experiments.back() + "/PMT_"  + std::to_string(ch) + "/");
 			dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
 			dr->AddToDraw(_xs_sum[ind], integral, integral_variance, "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_Int_AVR","axes x1y2");
 			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");

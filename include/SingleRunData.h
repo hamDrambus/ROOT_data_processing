@@ -2,7 +2,7 @@
 #define SINGLE_RUN_DATA_H
 
 #include "GlobalParameters.h"
-#include "GraphicOutputManager.h"
+#include "GraphCollection.h"
 #include "SignalOperations.h"
 #include "AllRunsResults.h"
 
@@ -23,7 +23,7 @@ protected:
 	int PMT3_n_peaks;
 
 	ParameterPile::experiment_area curr_area; //sets channel area
-	GraphicOutputManager graph_manager;
+	GraphCollection graph_manager;
 
 	void file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys, int index);
 	double find_spreaded_peaks_threshold(DVECTOR &x_peaks_spreaded, DVECTOR &y_peaks_spreaded, double &apr_threshold);

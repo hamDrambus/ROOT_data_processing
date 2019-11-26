@@ -3,7 +3,7 @@
 #include "Math/BrentMinimizer1D.h"
 #include "TSpectrum.h"
 #include "Polynom2Order.h"
-#include "GraphicOutputManager.h"
+#include "GraphCollection.h"
 
 namespace SignalOperations {
 
@@ -2037,8 +2037,8 @@ namespace SignalOperations {
 
 				//#ifdef _TEMP_CODE
 				//				if ((*i <= 32.49) && (32.49 <= *(i + N_trust - 1))) {
-				//					GraphicOutputManager man;
-				//					Drawing *dr = man.GetDrawing("Peak find test "+std::to_string(*j), 0, ParameterPile::DrawEngine::Gnuplot);
+				//					GraphCollection man;
+				//					GnuplotDrawing *dr = man.GetDrawing("Peak find test "+std::to_string(*j));
 				//					DVECTOR tmp_x, tmp_y;
 				//					for (auto ti = i, tj = j; (ti < (i + N_trust)) && (tj < (j + N_trust)); ++ti, ++tj) {
 				//						tmp_x.push_back(*ti);
@@ -2054,7 +2054,7 @@ namespace SignalOperations {
 				//					aa << std::setprecision(12) << a;
 				//					bb << std::setprecision(12) << b;
 				//					cc << std::setprecision(12) << c;
-				//					dr->AddToDraw("a = " + aa.str() + "\nb = " + bb.str() + "\nc = " + cc.str() + "\nf(x) = a*x*x + b*x + c", "f(x)", "fit", "w l", 0);
+				//					dr->AddToDraw("a = " + aa.str() + "\nb = " + bb.str() + "\nc = " + cc.str() + "\nf(x) = a*x*x + b*x + c", "f(x)", "fit", "w l");
 				//					man.Draw();
 				//				}
 				//#endif

@@ -276,17 +276,17 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 			"_ch" + std::to_string(ch) + "_sub" + std::to_string(curr_area.sub_runs.back());
 		if (ParameterPile::draw_required(area)) {
 			std::string plot_name = "";
-			plot_name += std::string("PMT_ch") + std::to_string(ch);
+			plot_name += std::string("PMT") + std::to_string(ch);
 			plot_name += "_run" + std::to_string(curr_area.runs.back()) + "_sub" + std::to_string(area.sub_runs.back());
 			int ind = curr_area.channels.get_order_index_by_index(ch);
 
-			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, ParameterPile::DrawEngine::Gnuplot);
+			GnuplotDrawing *dr = graph_manager.GetDrawing(plot_name);
 			if (NULL != dr) {
-				dr->SetDirectory(OUTPUT_DIR+OUTPUT_PMTS + curr_area.experiments.back() + "/PMT_"  + std::to_string(ch) + "/");
+				dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_PMTS + curr_area.experiments.back() + "/PMT"  + std::to_string(ch) + "/");
 				if (pmt_baseline_ys.empty()) { //simple baseline case
-					dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "with lines", 0);
+					dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "with lines");
 					if (!ys_filtered.empty())
-						dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered_" + plot_title, "with lines lw 2", 0);
+						dr->AddToDraw(xs_channels[ind], ys_channels[ind], "filtered_" + plot_title, "with lines lw 2");
 					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#FF0000\"");
 					if (threshold_edges!=found_base_lines[ind])
 						dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
@@ -298,21 +298,21 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					}
 				} else { //curved baseline case
 					if (!ys_filtered.empty()) {
-						dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
-						//dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#FF00FF\"", 0);
+						dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"");
+						//dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#FF00FF\"");
 					} else
-						dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#0000FF\"", 0);
-					dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"", 0);
+						dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#0000FF\"");
+					dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"");
 #ifdef _TEMP_CODE
-					dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys1, "ROOT baseline V1", "w l lw 2 lc rgb \"#BB0000\"", 0);
-					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys2, "ROOT baseline V2", "w l lw 2", 0);
-					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys3, "ROOT baseline V3", "w l lw 2", 0);
-					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys4, "ROOT baseline V4", "w l lw 2", 0);
-					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys5, "ROOT baseline V5", "w l lw 2", 0);
-					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys6, "ROOT baseline V6", "w l lw 2", 0);
-					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys7, "ROOT baseline V7", "w l lw 2", 0);
+					dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys1, "ROOT baseline V1", "w l lw 2 lc rgb \"#BB0000\"");
+					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys2, "ROOT baseline V2", "w l lw 2");
+					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys3, "ROOT baseline V3", "w l lw 2");
+					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys4, "ROOT baseline V4", "w l lw 2");
+					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys5, "ROOT baseline V5", "w l lw 2");
+					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys6, "ROOT baseline V6", "w l lw 2");
+					//dr->AddToDraw(pmt_baseline_xs, pmt_baseline_ys7, "ROOT baseline V7", "w l lw 2");
 #endif
-					dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#000000\"", 0);
+					dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#000000\"");
 					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#FF0000\"");
 					dr->AddToDraw_baseline(ROOTs_baseline_baseline, "ROOTs baseline", "w l lc rgb \"#FF33FF\"");
 					dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
@@ -632,28 +632,28 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 			std::string plot_title = curr_area.experiments.back() + "\\_run" + std::to_string(curr_area.runs.back()) +
 						"\\_ch" + std::to_string(ch) + "\\_sub" + std::to_string(curr_area.sub_runs.back());
 			std::string plot_name = "";
-			plot_name += std::string("MPPC_ch") + std::to_string(ch);
+			plot_name += std::string("MPPC") + std::to_string(ch);
 			plot_name += "_run" + std::to_string(curr_area.runs.back()) + "_sub" + std::to_string(area.sub_runs.back());
 			int ind = curr_area.channels.get_order_index_by_index(ch);
 
-			Drawing *dr = graph_manager.GetDrawing(plot_name, ch, ParameterPile::DrawEngine::Gnuplot);
+			GnuplotDrawing *dr = graph_manager.GetDrawing(plot_name);
 			if (NULL != dr) {
-				dr->SetDirectory(OUTPUT_DIR+OUTPUT_MPPCS_PICS + curr_area.experiments.back() + "/" + OUTPUT_MPPCS + std::to_string(ch) + "/");
-				dr->AddToDraw(xs_raw, ys_raw, "raw" + plot_title, "w l lc rgb \"#0000FF\"", 0);
+				dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_MPPCS_PICS + curr_area.experiments.back() + "/" + OUTPUT_MPPCS + std::to_string(ch) + "/");
+				dr->AddToDraw(xs_raw, ys_raw, "raw" + plot_title, "w l lc rgb \"#0000FF\"");
 				if (!ys_filtered.empty())
-					dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#FF00FF\"", 0);
+					dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#FF00FF\"");
 				if (!mppc_baseline_ys.empty())
-				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"", 0);
+				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"");
 #ifdef _TEMP_CODE
-				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys1, "ROOT baseline V1", "w l lw 2 lc rgb \"#BB0000\"", 0);
-				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys2, "ROOT baseline V2", "w l lw 2", 0);
-				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys3, "ROOT baseline V3", "w l lw 2", 0);
-				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys4, "ROOT baseline V4", "w l lw 2", 0);
-				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys5, "ROOT baseline V5", "w l lw 2", 0);
-				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys6, "ROOT baseline V6", "w l lw 2", 0);
-				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys7, "ROOT baseline V7", "w l lw 2", 0);
+				dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys1, "ROOT baseline V1", "w l lw 2 lc rgb \"#BB0000\"");
+				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys2, "ROOT baseline V2", "w l lw 2");
+				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys3, "ROOT baseline V3", "w l lw 2");
+				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys4, "ROOT baseline V4", "w l lw 2");
+				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys5, "ROOT baseline V5", "w l lw 2");
+				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys6, "ROOT baseline V6", "w l lw 2");
+				//dr->AddToDraw(mppc_baseline_xs, mppc_baseline_ys7, "ROOT baseline V7", "w l lw 2");
 #endif
-				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#000000\"", 0);
+				dr->AddToDraw(xs_channels[ind], ys_channels[ind], "without baseline " + std::to_string(curr_area.runs.back()), "with lines lc rgb \"#000000\"");
 				dr->AddToDraw_baseline(global_threshold, "threshold", "w l lc rgb \"#FF0000\"");
 				dr->AddToDraw_baseline(ROOTs_baseline_baseline, "ROOTs baseline", "w l lc rgb \"#FF33FF\"");
 				dr->AddToDraw_baseline(0/*edge_threshold*/, "threshold\\_edges");
@@ -667,7 +667,7 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 			if (NULL != dr) {
 				dr->AddToDraw(x_peaks, y_peaks, "peaks "+ curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back())
 					+ "\\_sub\\_" + std::to_string(curr_area.sub_runs.back()) + "\\_ch\\_" + std::to_string(ch), "w l", 0);
-				dr->AddToDraw(x_peaks_spreaded_v2, y_peaks_spreaded_v2, "peaks spereaded v2 I = " + std::to_string(_result.mppc_S2_peaks_area.back()), "w l", 0);
+				dr->AddToDraw(x_peaks_spreaded_v2, y_peaks_spreaded_v2, "peaks spereaded v2 I = " + std::to_string(_result.mppc_S2_peaks_area.back()), "w l");
 				dr->AddToDraw_baseline(sp_approx_thr, "approx\\_threshold (median)", "w l");
 				dr->AddToDraw_baseline(sp_threshold, "exact\\_threshold", "w l lc rgb \"#FF0000\"");
 				dr->AddToDraw_vertical(S2_start_t, -1, 1, "lc rgb \"#FF0000\"");
@@ -678,9 +678,9 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 				dr = graph_manager.GetDrawing(plot_name + "integral", ch + 200, ParameterPile::DrawEngine::Gnuplot);
 				if (NULL != dr) {
 					dr->AddToDraw(xs_raw, ys_raw, "signal" + curr_area.experiments.back() + "\\_" + std::to_string(curr_area.runs.back())
-						+ "\\_sub\\_" + std::to_string(curr_area.sub_runs.back()) + "\\_ch\\_" + std::to_string(ch), "w l", 0);
-					dr->AddToDraw(xs_raw, ys_raw_i, "first integral", "w l", 0);
-					dr->AddToDraw(xs_raw, ys_raw_ii, "second integral = "+std::to_string(_result.mppc_double_I.back()), "w l", 0);
+						+ "\\_sub\\_" + std::to_string(curr_area.sub_runs.back()) + "\\_ch\\_" + std::to_string(ch), "w l");
+					dr->AddToDraw(xs_raw, ys_raw_i, "first integral", "w l");
+					dr->AddToDraw(xs_raw, ys_raw_ii, "second integral = "+std::to_string(_result.mppc_double_I.back()), "w l");
 					dr->AddToDraw_vertical(*x_ii_max, -1, 1, "lc rgb \"#FF0000\"");
 				}
 			}*/
