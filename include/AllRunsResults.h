@@ -78,6 +78,7 @@ protected:
 	int Iteration_N;
 	ParameterPile::experiment_area _exp;
 	GraphCollection graph_manager;
+	ParameterPile::indexed_info<GraphCollection> pictures; //per channel, all plots for the same channel (for all runs/events) are stored in single GraphCollection
 	//[#run]
 	std::vector<bool> _valid;
 	std::vector<Status> _status;

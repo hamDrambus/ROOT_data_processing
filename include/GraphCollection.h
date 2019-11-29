@@ -76,8 +76,8 @@ public:
 	void SetYrange(double from, double to);
 	void UnsetXrange(double from, double to); //gnuplot uses automatic one
 	void UnsetYrange(double from, double to); //gnuplot uses automatic one
-	std::pair<double, double> get_x_limts(void) const;
-	std::pair<double, double> get_y_limts(void) const;
+	std::pair<double, double> get_x_limits(void) const;
+	std::pair<double, double> get_y_limits(void) const;
 	
 	GnuplotDrawing* GetDrawing(std::size_t index);	//if does not exist returns NULL
 	GnuplotDrawing* GetDrawing(std::string name);	//if does not exist, creates it

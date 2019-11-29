@@ -288,9 +288,15 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 			plot_name += "_run" + std::to_string(curr_area.runs.back()) + "_sub" + std::to_string(area.sub_runs.back());
 			int ind = curr_area.channels.get_order_index_by_index(ch);
 
-			GnuplotDrawing *dr = graph_manager.GetDrawing(plot_name);
+			GraphCollection *pics = all_runs_results->pictures.info(ch);
+			if (NULL == pics) {
+				all_runs_results->pictures.push(ch, GraphCollection());
+				pics = all_runs_results->pictures.info(ch);
+				pics->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_PMTS + curr_area.experiments.back() + "/");
+				pics->SetPngDirectory(ParameterPile::save_pics_to);
+			}
+			GnuplotDrawing *dr = pics->GetDrawing(plot_name);
 			if (NULL != dr) {
-				dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_PMTS + curr_area.experiments.back() + "/PMT"  + std::to_string(ch) + "/");
 				if (pmt_baseline_ys.empty()) { //simple baseline case
 					dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "with lines");
 					if (!ys_filtered.empty())
@@ -299,8 +305,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					if (threshold_edges!=found_base_lines[ind])
 						dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
 					dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
-					dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
-					dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
+					//dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
+					//dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
 					if (!ys_int.empty()) {
 						dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
 					}
@@ -326,8 +332,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 					dr->AddToDraw_baseline(found_base_lines[ind], "baseline", "w l lc rgb \"#0000FF\"");
 					if (threshold_edges!=found_base_lines[ind])
 						dr->AddToDraw_baseline(threshold_edges, "threshold\\_2nd");
-					dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#FF0000\"");
-					dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#FF0000\"");
+					//dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#FF0000\"");
+					//dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#FF0000\"");
 					dr->AddToDraw_vertical(middle_left, -1, 1, "lc rgb \"#0000FF\"");
 					dr->AddToDraw_vertical(middle_right, -1, 1, "lc rgb \"#0000FF\"");
 					if (!ys_int.empty()) {
@@ -644,9 +650,15 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 			plot_name += "_run" + std::to_string(curr_area.runs.back()) + "_sub" + std::to_string(area.sub_runs.back());
 			int ind = curr_area.channels.get_order_index_by_index(ch);
 
-			GnuplotDrawing *dr = graph_manager.GetDrawing(plot_name);
+			GraphCollection *pics = all_runs_results->pictures.info(ch);
+			if (NULL == pics) {
+				all_runs_results->pictures.push(ch, GraphCollection());
+				pics = all_runs_results->pictures.info(ch);
+				pics->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_PMTS + curr_area.experiments.back() + "/");
+				pics->SetPngDirectory(ParameterPile::save_pics_to);
+			}
+			GnuplotDrawing *dr = pics->GetDrawing(plot_name);
 			if (NULL != dr) {
-				dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_MPPCS_PICS + curr_area.experiments.back() + "/" + OUTPUT_MPPCS + std::to_string(ch) + "/");
 				dr->AddToDraw(xs_raw, ys_raw, "raw" + plot_title, "w l lc rgb \"#0000FF\"");
 				if (!ys_filtered.empty())
 					dr->AddToDraw(xs_channels[ind], ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#FF00FF\"");
@@ -819,8 +831,6 @@ void SingleRunData::processSingleRun(AllRunsResults *all_runs_results)
 
 void SingleRunData::runProcessedProc(AllRunsResults *all_runs_results)
 {
-	graph_manager.Draw();
-	graph_manager.Clear();
 	if (all_runs_results->_valid[all_runs_results->N_of_runs])
 		++(all_runs_results->N_of_valid_runs);
 	++(all_runs_results->N_of_runs);

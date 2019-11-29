@@ -67,9 +67,11 @@ void AnalysisManager::processOneRun_first_iteration(AllRunsResults *_all_results
 	one_run_data.push_back(SingleRunData(current_under_processing));
 	one_run_data.back().processSingleRun(_all_results);
 	if (!_all_results->_valid[_all_results->N_of_runs-1]){
-		std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
-			<< current_under_processing.sub_runs.back() << " processed" << std::endl;
-		std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
+		if (_all_results->_status[_all_results->N_of_runs-1] != AllRunsResults::ExternalRejected) {
+			std::cout << "invalid: " << current_under_processing.experiments.back() << "/run_" << current_under_processing.runs.back() << "_sub_"
+				<< current_under_processing.sub_runs.back() << " processed" << std::endl;
+			std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
+		}
 		//one_run_data.pop_back();
 	} else {
 		//std::size_t data_size =sizeof(one_run_data);
@@ -100,9 +102,11 @@ void AnalysisManager::loopAllRuns(AllRunsResults *_all_results)
 	for (auto j = one_run_data.begin(); (j != one_run_data.end()); ++j) {
 		j->processSingleRun(_all_results);
 		if (!_all_results->_valid[_all_results->N_of_runs-1]) {
-			std::cout << "invalid: " << j->getArea().experiments.back() << "/run_" << j->getArea().runs.back() << "_sub_"
-				<< j->getArea().sub_runs.back() << " processed" << std::endl;
-			std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
+			if (_all_results->_status[_all_results->N_of_runs-1] != AllRunsResults::ExternalRejected) {
+				std::cout << "invalid: " << j->getArea().experiments.back() << "/run_" << j->getArea().runs.back() << "_sub_"
+					<< j->getArea().sub_runs.back() << " processed" << std::endl;
+				std::cout << "reason: " << _all_results->_status[_all_results->N_of_runs-1]<<std::endl;
+			}
 		}
 		//data_size += j->real_size();
 		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->getArea().experiments.back() << "_run" << j->getArea().runs.back() << "_sub"

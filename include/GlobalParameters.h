@@ -48,6 +48,11 @@ namespace ParameterPile
 	extern int threads_number;
 	extern bool draw_only;
 	extern accepted_events<double> events_to_process; //TODO: make it to be for each experiment
+	extern std::pair<double, double> pics_t_zoom;
+	extern double pics_trigger_position;
+	extern std::string save_pics_to; //TODO: make it to be for each experiment
+	extern std::size_t max_pics_number;
+	extern bool gnuplot_presits;
 
 	extern double dt_quant;
 

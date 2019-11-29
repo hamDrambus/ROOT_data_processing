@@ -68,13 +68,16 @@ bool GnuplotDrawing::generate_script(std::string script_name) const
 		str << _funcs[i]._extra_suffix_script << std::endl;
 	}
 
+	str << "set grid" << std::endl;
+	str << "replot" << std::endl;
 	str << "refresh" << std::endl;
+
 	if (!_dir_to_save.empty()) {
 		str << "set terminal png size " << std::to_string(ParameterPile::gnuplot_width) << ","
 			<< std::to_string(std::min(ParameterPile::gnuplot_max_size, ParameterPile::gnuplot_pad_size)) << std::endl;
-		str << "set output \"" << _dir_to_save + _name + ".png" << "\"" << std::endl;
+		str << "set output \"" << ParameterPile::this_path + _dir_to_save + _name + ".png" << "\"" << std::endl;
+		str << "set grid" << std::endl;
 		str << "replot" << std::endl;
-
 #if defined(__WIN32__)
 		str << "set terminal wxt size " << std::to_string(ParameterPile::gnuplot_width) << ","
 			<< std::to_string(std::min(ParameterPile::gnuplot_max_size, ParameterPile::gnuplot_pad_size)) << std::endl;
@@ -82,10 +85,13 @@ bool GnuplotDrawing::generate_script(std::string script_name) const
 		str << "set terminal qt size " << std::to_string(ParameterPile::gnuplot_width) << ","
 			<< std::to_string(std::min(ParameterPile::gnuplot_max_size, ParameterPile::gnuplot_pad_size)) << std::endl;
 #endif
+		str << "refresh" << std::endl;
 	}
 #if !defined(__WIN32__)
-	str << "pause -1" << std::endl;
+	if (ParameterPile::gnuplot_presits)
+		str << "pause -1" << std::endl;
 #endif
+	str.close();
 	return true;
 }
 
@@ -310,13 +316,15 @@ void GraphCollection::UnsetYrange(double from, double to) //gnuplot uses automat
 	}
 }
 
-std::pair<double, double> GraphCollection::get_x_limts(void) const
+std::pair<double, double> GraphCollection::get_x_limits(void) const
 {
 	std::pair<double, double> out(DBL_MAX, -DBL_MAX);
 	for (std::size_t i = 0, i_end_ = _graphs.size(); i != i_end_; ++i) {
 		for (std::size_t f = 0, f_end_ = _graphs[i]._funcs.size(); f != f_end_; ++f) {
-			out.first = std::min(out.first, _graphs[i]._funcs[f].x_lims.first);
-			out.second = std::min(out.second, _graphs[i]._funcs[f].x_lims.second);
+			if (_graphs[i]._funcs[f].x_lims.first !=-DBL_MAX)
+				out.first = std::min(out.first, _graphs[i]._funcs[f].x_lims.first);
+			if (_graphs[i]._funcs[f].x_lims.second !=DBL_MAX)
+				out.second = std::max(out.second, _graphs[i]._funcs[f].x_lims.second);
 		}
 	}
 	if (out.first == DBL_MAX)
@@ -326,13 +334,15 @@ std::pair<double, double> GraphCollection::get_x_limts(void) const
 	return out;
 }
 
-std::pair<double, double> GraphCollection::get_y_limts(void) const
+std::pair<double, double> GraphCollection::get_y_limits(void) const
 {
 	std::pair<double, double> out(DBL_MAX, -DBL_MAX);
 	for (std::size_t i = 0, i_end_ = _graphs.size(); i != i_end_; ++i) {
 		for (std::size_t f = 0, f_end_ = _graphs[i]._funcs.size(); f != f_end_; ++f) {
-			out.first = std::min(out.first, _graphs[i]._funcs[f].y_lims.first);
-			out.second = std::min(out.second, _graphs[i]._funcs[f].y_lims.second);
+			if (_graphs[i]._funcs[f].y_lims.first !=-DBL_MAX)
+				out.first = std::min(out.first, _graphs[i]._funcs[f].y_lims.first);
+			if (_graphs[i]._funcs[f].y_lims.second !=DBL_MAX)
+				out.second = std::max(out.second, _graphs[i]._funcs[f].y_lims.second);
 		}
 	}
 	if (out.first == DBL_MAX)
@@ -362,6 +372,9 @@ GnuplotDrawing* GraphCollection::CreateDrawing(std::string name) //returns exist
 	for (auto i = _graphs.begin(), i_end_ = _graphs.end(); i != i_end_; ++i)
 		if (i->GetName() == name)
 			return &(*i);
+	if (_graphs.size()>ParameterPile::max_pics_number) {
+		return NULL;
+	}
 	_graphs.push_back(GnuplotDrawing(name, _storage_dir, _dir_to_save));
 	_graphs.back().SetXrange(_x_range.first, _x_range.second);
 	_graphs.back().SetYrange(_y_range.first, _y_range.second);

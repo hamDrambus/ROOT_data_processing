@@ -42,7 +42,7 @@ namespace ParameterPile {
 				return false;
 			else {
 				for (std::size_t ind = 0, ind_end_ = _data.size(); ind < ind_end_; ++ind)
-					if (_data[ind].first != b._data[ind].second)
+					if (_data[ind].first != b._data[ind].first)
 						return false;
 			}
 			return true;
@@ -171,6 +171,7 @@ namespace ParameterPile {
 				throw std::out_of_range("indexed_info<T>::channel index is out of range");
 			return _data[ch_ind].first;
 		}
+
 		std::pair<std::size_t, std::size_t> get_bounds(const int& index) const
 		{
 			std::pair<std::size_t, std::size_t> out(std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max());
@@ -237,29 +238,29 @@ namespace ParameterPile {
 		{
 			indexed_info<double> single_element;
 			single_element.push(subrun, trigger_offset);
-			std::size_t sz = _data.size();
+			std::size_t sz = this->_data.size();
 			if (0 == sz) {
-				_data.push_back(std::pair<int, indexed_info<double> >(run, single_element));
+				this->_data.push_back(std::pair<int, indexed_info<double> >(run, single_element));
 				return;
 			}
-			if (run < _data.front().first) {
-				_data.insert(_data.begin(), std::pair<int, indexed_info<double> >(run, single_element));
+			if (run < this->_data.front().first) {
+				this->_data.insert(this->_data.begin(), std::pair<int, indexed_info<double> >(run, single_element));
 				return;
 			}
-			if (run > _data.back().first) {
-				_data.push_back(std::pair<int, indexed_info<double> >(run, single_element));
+			if (run > this->_data.back().first) {
+				this->_data.push_back(std::pair<int, indexed_info<double> >(run, single_element));
 				return;
 			}
-			std::pair<std::size_t, std::size_t> inds = get_bounds(run);
+			std::pair<std::size_t, std::size_t> inds = this->get_bounds(run);
 			if (inds.first != inds.second)
-				_data.insert(_data.begin() + inds.second, std::pair<int, indexed_info<double> >(run, single_element));
+				this->_data.insert(this->_data.begin() + inds.second, std::pair<int, indexed_info<double> >(run, single_element));
 			else
-				_data[inds.first].second.push(subrun, trigger_offset);
+				this->_data[inds.first].second.push(subrun, trigger_offset);
 		}
 
 		bool contains(const int& run, const int& subrun) const
 		{
-			const indexed_info<double> *subruns = this->info(run);
+			const indexed_info<T> *subruns = ((indexed_info<indexed_info<T> >*) this)->info(run);
 			if (NULL == subruns)
 				return false;
 			return subruns->contains(subrun);
@@ -267,7 +268,7 @@ namespace ParameterPile {
 
 		T operator() (const int& run, const int& subrun) const //returns std::numeric_limits<T>::max() if not found
 		{
-			const indexed_info<double> *subruns = this->info(run);
+			const indexed_info<T> *subruns = ((indexed_info<indexed_info<T> >*) this)->info(run);
 			if (NULL == subruns)
 				return std::numeric_limits<T>::max();
 			const T *val = subruns->info(subrun);
@@ -278,17 +279,17 @@ namespace ParameterPile {
 
 		T* info(const int& run, const int& subrun)
 		{
-			indexed_info<double> *subruns = this->info(run);
+			indexed_info<T> *subruns = ((indexed_info<indexed_info<T> >*) this)->info(run);
 			if (NULL == subruns)
-				return NULL
-				return subruns->info(subrun);
+				return NULL;
+			return subruns->info(subrun);
 		}
 		const T* info(const int& run, const int& subrun) const
 		{
-			const indexed_info<double> *subruns = this->info(run);
+			const indexed_info<T> *subruns = ((indexed_info<indexed_info<T> >*) this)->info(run);
 			if (NULL == subruns)
-				return NULL
-				return subruns->info(subrun);
+				return NULL;
+			return subruns->info(subrun);
 		}
 	};
 

@@ -115,6 +115,31 @@ void AllRunsResults::Merge(AllRunsResults* with)
 	_status.insert(_status.end(), with->_status.begin(), with->_status.end());
 	N_of_runs += with->N_of_runs;
 	N_of_valid_runs += with->N_of_valid_runs;
+	if (pictures.empty()) {
+		pictures = with->pictures;
+	} else {
+		for (std::size_t j = 0, j_end_ = with->pictures.size(); j!= j_end_; ++j) {
+			GraphCollection *pics = pictures.info(with->pictures.index(j));
+			if (NULL == pics) {
+				pictures.push(with->pictures.index(j), with->pictures[j]);
+				break;
+			} else {
+				pics->Merge(with->pictures[j]);
+				break;
+			}
+		}
+	}
+	if (pictures.isSameIndices(with->pictures)) {
+		for (std::size_t i = 0, i_end_ = pictures.size(); i!= i_end_; ++i)
+			pictures[i].Merge(with->pictures[i]);
+	} else {
+		if (pictures.empty()) {
+			pictures = with->pictures;
+		} else {
+			if (!with->pictures.empty())
+				std::cout << "AllRunsResults::Merge: Warning: Two AllRunsResults picture collections' channel mismatch: not merging pictures" << std::endl;
+		}
+	}
 	if (0 == Iteration_N) {
 		_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
 		_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
@@ -460,6 +485,15 @@ void AllRunsResults::Merged(void)
 		}
 	}
 	if(2==Iteration_N) {
+		for (std::size_t i = 0, i_end_ = pictures.size(); i!=i_end_; ++i) {
+			std::pair<double, double> y_range = pictures[i].get_y_limits();
+			pictures[i].SetYrange(y_range.first, y_range.second);
+			pictures[i].SetXrange(ParameterPile::pics_t_zoom.first, ParameterPile::pics_t_zoom.second);
+			if (ParameterPile::pics_trigger_position>=ParameterPile::pics_t_zoom.first && ParameterPile::pics_trigger_position<=ParameterPile::pics_t_zoom.second)
+				for (std::size_t p = 0, p_end_ = pictures[i].size(); p!=p_end_; ++p)
+					pictures[i].GetDrawing(p)->AddToDraw_vertical(ParameterPile::pics_trigger_position, y_range.first, y_range.second, "lc rgb \"#FF0000\"");
+			pictures[i].Draw();
+		}
 		for (std::size_t ind = 0, ind_end_ = avr_channels.size(); ind!=ind_end_; ++ind) {
 			int ch = avr_channels[ind];
 			for (auto i = _ys_disp[ind].begin(), i_end_ = _ys_disp[ind].end(); i!=i_end_; ++i) {
@@ -857,9 +891,10 @@ void AllRunsResults::Clear(void)
 	//N_peaks_cutoff preserve
 	//S_peaks_cutoff preserve
 	//Iteration_N preserve;
-	graph_manager.Clear();
 
 	if (ParameterPile::Max_iteration_N == Iteration()) {
+		graph_manager.Clear();
+		pictures.clear();
 		std::vector<bool>().swap(_valid);
 		std::vector<Status>().swap(_status);
 
