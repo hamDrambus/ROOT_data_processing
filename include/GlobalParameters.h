@@ -33,9 +33,13 @@
 //#define ROOT_BL_CALL_V7 find_background_v_0(f_ys, ys.size(), 360,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing5, false,6);
 
 
-namespace ParameterPile
+namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to class instead of namespace
 {
 	enum DrawEngine { Gnuplot, ROOT };
+
+	extern analysis_manifest gManifest;
+	//Following functions extend manifest, not erase already present data
+	bool Init190404(analysis_manifest manifest);
 
 	bool draw_required(ParameterPile::experiment_area what);
 	bool read_accepted_events(std::string file, ParameterPile::accepted_events<double> &info); //does not erase present data in info

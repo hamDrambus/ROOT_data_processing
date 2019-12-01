@@ -27,6 +27,7 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TVector.h>
+#include <TSpectrum.h>
 #include <TF1.h>
 #include <TMath.h>
 #include <TFile.h>

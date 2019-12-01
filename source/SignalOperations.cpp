@@ -1,7 +1,6 @@
 #include "SignalOperations.h"
 #include "Math/Functor.h"
 #include "Math/BrentMinimizer1D.h"
-#include "TSpectrum.h"
 #include "Polynom2Order.h"
 #include "GraphCollection.h"
 

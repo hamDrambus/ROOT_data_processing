@@ -327,6 +327,93 @@ namespace ParameterPile {
 		//bool operator == (const area_vector& with) const;
 	};
 
+	class channel_manifest {
+	public:
+		channel_manifest() : invert(false), device("none"), save_with_indices(false), do_draw(false), baseline_by_average(true), find_peaks(false), baseline_range(-DBL_MAX, DBL_MAX),
+			find_integral(false), integral_range(-DBL_MAX, DBL_MAX), find_double_integral(false), double_integral_range(-DBL_MAX, DBL_MAX),
+			find_average(false), threshold(0), threshold_cutoff(0), N_extrapolation(1), filter_n_points(0), filter_order(0),
+			filter_n_iterations(0), find_curved_baseline(false), curved_baseline_range(-DBL_MAX, DBL_MAX),
+			curved_baseline_trim(0, 0), curved_baseline_center(0, 0), curved_baseline_numberIterations(0),
+			curved_baseline_direction(TSpectrum::kBackDecreasingWindow), curved_baseline_filterOrder(TSpectrum::kBackOrder2), 
+			curved_baseline_smoothing(true), curved_baseline_smoothWindow(TSpectrum::kBackSmoothing3),
+			curved_baseline_compton(false), curved_baseline_sparse(1) {}
+
+		bool invert;
+		std::string device; //{"PMT", "SiPM", "GEM"}
+		bool save_with_indices; //false - use old saving: subsequent peak arrays. true - write run# and subrun# along with peak array. TODO: implement.
+		bool do_draw;
+		bool baseline_by_average; //use median if false (when there are a lot of peaks in region used for baseline restoration)
+		bool find_peaks;
+		std::pair<double, double> baseline_range; //All times here and below are in microseconds
+		bool find_integral;
+		std::pair<double, double> integral_range;
+		bool find_double_integral;
+		std::pair<double, double> double_integral_range;
+		bool find_average;
+		double threshold;
+		double threshold_cutoff; //2nd threshold
+		std::size_t N_extrapolation;
+
+		std::size_t filter_n_points;
+		std::size_t filter_order;
+		std::size_t filter_n_iterations;
+
+		bool find_curved_baseline;
+		std::pair<double, double> curved_baseline_range;
+		std::pair<double, double> curved_baseline_trim; //left and right tail
+		std::pair<double, double> curved_baseline_center; //region where curved baseline changes significantly. The rest of range is used to get curved baseline's baseline 
+
+		int curved_baseline_numberIterations;
+		int curved_baseline_direction;
+		int curved_baseline_filterOrder;
+		bool curved_baseline_smoothing;
+		int curved_baseline_smoothWindow;
+		bool curved_baseline_compton;
+		int curved_baseline_sparse;
+	};
+
+	class experiment_manifest {
+	public:
+		experiment_manifest() {}
+		indexed_info<channel_manifest> channels;
+		std::size_t subruns_per_file;
+		std::string in_folder; //relative
+		std::string out_folder; //relative
+		std::string name;
+		std::string accepted_events_fname;//absolute (starts with ParameterPile::this_path)
+		area_vector runs; //contains pairs [from, to]
+		area_vector sub_runs; //contains pairs [from, to]
+		accepted_events<double> accepted_events_data;
+		
+		area_vector runs_to_draw;
+		area_vector sub_runs_to_draw;
+		std::string out_gnuplot_folder; //relative
+		std::string out_picture_folder; //relative
+
+		double data_time_constant; //in microseconds 1.6e-2 for 62.5 MHz and 4e-3 for 250 MHz
+		std::size_t data_voltage_channels; //4095
+		double data_voltage_amplitude; //in volts. 2.0
+		double data_voltage_of_zero_channel; //in volts. -1.0
+		
+		bool do_process(int run, int subrun) {
+			return (runs.contains(run) && sub_runs.contains(subrun) && accepted_events_data.contains(run, subrun));
+		}
+		bool do_draw(int run, int subrun) {
+			return (runs_to_draw.contains(run) && sub_runs_to_draw.contains(subrun));
+		}
+		void append_folder(std::string folder) {
+			in_folder += folder;
+			out_folder += folder;
+			out_gnuplot_folder += folder;
+		}
+	};
+
+	class analysis_manifest {
+	public:
+		analysis_manifest() {}
+		std::deque<experiment_manifest> manifests;
+	};
+
 	class experiment_area //done //TODO - make analysis via this class. //->NextFile?
 	{
 	public:

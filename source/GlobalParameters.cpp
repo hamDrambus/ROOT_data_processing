@@ -161,6 +161,7 @@ void DrawFileData(std::string name, std::vector<double> xs, std::vector<double> 
 
 namespace ParameterPile
 {
+	analysis_manifest gManifest;
 	STD_CONT <experiment_area> areas_to_draw;
 	std::string this_path;
 	int subruns_per_file = 10;
@@ -386,5 +387,105 @@ namespace ParameterPile
 		exp_area.sub_runs.push(0, subruns_per_file-1);
 
 		exp_area.experiments.push_back("190404_Cd_20kV_850V_46V_th250mV");
+	}
+
+	bool Init190404(analysis_manifest manifest)
+	{
+		area_vector SiPM_channels;
+		SiPM_channels.push(32, 44);
+		SiPM_channels.push(48, 59);
+		experiment_manifest default_exp_manifest;
+		default_exp_manifest.data_time_constant = 1.6e-2;
+		default_exp_manifest.data_voltage_channels = 4095;
+		default_exp_manifest.data_voltage_amplitude = 2.0;
+		default_exp_manifest.data_voltage_of_zero_channel = -1.0;
+		default_exp_manifest.in_folder = "../Data/190404/";
+		default_exp_manifest.out_folder = "../Data/190404/results/";
+		default_exp_manifest.accepted_events_fname = "";
+		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data))
+			default_exp_manifest.accepted_events_data.clear();
+		default_exp_manifest.out_gnuplot_folder = "../Data/190404/results/temp_gnuplot/";
+		default_exp_manifest.out_picture_folder = "";//Do not save pictures
+		default_exp_manifest.subruns_per_file = 1000;
+		default_exp_manifest.runs.push(0, 9999);
+		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
+		default_exp_manifest.runs_to_draw; //DRAW none
+		default_exp_manifest.sub_runs_to_draw; //DRAW none
+
+		channel_manifest default_ch_manifest;
+		default_ch_manifest.find_peaks = true;
+		default_ch_manifest.save_with_indices = false;
+		default_ch_manifest.do_draw = false;					//DRAW
+		default_ch_manifest.baseline_by_average = true;
+		default_ch_manifest.baseline_range = std::pair<double, double> (0, 18.5);
+		default_ch_manifest.find_average = false;
+		default_ch_manifest.find_integral = false;
+		default_ch_manifest.integral_range = std::pair<double, double>(20, 40); //not tested
+		default_ch_manifest.find_double_integral = false;
+		default_ch_manifest.double_integral_range = std::pair<double, double>(20, 40); //not tested
+		default_ch_manifest.filter_n_iterations = 0;
+		default_ch_manifest.N_extrapolation = 1;
+		default_ch_manifest.threshold_cutoff = 0;
+	
+		default_ch_manifest.find_curved_baseline = false;
+		//The optimal parameters are the same for all channels given discretization frequency (62.5 MHz for this case)
+		default_ch_manifest.curved_baseline_numberIterations = 90;
+		default_ch_manifest.curved_baseline_direction = TSpectrum::kBackDecreasingWindow;
+		default_ch_manifest.curved_baseline_filterOrder = TSpectrum::kBackOrder2;
+		default_ch_manifest.curved_baseline_smoothing = true;
+		default_ch_manifest.curved_baseline_smoothWindow = TSpectrum::kBackSmoothing3;
+		default_ch_manifest.curved_baseline_compton = false;
+		default_ch_manifest.curved_baseline_sparse = 2;
+
+		//Set channel specifics for all experiments (kV)
+		default_ch_manifest.invert = true;
+		default_ch_manifest.do_draw = false;					//DRAW
+		default_ch_manifest.device = "PMT";
+		default_ch_manifest.threshold = 0.0031;
+		default_exp_manifest.channels.push(8, default_ch_manifest);
+		default_ch_manifest.threshold = 0.0040;
+		default_exp_manifest.channels.push(9, default_ch_manifest);
+		default_ch_manifest.threshold = 0.0031;
+		default_exp_manifest.channels.push(10, default_ch_manifest);
+		default_ch_manifest.threshold = 0.0060;
+		default_exp_manifest.channels.push(11, default_ch_manifest);
+
+		default_ch_manifest.invert = false;
+		default_ch_manifest.do_draw = false;					//DRAW
+		default_ch_manifest.find_curved_baseline = true;
+		default_ch_manifest.curved_baseline_range = std::pair<double, double>(10, 110);
+		default_ch_manifest.curved_baseline_center = std::pair<double, double>(20, 89);
+		default_ch_manifest.curved_baseline_trim = std::pair<double, double>(1, 1);
+		default_ch_manifest.threshold = 0.020;
+		default_exp_manifest.channels.push(12, default_ch_manifest);
+		default_ch_manifest.threshold = 0.020;
+		default_exp_manifest.channels.push(13, default_ch_manifest);
+		default_ch_manifest.threshold = 0.020;
+		default_exp_manifest.channels.push(14, default_ch_manifest);
+		default_ch_manifest.threshold = 0.020;
+		default_exp_manifest.channels.push(15, default_ch_manifest);
+		default_ch_manifest.threshold = 0.080;
+		default_exp_manifest.channels.push(16, default_ch_manifest);
+
+		default_ch_manifest.invert = true;
+		default_ch_manifest.do_draw = false;					//DRAW
+		default_ch_manifest.find_curved_baseline = false;
+		default_ch_manifest.device = "SiPM";
+		default_ch_manifest.threshold = 0.0070;
+		for (int ch = SiPM_channels.get_next_index(); ch>=0; ch = SiPM_channels.get_next_index())
+			default_exp_manifest.channels.push(ch, default_ch_manifest);
+
+		experiment_manifest new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_20kV_850V_46V_th250mV") + "/");
+		//this is a place to tweak individual channel for specific fields (e.g.:
+		//new_manifest.channels.info(11)->threshold = 0.0055;
+		//new_manifest.channels.info(38)->find_double_integral = true;
+		//new_manifest.channels.info(38)->double_integral_range = std::pair<double, double>(25, 32);
+		//) to calculate double integral for 38th SiPM and set 11 PMT threshold to 0.0055 instead of 0.0060
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder( (new_manifest.name = "190404_Cd_18kV_850V_46V_th240mV") + "/");
+		manifest.manifests.push_back(new_manifest);
 	}
 };
