@@ -37,40 +37,11 @@
 #undef max
 #undef min
 
-#define DATA_PREFIX std::string("../Data/190404/")
-#define OUTPUT_DIR std::string("../Post_processing/190404/results_v3/Cd_46V_20kV_850V/07_rejected_events/")
-#define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
-
-#define DATA_TIME_CONSTANT 1.6e-2
-//#define DATA_TIME_CONSTANT 4e-3
-//^in microseconds
-#define DATA_VOLTAGE_CHANNELS 4095
-#define DATA_VOLTAGE_AMPLITUDE 2.0
-//in volts
-#define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
-//in volts
-//GEM_v1 - finding baseline for every event
-//GEM_v2 - finding baseline for averaged signal
-#define GEM_V2_
-#define GEM_CH_ 6
-#undef GEM_V1_
-#ifdef GEM_V1_
-#define OUTPUT_GEMS "GEM_v1"
-#endif
-#ifdef GEM_V2_
-#define OUTPUT_GEMS "GEM_v2"
-#endif
-
-#define OUTPUT_PMTS "PMT_v1/PMT_"
-#define OUTPUT_MPPCS "MPPC_"
-#define OUTPUT_MPPCS_PICS "MPPCs_v1/MPPCs_"
-//#define _TEMP_CODE
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
 //#define _NO_PMT_SELECTION
 #define _NO_AUTO_PMT_SELECTION
 //#define _USE_TIME_STATISTICS
-//#define _DRAW_CLUSTER_FINDING
 
 #define STD_CONT std::deque
 

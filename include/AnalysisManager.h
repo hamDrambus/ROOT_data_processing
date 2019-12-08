@@ -4,53 +4,43 @@
 #include "TH1D.h"
 #include "TH1I.h"
 #include "GlobalParameters.h"
-#include "SingleRunData.h"
-#include "AllRunsResults.h"
+#include "SingleEventData.h"
+#include "AllEventsResults.h"
 
 class AnalysisManager
 {
-private:
-	ParameterPile::area_vector available_runs; //for current experiment
 public:
-	AnalysisManager(ParameterPile::experiment_area area);
+	AnalysisManager(ParameterPile::analysis_manifest to_process);
 protected:
-	ParameterPile::experiment_area _exp_area;
-	//ParameterPile::experiment_area first_level_processed;  //per run processed - e.g. filters
-	//ParameterPile::experiment_area second_level_processed; //per experiment processed - averaged per runs.
-	//ParameterPile::experiment_area third_level_processed;  //everything
-	ParameterPile::experiment_area current_under_processing;
+	ParameterPile::analysis_manifest manifest_all;
+	ParameterPile::experiment_manifest manifest_under_processing; //corresponds to single experiment/folder
+	ParameterPile::experiment_manifest manifest_single_event; //Contains only single run and subrun
+	std::size_t index_manifest_under_processing;
 
-	STD_CONT<SingleRunData> one_run_data;
-	//STD_CONT<SingleRunResults> one_run_results;
-	STD_CONT<AllRunsResults> all_runs_results;
+	//STD_CONT<SingleRunData> one_run_data;
+	STD_CONT<AllEventsResults> all_events_results;
 
 	TCondition* _cond;
 	TMutex* _thread_mutex;
 
-	enum NextRunIs { FirstRun, NewSubRun, NewRun, NewExperiment, Null} curr_run;
-	virtual void processOneRun_first_iteration(AllRunsResults *_all_results);
-	virtual void nextRun(void);
-	virtual void processAllRuns(void);
-	virtual void loopAllRuns_first_iteration(AllRunsResults *_all_results);
-	virtual void loopAllRuns(AllRunsResults *_all_results);
-	//virtual void processOneRun(SingleRunData *run, AllRunsResults *_all_results);
-	ParameterPile::experiment_area refine_exp_area(ParameterPile::experiment_area area);//looks up the existing runs in data directory 
-	//and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally
-	//TODO: maybe move to the AnalysisManager
+	enum NextEventIs {NewSubRun, NewRun, NewExperiment, Null} curr_run;
+	virtual void processOneEvent_first_iteration(AllEventsResults *_all_results);
+	virtual void nextEvent(void);
+	virtual void nextExperiment(void);
+	virtual void processAllEvents(void);
+	virtual void loopAllEvents_first_iteration(AllEventsResults *_all_results);
+	virtual void loopAllEvents(AllEventsResults *_all_results);
+	ParameterPile::experiment_manifest refine_exp_area(ParameterPile::experiment_manifest area);//looks up the existing runs in data directory 
+	//and intersects them with input area (from ParameterPile::experiment_manifest). This is required in order to split runs between threads equally
 public:
-	//virtual void nextExperiment(void);
-
 	virtual void processAllExperiments(void);
-	virtual void proceessAllRunsOneThread(void);//there is supposed to be only single experiment //TODO: there is the first and second iterations
-	//after the first one, one_run_data must not be erased for higher perfomance. After the second iteration data should be erased.
-	//In the case of several experements it may be expensive to store data for every one for the second iteration
-	STD_CONT<AllRunsResults>* getAllRunsResults(void);
-	void setAllRunsResults(AllRunsResults* to_what);
+	virtual void proceessAllEventsOneThread(void);//Process only single experiment (folder)
+	STD_CONT<AllEventsResults>* getAllEventsResults(void);
+	void setAllEventsResults(AllEventsResults* to_what);
 	void setCondition(TCondition* cond);
 	TCondition* getCondition(void);
 	void setThreadMutex(TMutex* mutex);
 	TMutex* getThreadMutex(void);
-	//double minimize_function(double value);
 };
 
 #endif

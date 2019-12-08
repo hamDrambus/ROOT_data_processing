@@ -138,6 +138,10 @@ namespace ParameterPile {
 	{	return _vec.back();}
 	int &area_vector::front(void)
 	{	return *_vec.begin();}
+	const int &area_vector::back(void) const
+	{	return _vec.back();}
+	const int &area_vector::front(void) const
+	{	return *_vec.begin();}
 
 	STD_CONT<area_vector> area_vector::split_area(int N) const
 	{

@@ -124,7 +124,8 @@ namespace SignalOperations {
 	}
 
 	//Not used, too unstable and very expensive
-	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out,
+		int numberIterations, int direction, int filterOrder, bool smoothing, int smoothWindow, bool compton)
 	{
 		if (xs.size() != ys.size()){
 			ys_out.clear();
@@ -137,7 +138,7 @@ namespace SignalOperations {
 		double *f_ys = new double[ys.size()];
 		for (int h = 0; h != ys.size(); ++h)
 			f_ys[h] = ys[h];
-		spec->Background(f_ys, ys.size(), 60, TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
+		spec->Background(f_ys, ys.size(), numberIterations, direction, filterOrder, smoothing, smoothWindow, compton);
 		for (int h = 0; h != ys.size(); ++h)
 			ys_out[h]=f_ys[h];
 		delete[] f_ys;
@@ -161,7 +162,8 @@ namespace SignalOperations {
 			ys_out[xx - xs.begin()] = y_cut_from + (*xx-*x_cut_from)*(y_min - y_cut_from)/(*x_min-*x_cut_from);//line
 	}
 
-	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
+	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out,
+		int numberIterations, int direction, int filterOrder, bool smoothing, int smoothWindow, bool compton, int sparse)
 	{
 		int _size_ = ys.size();
 #ifndef _USE_DEQUE
@@ -173,157 +175,12 @@ namespace SignalOperations {
 		for (int h = 0; h != _size_; ++h)
 			f_ys[h] = ys[h];
 #endif
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V0
+		find_background_v_0(f_ys, ys.size(), numberIterations, direction, filterOrder, smoothing, smoothWindow, compton, sparse);
 #ifdef _USE_DEQUE
 			for (int h = 0; h != _size_; ++h)
 				ys_out[h] = f_ys[h];
 		delete[] f_ys;
 #endif
-	}
-
-	void find_baseline_by_ROOT_v1(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		int _size_ = ys.size();
-#ifndef _USE_DEQUE
-		ys_out = ys;
-		double *f_ys = &ys_out[0];
-#else
-		ys_out.resize(ys.size());
-		double *f_ys = new double[_size_];
-		for (int h = 0; h != _size_; ++h)
-			f_ys[h] = ys[h];
-#endif
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V1
-#ifdef _USE_DEQUE
-		for (int h = 0; h != _size_; ++h)
-			ys_out[h] = f_ys[h];
-		delete[] f_ys;
-#endif
-	}
-
-	void find_baseline_by_ROOT_v2(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		int _size_ = ys.size();
-#ifndef _USE_DEQUE
-		ys_out = ys;
-		double *f_ys = &ys_out[0];
-#else
-		ys_out.resize(ys.size());
-		double *f_ys = new double[_size_];
-		for (int h = 0; h != _size_; ++h)
-			f_ys[h] = ys[h];
-#endif
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V2
-#ifdef _USE_DEQUE
-			for (int h = 0; h != _size_; ++h)
-				ys_out[h] = f_ys[h];
-		delete[] f_ys;
-#endif
-	}
-
-	void find_baseline_by_ROOT_v3(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		int _size_ = ys.size();
-#ifndef _USE_DEQUE
-		ys_out = ys;
-		double *f_ys = &ys_out[0];
-#else
-		ys_out.resize(ys.size());
-		double *f_ys = new double[_size_];
-		for (int h = 0; h != _size_; ++h)
-			f_ys[h] = ys[h];
-#endif
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V3
-#ifdef _USE_DEQUE
-			for (int h = 0; h != _size_; ++h)
-				ys_out[h] = f_ys[h];
-		delete[] f_ys;
-#endif
-	}
-
-	void find_baseline_by_ROOT_v4(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		ys_out.resize(ys.size());
-
-		TSpectrum *spec = new TSpectrum();
-		double *f_ys = new double[ys.size()];
-		for (int h = 0; h != ys.size(); ++h)
-			f_ys[h] = ys[h];
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V4
-		for (int h = 0; h != ys.size(); ++h)
-			ys_out[h]=f_ys[h];
-		delete[] f_ys;
-		spec->Delete();
-	}
-
-	void find_baseline_by_ROOT_v5(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		ys_out.resize(ys.size());
-
-		TSpectrum *spec = new TSpectrum();
-		double *f_ys = new double[ys.size()];
-		for (int h = 0; h != ys.size(); ++h)
-			f_ys[h] = ys[h];
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V5
-		for (int h = 0; h != ys.size(); ++h)
-			ys_out[h] = f_ys[h];
-		delete[] f_ys;
-		spec->Delete();
-
-		DITERATOR x_min;
-		double y_min;
-		SignalOperations::get_min(xs, ys_out, xs.begin(), xs.end(), x_min, y_min, 1);
-		if (x_min == xs.end())
-			return;
-		D_REV_ITERATOR x_prev_min(x_min);
-		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
-		if (x_prev_min == xs.rend())
-			return;
-		SignalOperations::find_previous_extremum_faster(xs, ys_out, x_prev_min, 5);
-		if (x_prev_min == xs.rend())
-			return;
-		DITERATOR x_cut_from = x_prev_min.base();
-		double y_cut_from = ys_out[x_cut_from - xs.begin()];
-		for (auto xx = x_cut_from; xx != x_min; ++xx)
-			ys_out[xx - xs.begin()] = y_cut_from + (*xx - *x_cut_from)*(y_min - y_cut_from) / (*x_min - *x_cut_from);//line
-	}
-
-	void find_baseline_by_ROOT_v6(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		ys_out.resize(ys.size());
-
-		TSpectrum *spec = new TSpectrum();
-		double *f_ys = new double[ys.size()];
-		for (int h = 0; h != ys.size(); ++h)
-			f_ys[h] = ys[h];
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V6
-		for (int h = 0; h != ys.size(); ++h)
-			ys_out[h]=f_ys[h];
-		delete[] f_ys;
-		spec->Delete();
-	}
-
-	void find_baseline_by_ROOT_v7(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out)
-	{
-		ys_out.resize(ys.size());
-
-		TSpectrum *spec = new TSpectrum();
-		double *f_ys = new double[ys.size()];
-		for (int h = 0; h != ys.size(); ++h)
-			f_ys[h] = ys[h];
-		//TODO: ? ParameterPile and as input parameters?
-		ROOT_BL_CALL_V7
-		for (int h = 0; h != ys.size(); ++h)
-			ys_out[h]=f_ys[h];
-		delete[] f_ys;
-		spec->Delete();
 	}
 
 	const char *find_background_v_raw(double *spectrum, int ssize,

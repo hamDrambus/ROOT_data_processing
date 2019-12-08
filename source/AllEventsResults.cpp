@@ -1,10 +1,7 @@
-#include "AllRunsResults.h"
+#include "AllEventsResults.h"
 
-AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
+AllEventsResults::AllEventsResults(const ParameterPile::experiment_manifest* to_process) : processing_manifest(to_process)
 {
-	_exp = experiment;
-	N_of_runs = 0;
-	N_of_valid_runs = 0;
 	Iteration_N = 0;
 #ifdef _USE_TIME_STATISTICS
 	time_stat.t_PMT_proc=0;//0st iteration
@@ -62,59 +59,37 @@ AllRunsResults::AllRunsResults(ParameterPile::experiment_area experiment)
 #endif
 }
 
-void AllRunsResults::find_GEM_start_time(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust, GraphCollection &man)
+void AllEventsResults::Merge(AllEventsResults* with)
 {
-	DVECTOR xs_before_S1 = xs, ys_before_S1 = ys;
-	SignalOperations::apply_time_limits(xs_before_S1, ys_before_S1, *(xs.begin()), ParameterPile::S1_start_time);
-	DITERATOR x_befS1_max;
-	double noize_amp;
-	SignalOperations::get_max(xs_before_S1, ys_before_S1, x_befS1_max, noize_amp, N_trust);
-	GnuplotDrawing *dr = man.GetDrawing(0);
-	if (dr)
-		dr->AddToDraw_vertical(*x_befS1_max, -0.4, 0.4, "lc rgb \"#000000\"");
-	noize_amp *= ParameterPile::GEM_threshold_to_noise;
-	if (dr)
-		dr->AddToDraw_baseline(noize_amp, "threshold", "lc rgb \"#000000\"");
-	DITERATOR x_S1_left = xs.begin();
-	DITERATOR x_S1_right = xs.begin();
-	SignalOperations::find_next_peak(xs, ys, x_S1_left, x_S1_right, noize_amp, N_trust);
-	if (x_S1_left == xs.end()) {
-		std::cout << "1st peak not found, threshold " << noize_amp << std::endl;
-		x_start = xs.end();
-		return;
+	if (ParameterPile::Max_iteration_N == Iteration_N) {//Merge per-event data only after the last iteration (was stored in individual AllEventsResults's before)
+		events_data.insert(events_data.end(), with->events_data.begin(), with->events_data.end());
 	}
-	if (dr)
-		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#00AA00\"");
-	//x_S1_right += N_trust;
-	SignalOperations::find_next_extremum(xs, ys, x_S1_right, N_trust);
-	if (dr)
-		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#0000AA\"");
-	x_S1_right += N_trust;
-	SignalOperations::find_next_extremum(xs, ys, x_S1_right, N_trust);
-	if (dr)
-		dr->AddToDraw_vertical(*x_S1_right, -0.4, 0.4, "lc rgb \"#00AAAA\"");
-	x_S1_right += N_trust;
-	SignalOperations::find_next_extremum(xs, ys, x_S1_right, N_trust);
-	if (x_S1_right == xs.end()){
-		x_start = xs.end();
-		return;
+	if (0 == Iteration_N) {
+		if (averages.empty()) {
+			averages = with->averages;
+		} else {
+			if (!averages.isSameIndices(with->averages)) {
+				std::cerr << "AllEventsResults::Merge: Warning: average data channel mismatch!" << std::endl;
+			}
+			for (std::size_t i = 0, i_end_ = with->averages.size(); i != i_end_; ++i) {
+				int channel = with->averages.index(i);
+				AverageData* data = averages.info(channel);
+				if (NULL == data) {
+					averages.push(channel, with->averages[i]);
+				} else {
+					data->average_event_n += with->averages[i].average_event_n;
+					if (data->xs_sum.size() != with->averages[i].xs_sum.size()) {
+						std::cerr << "AllEventsResults::Merge: Warning: average data size mismatch for" << std::endl
+							<< "\tchannel " << channel << " (" << data->xs_sum.size() << " vs " << with->averages[i].xs_sum.size() << ")!" << std::endl;
+					}
+					for (auto y1 = data->ys_sum.begin(), y1_end_ = data->ys_sum.end(), y2 = with->averages[i].ys_sum.begin(), y2_end_ = with->averages[i].ys_sum.end();
+						(y1 != y1_end_) && (y2 != y2_end_); ++y1, ++y2)
+						*y1 += *y2;
+				}
+			}
+		}
 	}
-	if (*(ys.begin() + (x_S1_right - xs.begin())) > 0){
-		x_start = x_S1_right;
-
-		return;
-	}
-	x_S1_left = x_S1_right;
-	SignalOperations::find_next_peak(xs, ys, x_S1_left, x_S1_right, 0, N_trust); //effectively finds intersection with 0
-	x_start = x_S1_left;
-}
-
-void AllRunsResults::Merge(AllRunsResults* with)
-{
-	_valid.insert(_valid.end(), with->_valid.begin(), with->_valid.end());
-	_status.insert(_status.end(), with->_status.begin(), with->_status.end());
-	N_of_runs += with->N_of_runs;
-	N_of_valid_runs += with->N_of_valid_runs;
+	
 	if (pictures.empty()) {
 		pictures = with->pictures;
 	} else {
@@ -140,97 +115,33 @@ void AllRunsResults::Merge(AllRunsResults* with)
 				std::cout << "AllRunsResults::Merge: Warning: Two AllRunsResults picture collections' channel mismatch: not merging pictures" << std::endl;
 		}
 	}
-	if (0 == Iteration_N) {
-		_Ss.insert(_Ss.end(), with->_Ss.begin(), with->_Ss.end());
-		_ns.insert(_ns.end(), with->_ns.begin(), with->_ns.end());
-		bool empty = false, valid = true;
-		if (pmt_channels.empty())
-			empty = true;
-		valid = isSameChannels(pmt_channels, with->pmt_channels);
-		valid = valid && isSameChannels(pmt_integrated_channels, with->pmt_integrated_channels);
-		if (!empty && !valid){
-			std::cout << "WARNING Two AllRunsResults have PMT channels' size mismatches: not Merging" << std::endl;
-			return;
-		}
-		if (empty) {
-			pmt_channels = with->pmt_channels;
-			pmt_peaks = with->pmt_peaks;
-			pmt_S2_integral = with->pmt_S2_integral;
-			pmt_integrated_channels = with->pmt_integrated_channels;
-		} else {
-			pmt_peaks.insert(pmt_peaks.end(), with->pmt_peaks.begin(), with->pmt_peaks.end());
-			pmt_S2_integral.insert(pmt_S2_integral.end(), with->pmt_S2_integral.begin(), with->pmt_S2_integral.end());
-		}
-	}
+	
 	if (1 == Iteration_N) {
-		bool empty = false, valid = true;
-		if (avr_channels.empty())
-			empty = true;
-		valid = isSameChannels(avr_channels, with->avr_channels);
-		if (!empty && !valid){
-			std::cout << "WARNING Two AllRunsResults have averaging channels' size mismatches: not Merging" << std::endl;
-			return;
-		}
-		if (empty) {
-			avr_channels = with->avr_channels;
-			_xs_sum = with->_xs_sum;
-			_ys_sum = with->_ys_sum;
-			_ys_disp = with->_ys_disp;
+		if (averages.empty()) {
+			averages = with->averages;
 		} else {
-			for (int ch = 0; ch < avr_channels.size(); ++ch) {
-				if (_xs_sum[ch].size()!=with->_xs_sum[ch].size()) {
-					std::cout << "WARNING Two average signals (ch "<<avr_channels[ch]<<" in different AllRunsResults have different size: not Merging" << std::endl;
-					return;
-				}
-				for (auto i=_ys_sum[ch].begin(), j=with->_ys_sum[ch].begin(), i_end_=_ys_sum[ch].end(), j_end_=with->_ys_sum[ch].end(); (i!=i_end_)&&(j!=j_end_); ++i,++j) {
-					*i+=*j;
+			if (!averages.isSameIndices(with->averages)) {
+				std::cerr << "AllEventsResults::Merge: Warning: average data channel mismatch!" << std::endl;
+			}
+			for (std::size_t i = 0, i_end_ = with->averages.size(); i != i_end_; ++i) {
+				int channel = with->averages.index(i);
+				AverageData* data = averages.info(channel);
+				if (NULL == data) {
+					averages.push(channel, with->averages[i]);
+				} else {
+					data->dispersion_event_n += with->averages[i].dispersion_event_n;
+					if (data->xs_sum.size() != with->averages[i].xs_sum.size()) {
+						std::cerr << "AllEventsResults::Merge: Warning: average data size mismatch for" << std::endl
+							<< "\tchannel " << channel << " (" << data->xs_sum.size() << " vs " << with->averages[i].xs_sum.size() << ")!" << std::endl;
+					}
+					for (auto y1 = data->ys_disp.begin(), y1_end_ = data->ys_disp.end(), y2 = with->averages[i].ys_disp.begin(), y2_end_ = with->averages[i].ys_disp.end();
+						(y1 != y1_end_) && (y2 != y2_end_); ++y1, ++y2)
+						*y1 += *y2;
 				}
 			}
 		}
+	}
 
-		empty = false, valid = true;
-		valid = isSameChannels(mppc_channels, with->mppc_channels);
-		if (mppc_peaks.empty())
-			empty = true;
-		if (!empty && !valid){
-			std::cout << "WARNING Two AllRunsResults have MPPC channels' size mismatches: not Merging" << std::endl;
-			return;
-		}
-		if (empty) {
-			mppc_channels = with->mppc_channels;
-			mppc_double_Is = with->mppc_double_Is;
-			mppc_peaks = with->mppc_peaks;
-		} else {
-			mppc_peaks.insert(mppc_peaks.end(), with->mppc_peaks.begin(), with->mppc_peaks.end());
-			mppc_double_Is.insert(mppc_double_Is.end(), with->mppc_double_Is.begin(), with->mppc_double_Is.end());
-		}
-	}
-	if (2 == Iteration_N) {
-		bool empty = false, valid = true;
-		if (avr_channels.empty())
-			empty = true;
-		valid = isSameChannels(avr_channels, with->avr_channels);
-		if (!empty && !valid){
-			std::cout << "WARNING Two AllRunsResults have averaging channels' size mismatches: not Merging" << std::endl;
-			return;
-		}
-		if (empty) {
-			avr_channels = with->avr_channels;
-			_xs_sum = with->_xs_sum;
-			_ys_sum = with->_ys_sum;
-			_ys_disp = with->_ys_disp;
-		} else {
-			for (int ch = 0; ch < avr_channels.size(); ++ch) {
-				if (_ys_disp[ch].size()!=with->_ys_disp[ch].size()) {
-					std::cout << "WARNING Two average signals (ch "<<avr_channels[ch]<<" in different AllRunsResults have different size: not Merging" << std::endl;
-					return;
-				}
-				for (auto i=_ys_disp[ch].begin(), j=with->_ys_disp[ch].begin(), i_end_=_ys_disp[ch].end(), j_end_=with->_ys_disp[ch].end(); (i!=i_end_)&&(j!=j_end_); ++i,++j) {
-					*i+=*j;
-				}
-			}
-		}
-	}
 #ifdef _USE_TIME_STATISTICS
 	time_stat.t_RUN_proc_single_iter += with->time_stat.t_RUN_proc_single_iter;
 	time_stat.n_RUN_proc_single_iter += with->time_stat.n_RUN_proc_single_iter;
@@ -292,15 +203,23 @@ void AllRunsResults::Merge(AllRunsResults* with)
 	with->Clear();
 }
 
-void AllRunsResults::Merged(void)
+void AllEventsResults::Merged(void)
 {
 	std::cout << "Iteration " << Iteration_N << std::endl;
-	std::cout << "N of runs " << N_of_runs << std::endl;
-	std::cout << "N of valid runs " << N_of_valid_runs << std::endl;
-	if(1==Iteration_N) {
-		for (std::size_t ch = 0, ch_end_=avr_channels.size(); ch!=ch_end_; ++ch)
-			for (auto i = _ys_sum[ch].begin(), i_end_ = _ys_sum[ch].end(); i!=i_end_; ++i)
-				*i/=(double)N_of_valid_runs;
+	std::cout << "N of events " << events_data.size() << std::endl;
+	std::size_t N_of_valid_runs = 0;
+	for (std::size_t i = 0, i_end_ = events_data.size(); i != i_end_; ++i)
+		N_of_valid_runs += events_data[i].isValid() ? 1 : 0;
+	std::cout << "N of valid events " << N_of_valid_runs << std::endl;
+	if (0 == Iteration_N) {
+		for (std::size_t i = 0, i_end_ = averages.size(); i != i_end_; ++i) 
+			for (auto y = averages[i].ys_sum.begin(), y_end_ = averages[i].ys_sum.end(); y!=y_end_; ++y)
+				*y/=(double)averages[i].average_event_n;
+	}
+	if (1 == Iteration_N) {
+		for (std::size_t i = 0, i_end_ = averages.size(); i != i_end_; ++i)
+			for (auto y = averages[i].ys_disp.begin(), y_end_ = averages[i].ys_disp.end(); y != y_end_; ++y)
+				*y /= (double)averages[i].dispersion_event_n;
 	}
 
 	if (2==Iteration_N) {//Save PMT only at the end (with final _valid vector)
