@@ -37,6 +37,7 @@ public:
 	GnuplotDrawing(std::string name);
 	GnuplotDrawing(std::string name, std::string gnuplot_dir, std::string png_dir);
 	void AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title = "", std::string extra_txt = "");
+	void AddToDraw(STD_CONT<DVECTOR> &xs, STD_CONT<DVECTOR> &ys, std::string title = "", std::string extra_txt = "");//Disjointed data
 	void AddToDraw(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err, std::string title = "", std::string extra_txt = "");
 	void AddToDraw_baseline(double base_line, std::string title = "baseline", std::string extra_txt = "");//May add more functions to draw, e.g. gauss
 	void AddToDraw_vertical(double x_pos, double from_y, double to_y, std::string extra_txt = "");

@@ -1711,6 +1711,87 @@ namespace SignalOperations {
 		ys.erase(ys.begin(), iterator_left_y);
 	}
 
+	void select_peaks(const DVECTOR &xs, const DVECTOR &ys, STD_CONT<peak> &peaks, double dx_hint, double baseline,
+			std::pair<std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>, std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>>  &output)
+	{
+		STD_CONT<DVECTOR>().swap(output.first.first);//xs for even peaks
+		STD_CONT<DVECTOR>().swap(output.first.second);//ys for even peaks
+		STD_CONT<DVECTOR>().swap(output.second.first);//xs for odd peaks
+		STD_CONT<DVECTOR>().swap(output.second.second);//ys for odd peaks
+		if (xs.size()!=ys.size())
+			return;
+		std::sort(peaks.begin(), peaks.end(), [](const peak& a, const peak& b)->bool {
+			return a.left < b.left;
+		});
+		bool even = true;
+		bool in_peak = false;
+		std::size_t pk = 0;
+		std::size_t pk_end_ = peaks.size();
+		for (std::size_t i = 0, i_end_ = xs.size(); i!=i_end_; ++i) {
+			if (pk>=pk_end_)
+				break;
+			bool was_in_peak = in_peak;
+			if (xs[i] < peaks[pk].left)
+				continue;
+			if (xs[i]>=peaks[pk].left && xs[i]<peaks[pk].right) {
+				in_peak = true;
+				if (!was_in_peak) {
+					if (even) {
+						output.first.first.push_back(DVECTOR());
+						output.first.second.push_back(DVECTOR());
+						output.first.first.back().push_back(xs[i] - dx_hint/20);
+						output.first.second.back().push_back(baseline);
+					} else {
+						output.second.first.push_back(DVECTOR());
+						output.second.second.push_back(DVECTOR());
+						output.second.first.back().push_back(xs[i] - dx_hint/20);
+						output.second.second.back().push_back(baseline);
+					}
+				}
+				if (even) {
+					output.first.first.back().push_back(xs[i]);
+					output.first.second.back().push_back(ys[i]);
+				} else {
+					output.second.first.back().push_back(xs[i]);
+					output.second.second.back().push_back(ys[i]);
+				}
+			}
+			if (xs[i]>=peaks[pk].right) {
+				in_peak = false;
+				if (xs[i]==peaks[pk].right) {
+					if (even) {
+						output.first.first.back().push_back(xs[i]);
+						output.first.second.back().push_back(ys[i]);
+					} else {
+						output.second.first.back().push_back(xs[i]);
+						output.second.second.back().push_back(ys[i]);
+					}
+				}
+				if (was_in_peak) {
+					if (even) {
+						output.first.first.back().push_back(output.first.first.back().back() + dx_hint/20);
+						output.first.second.back().push_back(baseline);
+					} else {
+						output.second.first.back().push_back(output.second.first.back().back() + dx_hint/20);
+						output.second.second.back().push_back(baseline);
+					}
+				}
+				++pk;
+				even = !even;
+				--i;//!!! for the case when peaks[pk+1].left and >= xs[i] - need to include x[i] into peak as well
+			}
+		}
+		if (in_peak) {
+			if (even) {
+				output.first.first.back().push_back(output.first.first.back().back() + dx_hint/20);
+				output.first.second.back().push_back(baseline);
+			} else {
+				output.second.first.back().push_back(output.second.first.back().back() + dx_hint/20);
+				output.second.second.back().push_back(baseline);
+			}
+		}
+	}
+
 	void apply_time_limits(DVECTOR &xs, DVECTOR &ys, double x_left, double x_right)
 	{
 		if ((xs.size() != ys.size()) || x_left>=x_right)
@@ -2000,7 +2081,7 @@ namespace SignalOperations {
 		double thresh_finder, double thresh_edges, int N_trust)
 	{
 		if (thresh_edges >= thresh_finder)
-			thresh_edges = 0; //TODO: this is error case
+			thresh_edges = thresh_finder; //TODO: this is error case
 		x_finish = xs.end();
 		DITERATOR minimal_iterator = x_start;
 		DITERATOR pk_max;
@@ -2106,10 +2187,10 @@ namespace SignalOperations {
 			auto _end_ = xs.end();
 			auto _begin_ = xs.begin();
 			for (auto i = x_finish, j = ys.begin() + (x_finish - xs.begin()); (i != _end_); ++i, ++j){
-				if ((i == _begin_) || ((i + 1) == _end_))
+				if ((i == _begin_) || (i == x_finish) || ((i + 1) == _end_))
 					continue;
 				if ((*j - thresh_edges)*(*(j - 1) - thresh_edges) <= 0){ //intersection
-					x_finish = i; //TODO: more exact?
+					x_finish = i-1; //TODO: more exact?
 					break;
 				}
 				//if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){ //extremum - too unstable for N_trust==1 and pretty much useless
@@ -2118,23 +2199,23 @@ namespace SignalOperations {
 				//	break;
 				//}
 			}
-			D_REV_ITERATOR x_left_peak = D_REV_ITERATOR(x_start);
-			D_REV_ITERATOR x_rend = D_REV_ITERATOR(minimal_iterator);
+			D_REV_ITERATOR x_left_peak = D_REV_ITERATOR(x_start+1);
+			D_REV_ITERATOR x_rend = D_REV_ITERATOR(minimal_iterator+1);
 			auto _rend_ = xs.rend();
 			auto _rbegin_ = xs.rbegin();
 			for (auto i = x_left_peak, j = ys.rbegin() + (x_left_peak - xs.rbegin()); (i != x_rend); ++i, ++j){
-				if ((i == _rbegin_) || ((i + 1) == _rend_))
+				if ((i == _rbegin_) ||(i==x_left_peak) ||((i + 1) == _rend_))
 					continue;
 				if ((*j - thresh_edges)*(*(j - 1) - thresh_edges) <= 0){
-					x_finish = i.base(); //TODO: more exact?
+					x_start = (i-1).base() - 1; //TODO: more exact?
 					break;
 				}
-				if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){
-					if (*j > thresh_edges) {
-						x_start = i.base();
-						break;
-					}
-				}
+				//if (!((*j - *(j - 1))*(*(j + 1) - *j) <= 0)){
+				//	if (*j > thresh_edges) {
+				//		x_start = i.base();
+				//		break;
+				//	}
+				//}
 			}
 			if (x_start < minimal_iterator)
 				x_start = minimal_iterator;

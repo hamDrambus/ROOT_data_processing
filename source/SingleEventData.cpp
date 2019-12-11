@@ -18,9 +18,28 @@ void SingleEventData::readOneRun(AllEventsResults *results, int channel)
 	ChannelData *data = channel_data.info(channel);
 	if (NULL == data)
 		return;
-	std::string path = manifest->in_folder;
-	path += "run_" + std::to_string(index.run) + "__ch_" + std::to_string(channel) + ".dat";
-	file_to_vector(path, data->xs, data->ys, index.subrun);
+	const ParameterPile::channel_manifest* man = manifest->channels.info(channel);//guaranteed to be not NULL
+	if (!man->summarize_channels.empty()) {
+		DVECTOR xs, ys;
+		for (std::size_t ch_ind = 0, ch_ind_end_ = man->summarize_channels.size(); ch_ind!=ch_ind_end_; ++ch_ind) {
+			int ch = man->summarize_channels.get_index_by_order_index(ch_ind);
+			std::string path = manifest->in_folder;
+			path += "run_" + std::to_string(index.run) + "__ch_" + std::to_string(ch) + ".dat";
+			file_to_vector(path, xs, ys, index.subrun);
+			if (!xs.empty())
+				if (data->ys.empty()) {
+					data->ys = ys;
+					data->xs = xs;
+				} else {
+					for (std::size_t i=0, i_end_ = std::min(data->ys.size(), ys.size()); i!=i_end_; ++i)
+						data->ys[i] += ys[i];
+				}
+		}
+	} else {
+		std::string path = manifest->in_folder;
+		path += "run_" + std::to_string(index.run) + "__ch_" + std::to_string(channel) + ".dat";
+		file_to_vector(path, data->xs, data->ys, index.subrun);
+	}
 	if (!data->xs.empty()&&(Status::Empty==status))
 		status = Status::Ok;
 }
@@ -74,11 +93,6 @@ void SingleEventData::file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys
 	return;
 }
 
-void SingleEventData::push_event (AllEventsResults *all_runs_results)
-{
-	all_runs_results->events_data.push_back(*this); //TODO: really stupid architechture! Have to rework AnalysisManager's handling of AllEventsResults and SingleEventData.
-}
-
 void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_results)
 {
 	/*	Process PMTs and SiPMs only.
@@ -88,14 +102,13 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 	 *		4) Restore curved baseline if necessary
 	 *		5) Finding peaks, taking integrals of signals in preset time windows. Add to draw later if necessary.
 	 */
-	push_event(all_runs_results);
 	if (!manifest->accepted_events_data.empty()) {
 		trigger_offset = manifest->accepted_events_data(index.run, index.subrun);
 		if (std::numeric_limits<double>::max() == trigger_offset) {
 			status = Status::ExternalRejected;
 		}
 	}
-	for (std::size_t ch_ind = 0, ch_end_ = manifest->channels.size(); ch_ind != ch_end_ && isValid(); ++ch_ind) { //corresponding channel data was initialized accordingly. Also both must be sorted by channel
+	for (std::size_t ch_ind = 0, ch_end_ = manifest->channels.size(); ch_ind != ch_end_ && status!=Status::ExternalRejected; ++ch_ind) { //corresponding channel data was initialized accordingly. Also both must be sorted by channel
 		int ch = manifest->channels.index(ch_ind);
 		readOneRun(all_runs_results, ch); //read all PMTs, ignore GEM and MPPCs
 		if (channel_data[ch_ind].xs.empty())
@@ -222,11 +235,19 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 					if (threshold_edges != channel_data[ch_ind].found_baseline)
 						dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
 					dr->AddToDraw_baseline(channel_data[ch_ind].found_baseline, "baseline", "w l lc rgb \"#0000FF\"");
-					//dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");
-					//dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#0000FF\"");
+					//dr->AddToDraw_vertical(S2_st, -DBL_MAX, DBL_MAX, "lc rgb \"#0000FF\"");
+					//dr->AddToDraw_vertical(S2_ft, -DBL_MAX, DBL_MAX, "lc rgb \"#0000FF\"");
 					//if (!ys_int.empty()) {
 					//	dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
 					//}
+					if (manifest->channels[ch_ind].display.draw_peaks) {
+						//{even, odd peak}->{x, y}->peak#->point
+						std::pair<std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>, std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>> peak_forms;
+						SignalOperations::select_peaks(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].peaks,
+								delta_x, channel_data[ch_ind].found_baseline, peak_forms);
+						dr->AddToDraw(peak_forms.first.first, peak_forms.first.second, "peaks_even", "w l lc rgb \"#009900\"");
+						dr->AddToDraw(peak_forms.second.first, peak_forms.second.second, "peaks_odd", "w l lc rgb \"#FF3300\"");
+					}
 				} else { //curved baseline case
 					if (!ys_filtered.empty()) {
 						dr->AddToDraw(channel_data[ch_ind].xs, ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"");
@@ -240,13 +261,21 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 					dr->AddToDraw_baseline(channel_data[ch_ind].found_baseline, "baseline", "w l lc rgb \"#0000FF\"");
 					if (threshold_edges != channel_data[ch_ind].found_baseline)
 						dr->AddToDraw_baseline(threshold_edges, "threshold\\_2nd");
-					//dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#FF0000\"");
-					//dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#FF0000\"");
-					dr->AddToDraw_vertical(middle_left, -1, 1, "lc rgb \"#0000FF\"");
-					dr->AddToDraw_vertical(middle_right, -1, 1, "lc rgb \"#0000FF\"");
+					//dr->AddToDraw_vertical(S2_st, -DBL_MAX, DBL_MAX, "lc rgb \"#FF0000\"");
+					//dr->AddToDraw_vertical(S2_ft, -DBL_MAX, DBL_MAX, "lc rgb \"#FF0000\"");
+					dr->AddToDraw_vertical(middle_left, -DBL_MAX, DBL_MAX, "lc rgb \"#0000FF\"");
+					dr->AddToDraw_vertical(middle_right, -DBL_MAX, DBL_MAX, "lc rgb \"#0000FF\"");
 					//if (!ys_int.empty()) {
 					//	dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
 					//}
+					if (manifest->channels[ch_ind].display.draw_peaks) {
+						//{even, odd peak}->{x, y}->peak#->point
+						std::pair<std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>, std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>> peak_forms;
+						SignalOperations::select_peaks(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].peaks,
+								delta_x, channel_data[ch_ind].found_baseline, peak_forms);
+						dr->AddToDraw(peak_forms.first.first, peak_forms.first.second, "peaks_even", "w l lc rgb \"#009900\"");
+						dr->AddToDraw(peak_forms.second.first, peak_forms.second.second, "peaks_odd", "w l lc rgb \"#FF3300\"");
+					}
 				}
 			}
 		}

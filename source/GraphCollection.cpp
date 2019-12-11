@@ -1,7 +1,7 @@
 #include "GraphCollection.h"
 
 
-GnuplotDrawing::GnuplotDrawing(std::string name) : _name(name), _storage_dir(OUTPUT_DIR + "gnuplot/"),
+GnuplotDrawing::GnuplotDrawing(std::string name) : _name(name), _storage_dir("gnuplot/"),
 	_dir_to_save(""), _x_range(-DBL_MAX, DBL_MAX), _y_range(-DBL_MAX, DBL_MAX)
 {}
 
@@ -123,6 +123,52 @@ void GnuplotDrawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std:
 		ff.y_lims.first = std::min(ys[i], ff.y_lims.first);
 		ff.x_lims.second = std::max(ys[i], ff.x_lims.second);
 		ff.y_lims.second = std::max(ys[i], ff.y_lims.second);
+	}
+	if (ff.x_lims.first == DBL_MAX)
+		ff.x_lims.first = -DBL_MAX;
+	if (ff.x_lims.second == -DBL_MAX)
+		ff.x_lims.second = DBL_MAX;
+	if (ff.y_lims.first == DBL_MAX)
+		ff.y_lims.first = -DBL_MAX;
+	if (ff.y_lims.second == -DBL_MAX)
+		ff.y_lims.second = DBL_MAX;
+	ff._extra_pars = extra_txt;
+	ff._title = title;
+	_funcs.push_back(ff);
+}
+
+void GnuplotDrawing::AddToDraw(STD_CONT<DVECTOR> &xs, STD_CONT<DVECTOR> &ys, std::string title, std::string extra_txt)
+{
+	if (xs.size() != ys.size()) {
+		std::cerr << "GnuplotDrawing::AddToDraw: Error! x-y size mismatch for plot '" << _name << "': '" << title << "'" << std::endl;
+		return;
+	}
+	for (std::size_t a = 0, a_end_ = xs.size(); a!=a_end_; ++a)
+		if (xs[a].size()!=ys[a].size()) {
+			std::cerr << "GnuplotDrawing::AddToDraw: Error! x-y size mismatch for plot '" << _name << "': '" << title << "'" << std::endl;
+			return;
+		}
+	title = process_title(title);
+	Function ff;
+	ff._data_filename = ParameterPile::this_path + _storage_dir + _name + "_" + std::to_string(_funcs.size());
+
+	std::ofstream f_data;
+	open_output_file(ff._data_filename, f_data, std::ios_base::trunc);
+	if (!f_data.is_open())
+		return;
+
+	ff._data_filename = "'" + ff._data_filename + "'";
+	ff.x_lims = std::pair<double, double>(DBL_MAX, -DBL_MAX);
+	ff.y_lims = std::pair<double, double>(DBL_MAX, -DBL_MAX);
+	for (std::size_t a = 0, a_end_ = xs.size(); a != a_end_; ++a) {
+		for (std::size_t i = 0, i_end_ = xs[a].size(); i != i_end_; ++i) {
+			f_data << xs[a][i] << "\t" << ys[a][i] << std::endl;
+			ff.x_lims.first = std::min(xs[a][i], ff.x_lims.first);
+			ff.y_lims.first = std::min(ys[a][i], ff.y_lims.first);
+			ff.x_lims.second = std::max(ys[a][i], ff.x_lims.second);
+			ff.y_lims.second = std::max(ys[a][i], ff.y_lims.second);
+		}
+		f_data << std::endl;
 	}
 	if (ff.x_lims.first == DBL_MAX)
 		ff.x_lims.first = -DBL_MAX;
@@ -271,7 +317,7 @@ std::string GnuplotDrawing::GetName(void) const
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-GraphCollection::GraphCollection(void) : _storage_dir(OUTPUT_DIR + "gnuplot/"),
+GraphCollection::GraphCollection(void) : _storage_dir("gnuplot/"),
 	_dir_to_save(""), _x_range(-DBL_MAX, DBL_MAX), _y_range(-DBL_MAX, DBL_MAX) {}
 
 void GraphCollection::SetPngDirectory(std::string path) //For all GnuplotDrawing, including future ones

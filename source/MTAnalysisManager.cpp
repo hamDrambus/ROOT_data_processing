@@ -19,23 +19,23 @@ void MTAnalysisManager::processOneRun(void)
 
 void MTAnalysisManager::nextRun(void)
 {
-	if (NextEventIs::Null == curr_run) {
+	if (LoopStatus::Null == curr_run) {
 		index_manifest_under_processing = 0;
 		if (index_manifest_under_processing >= manifest_all.manifests.size()) {
-			curr_run = NextEventIs::Null;
+			curr_run = LoopStatus::Null;
 			return;
 		}
 		manifest_under_processing = manifest_all.manifests[index_manifest_under_processing];
-		curr_run = NextEventIs::NewExperiment;
+		curr_run = LoopStatus::NextExperiment;
 		return;
 	}
 	if (++index_manifest_under_processing < manifest_all.manifests.size()) {
 		manifest_under_processing = manifest_all.manifests[index_manifest_under_processing];
-		curr_run = NextEventIs::NewExperiment;
+		curr_run = LoopStatus::NextExperiment;
 		return;
 	} else {
 		manifest_under_processing = ParameterPile::experiment_manifest();
-		curr_run = NextEventIs::Null;
+		curr_run = LoopStatus::Null;
 		return;
 	}
 	//No runs or subruns switch, the MultithreadAnalysisManager is only responsible for experiments switching and runs splitting

@@ -38,6 +38,8 @@ namespace SignalOperations
 	//^area is [a,b], not (a,b)
 	void apply_time_limits(DVECTOR &xs, DVECTOR &ys, double x_left, double x_right);
 	void apply_time_limits(DVECTOR &xs, DVECTOR &ys, double x_left, double x_right, double dx_hint);
+	void select_peaks(const DVECTOR &xs, const DVECTOR &ys, STD_CONT<peak> &peaks, double dx_hint, double baseline,
+			std::pair<std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>, std::pair<STD_CONT<DVECTOR>, STD_CONT<DVECTOR>>>  &output);
 
 	DITERATOR find_x_iterator_by_value(DITERATOR &x_left, DITERATOR &x_right, double x);
 	DITERATOR find_x_iterator_by_value(DITERATOR &x_left, DITERATOR &x_right, double x, double hint);

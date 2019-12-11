@@ -39,7 +39,7 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 
 	extern analysis_manifest gManifest;
 	//Following functions extend manifest, not erase already present data
-	bool Init190404(analysis_manifest manifest);
+	bool Init190404(analysis_manifest& manifest);
 
 	bool draw_required(ParameterPile::experiment_area what);
 	bool read_accepted_events(std::string file, accepted_events<double> &info); //does not erase present data in info

@@ -51,6 +51,7 @@ public:
 		case ExternalRejected:
 			return "Externally rejected";
 		}
+		return "";
 	}
 
 protected:
@@ -67,7 +68,6 @@ protected:
 	void readOneRun(AllEventsResults *results, int channel);
 	void clearOneRun(int channel);
 	void calculate_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &threshold_edges, double &baseline, STD_CONT<peak> &peaks_before_S1, int channel);
-	void push_event (AllEventsResults *all_runs_results);
 	void push_average (int ch, AllEventsResults *all_runs_results);
 	void push_dispersion (int ch, AllEventsResults *all_runs_results);
 public:

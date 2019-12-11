@@ -1,7 +1,7 @@
 #include "AnalysisManager.h"
 
 AnalysisManager::AnalysisManager(ParameterPile::analysis_manifest exp_area) : manifest_all(exp_area), 
-	index_manifest_under_processing(0), curr_run(NextEventIs::Null), _cond(NULL), _thread_mutex(NULL)
+	index_manifest_under_processing(0), curr_run(LoopStatus::Null), _cond(NULL), _thread_mutex(NULL)
 {}
 
 void AnalysisManager::nextExperiment(void)
@@ -15,28 +15,29 @@ void AnalysisManager::nextExperiment(void)
 		manifest_single_event = manifest_under_processing;
 		if (manifest_under_processing.runs.empty() || manifest_under_processing.sub_runs.empty()) {
 			++index_manifest_under_processing;
-			std::cout << "AnalysisManager::nextExperiment: Warnining: Folder \"" << manifest_under_processing.in_folder << "\" does not contain data to process!" << std::endl;
+			std::cout << "AnalysisManager::nextExperiment: Warning: Folder \"" << manifest_under_processing.in_folder << "\" does not contain data to process!" << std::endl;
 			continue;
 		}
 		manifest_single_event.runs.erase();
 		manifest_single_event.runs.push_back(manifest_under_processing.runs.get_next_index());
 		manifest_single_event.sub_runs.erase();
 		manifest_single_event.sub_runs.push_back(manifest_under_processing.sub_runs.get_next_index());
-		curr_run = NextEventIs::NewExperiment;
+		curr_run = LoopStatus::NextExperiment;
 		return;
 	}
 	index_manifest_under_processing = 0;
-	curr_run = NextEventIs::Null;
+	curr_run = LoopStatus::Null;
 	return;
 }
 
 void AnalysisManager::nextEvent(void)
 {
-	if (NextEventIs::Null==curr_run) {
-		index_manifest_under_processing = 0;
-		--index_manifest_under_processing;
+	if (LoopStatus::Null==curr_run || LoopStatus::LastEvent == curr_run) {
+		if (LoopStatus::Null==curr_run) { //first call only
+			index_manifest_under_processing = 0;
+			--index_manifest_under_processing;
+		}
 		nextExperiment();
-		curr_run = NextEventIs::NewSubRun;
 		return;
 	}
 	manifest_single_event.sub_runs.back() = manifest_under_processing.sub_runs.get_next_index();
@@ -44,13 +45,13 @@ void AnalysisManager::nextEvent(void)
 		manifest_single_event.sub_runs.back() = manifest_under_processing.sub_runs.get_next_index();
 		manifest_single_event.runs.back() = manifest_under_processing.runs.get_next_index();
 		if (manifest_single_event.runs.back() < 0) {
-			nextExperiment();
+			curr_run = LoopStatus::LastEvent;
 		} else {
-			curr_run = NextEventIs::NewRun;
+			curr_run = LoopStatus::NextEvent;
 			return;
 		}
 	} else {
-		curr_run = NextEventIs::NewSubRun;
+		curr_run = LoopStatus::NextEvent;
 		return;
 	}
 }
@@ -62,8 +63,7 @@ void AnalysisManager::processOneEvent_first_iteration(AllEventsResults *_all_res
 	if (!_all_results->events_data.back().isValid()) {
 		if (_all_results->events_data.back().status != SingleEventData::ExternalRejected) {
 			std::cout << "invalid: " << manifest_single_event.name << "/run_" << manifest_single_event.runs.back() << "_sub_"
-				<< manifest_single_event.sub_runs.back() << " processed" << std::endl;
-			std::cout << "reason: " << _all_results->events_data.back().Status() <<std::endl;
+				<< manifest_single_event.sub_runs.back() << ": "<< _all_results->events_data.back().Status() << std::endl;
 		}
 		//_all_results->events_data.pop_back();
 	} else {
@@ -74,7 +74,7 @@ void AnalysisManager::processOneEvent_first_iteration(AllEventsResults *_all_res
 
 void AnalysisManager::loopAllEvents_first_iteration(AllEventsResults *_all_results)
 {
-	while ((curr_run != NextEventIs::Null) && (curr_run != NextEventIs::NewExperiment)) {
+	while ((curr_run != LoopStatus::LastEvent && LoopStatus::Null!=curr_run)) {
 		processOneEvent_first_iteration(_all_results);
 		nextEvent();
 	}
@@ -88,8 +88,7 @@ void AnalysisManager::loopAllEvents(AllEventsResults *_all_results)
 		j->processSingleEvent(_all_results);
 		if (!j->isValid()) {
 			if ( j->status != SingleEventData::ExternalRejected) {
-				std::cout << "invalid: " << j->manifest->name << "/run_" << j->index.run << "_sub_"	<< j->index.subrun << " processed" << std::endl;
-				std::cout << "reason: " << j->Status() << std::endl;
+				std::cout << "invalid: " << j->manifest->name << "/run_" << j->index.run << "_sub_"	<< j->index.subrun << ": "<<j->Status()<< std::endl;
 			}
 		}
 		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->manifest->name << "_run" << j->index.run << "_sub"
@@ -100,6 +99,7 @@ void AnalysisManager::loopAllEvents(AllEventsResults *_all_results)
 void AnalysisManager::processAllEvents(void)
 {
 	all_events_results.push_back(AllEventsResults(&manifest_under_processing));
+	std::cout<<"PROCESSING \""<<manifest_under_processing.in_folder<<"\""<<std::endl;
 	while (all_events_results.back().Iteration() <= ParameterPile::Max_iteration_N) {
 #ifdef _USE_TIME_STATISTICS
 		time_t runs_start_timer;
@@ -114,13 +114,15 @@ void AnalysisManager::processAllEvents(void)
 #endif
 		all_events_results.back().Merged();//all in one thread, so it is already joined. Merge == iteration++
 	}
+	if (LoopStatus::LastEvent==curr_run) //move to next experiment
+		nextEvent();
 }
 
 void AnalysisManager::processAllExperiments(void)
 {
-	nextEvent();
-	while (curr_run != NextEventIs::Null){
-		curr_run = NextEventIs::NewSubRun;
+	if (LoopStatus::Null==curr_run)
+		nextEvent();
+	while (curr_run != LoopStatus::Null) {
 		processAllEvents();
 	}
 }
@@ -143,8 +145,10 @@ void AnalysisManager::proceessAllEventsOneThread(void)
 	loopAllEvents(&all_events_results.back());
 
 	if (0 == all_events_results.back().Iteration())
-		while (curr_run != NextEventIs::Null)
+		while (curr_run != LoopStatus::Null && curr_run != LoopStatus::LastEvent)
 			nextEvent();//skip the rest of experiments if any
+	if (LoopStatus::LastEvent==curr_run) //move to next experiment
+		nextEvent();
 
 #ifdef _USE_TIME_STATISTICS
 	time(&runs_end_timer);

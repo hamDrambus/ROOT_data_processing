@@ -19,55 +19,17 @@
 #include <errno.h>
 #include <sys/stat.h>
 #endif
-
+#include <limits>
+#include <float.h>
 
 #include <TThread.h>
-#include <TApplication.h>
-#include <TVirtualFFT.h>
-#include <TCanvas.h>
-#include <TGraph.h>
-#include <TVector.h>
 #include <TSpectrum.h>
-#include <TF1.h>
+#include <TApplication.h>
 #include <TMath.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <Math/Point2D.h>
 
 #undef max
 #undef min
 
-<<<<<<< HEAD
-#define DATA_PREFIX std::string("../Data/190404/")
-#define OUTPUT_DIR std::string("../Post_processing/190404/results_v3/Cd_46V_8kV_850V/forms_Cd_peak/events/")
-#define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
-
-#define DATA_TIME_CONSTANT 1.6e-2
-//#define DATA_TIME_CONSTANT 4e-3
-//^in microseconds
-#define DATA_VOLTAGE_CHANNELS 4095
-#define DATA_VOLTAGE_AMPLITUDE 2.0
-//in volts
-#define DATA_VOLTAGE_OF_ZERO_CHANNEL (-1.0)
-//in volts
-//GEM_v1 - finding baseline for every event
-//GEM_v2 - finding baseline for averaged signal
-#define GEM_V2_
-#define GEM_CH_ 6
-#undef GEM_V1_
-#ifdef GEM_V1_
-#define OUTPUT_GEMS "GEM_v1"
-#endif
-#ifdef GEM_V2_
-#define OUTPUT_GEMS "GEM_v2"
-#endif
-
-#define OUTPUT_PMTS "PMT_v1/PMT_"
-#define OUTPUT_MPPCS "MPPC_"
-#define OUTPUT_MPPCS_PICS "MPPCs_v1/MPPCs_"
-//#define _TEMP_CODE
-=======
->>>>>>> 378a3efde92f0411e374bdcf346c9d3648a6059e
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
 //#define _NO_PMT_SELECTION
@@ -86,10 +48,14 @@
 #define DITERATOR DVECTOR::iterator
 #define D_REV_ITERATOR DVECTOR::reverse_iterator
 
+#define GET_MACRO(_1,_2, NAME,...) NAME
+#define INVOKE_GNUPLOT(...) GET_MACRO(__VA_ARGS__, INVOKE_GNUPLOT2, INVOKE_GNUPLOT1)(__VA_ARGS__)
+
 #if defined(__WIN32__)
-#define INVOKE_GNUPLOT(a) system(("start \"\" \"%GNUPLOT%\\gnuplot.exe\" --persist \"" + a + "\"").c_str())
+#define INVOKE_GNUPLOT1(a) system(("start \"\" \"%GNUPLOT%\\gnuplot.exe\" --persist \"" + a + "\"").c_str())
 #else
-#define INVOKE_GNUPLOT(a) system(("gnome-terminal -- bash -c \"cd \""+OUTPUT_DIR+"\"; gnuplot \"" + a +"\"\"").c_str());
+#define INVOKE_GNUPLOT1(a) system(("gnome-terminal -- bash -c \"gnuplot \"" + a +"\"\"").c_str());
+#define INVOKE_GNUPLOT2(a, b) system(("gnome-terminal -- bash -c \"cd \""+b+"\"; gnuplot \"" + a +"\"\"").c_str());
 #endif //__WIN32__
 
 

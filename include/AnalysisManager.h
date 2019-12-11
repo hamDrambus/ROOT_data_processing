@@ -1,8 +1,6 @@
 #ifndef ANALYSIS_MANAGER_H
 #define ANALYSIS_MANAGER_H
 
-#include "TH1D.h"
-#include "TH1I.h"
 #include "GlobalParameters.h"
 #include "SingleEventData.h"
 #include "AllEventsResults.h"
@@ -23,7 +21,7 @@ protected:
 	TCondition* _cond;
 	TMutex* _thread_mutex;
 
-	enum NextEventIs {NewSubRun, NewRun, NewExperiment, Null} curr_run;
+	enum LoopStatus {NextEvent, LastEvent, NextExperiment, LastExperiment, Null} curr_run; //Null - initial and final (after everything was processed) states
 	virtual void processOneEvent_first_iteration(AllEventsResults *_all_results);
 	virtual void nextEvent(void);
 	virtual void nextExperiment(void);

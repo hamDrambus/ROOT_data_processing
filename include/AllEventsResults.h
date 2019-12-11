@@ -1,10 +1,6 @@
 #ifndef ALL_EVENTS_RESULTS_H
 #define ALL_EVENTS_RESULTS_H
 
-#include "TH1D.h"
-#include "TH1I.h"
-#include "TLine.h"
-#include "TStyle.h"
 #include "GlobalParameters.h"
 #include "SingleEventData.h"
 
@@ -87,15 +83,6 @@ protected:
 	GraphCollection graph_manager;
 	indexed_info<GraphCollection> pictures; //per channel, all plots for the same channel (for all runs/events) are stored in single GraphCollection
 	indexed_info<AverageData> averages;
-														
-	void vector_to_file(STD_CONT<STD_CONT<double> > &what, int ch_ind, std::string fname, std::string title="MPPC");
-	void vector_to_file(STD_CONT<STD_CONT<STD_CONT<peak> > > &pks, int ch_ind, std::string fname, std::string title = "MPPC_peaks");
-	void vector_to_file(DVECTOR &xs, DVECTOR &ys, DVECTOR &ydisps, std::string fname, std::string title = "Average");
-	
-	double Mean(STD_CONT<STD_CONT<STD_CONT<peak> > > &peaks, int ch_ind, std::function<double (peak& pk)> &value_picker);
-	double RMS(STD_CONT<STD_CONT<STD_CONT<peak> > > &peaks, int ch_ind, std::function<double (peak& pk)> &value_picker);
-	double Mean(STD_CONT<STD_CONT<double> > &vals, int ch_ind);
-	double RMS(STD_CONT<STD_CONT<double> > &vals, int ch_ind);
 
 #ifdef _USE_TIME_STATISTICS
 	time_results time_stat;

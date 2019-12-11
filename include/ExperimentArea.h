@@ -312,7 +312,8 @@ namespace ParameterPile {
 		area_vector(void);
 		//area_vector(STD_CONT<int> channels); //TODO:
 		int get_order_index_by_index(int ind) const;
-		int get_index_by_order_index(int ind) const;
+		int get_index_by_order_index(std::size_t ind) const;
+		std::size_t size(void) const;
 		//TODO: rework in thread-save manner. (via size, get[] or altogether as iterator)
 		//TODO: actually mb all settings objects should be copied for each thread?
 		int get_next_index(void); //for running through all indices
@@ -421,11 +422,15 @@ namespace ParameterPile {
 		area_vector runs; //contains pairs [from, to]
 		area_vector sub_runs; //contains pairs [from, to]
 		accepted_events<double> accepted_events_data;
+		bool write_event_indices;
 		
 		area_vector runs_to_draw;
 		area_vector sub_runs_to_draw;
 		std::string out_gnuplot_folder; //relative
 		std::string out_picture_folder; //relative
+
+		double trigger_at;
+		bool draw_only;
 
 		double data_time_constant; //in microseconds 1.6e-2 for 62.5 MHz and 4e-3 for 250 MHz
 		std::size_t data_voltage_channels; //4095
