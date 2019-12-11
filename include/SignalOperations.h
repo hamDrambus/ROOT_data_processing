@@ -11,15 +11,10 @@ namespace SignalOperations
 	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys);
 	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys);
 	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
-	void find_baseline_by_ROOT (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v1 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v2 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v3 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v4 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v5 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v6 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
-	void find_baseline_by_ROOT_v7 (DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out);
+	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out,
+		int numberIterations, int direction, int filterOrder, bool smoothing, int smoothWindow, bool compton, int sparse);
+	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out,
+		int numberIterations, int direction, int filterOrder, bool smoothing, int smoothWindow, bool compton);
 	const char *find_background_v_raw(double *spectrum, int ssize,
 		int numberIterations,
 		int direction, int filterOrder,

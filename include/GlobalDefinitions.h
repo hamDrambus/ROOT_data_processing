@@ -27,6 +27,7 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TVector.h>
+#include <TSpectrum.h>
 #include <TF1.h>
 #include <TMath.h>
 #include <TFile.h>
@@ -36,6 +37,7 @@
 #undef max
 #undef min
 
+<<<<<<< HEAD
 #define DATA_PREFIX std::string("../Data/190404/")
 #define OUTPUT_DIR std::string("../Post_processing/190404/results_v3/Cd_46V_8kV_850V/forms_Cd_peak/events/")
 #define DATA_NAME_FORMAT "^run_\d+__ch_\d+\.dat$"
@@ -64,12 +66,13 @@
 #define OUTPUT_MPPCS "MPPC_"
 #define OUTPUT_MPPCS_PICS "MPPCs_v1/MPPCs_"
 //#define _TEMP_CODE
+=======
+>>>>>>> 378a3efde92f0411e374bdcf346c9d3648a6059e
 #define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
 #define _HOTFIX_CLEAR_MEMORY
 //#define _NO_PMT_SELECTION
 #define _NO_AUTO_PMT_SELECTION
 //#define _USE_TIME_STATISTICS
-//#define _DRAW_CLUSTER_FINDING
 
 #define STD_CONT std::deque
 
