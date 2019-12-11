@@ -52,22 +52,26 @@ bool GnuplotDrawing::generate_script(std::string script_name) const
 		<< (_y_range.second == DBL_MAX ? "" : std::to_string(_y_range.second)) << " ]" << std::endl;
 	str << "set xlabel \"" << _x_title << "\"" << std::endl;
 	str << "set ylabel \"" << _y_title << "\"" << std::endl;
+	str << std::endl;
 
 	bool first_plot = true;
 	for (std::size_t i = 0, i_end_ = _funcs.size(); i != i_end_; ++i) {
-		str << _funcs[i]._extra_prefix_script << std::endl;
+		if (!_funcs[i]._extra_prefix_script.empty())
+			str << _funcs[i]._extra_prefix_script << std::endl;
 		if (!_funcs[i]._data_filename.empty()) {
 			if (_funcs[i].y_errors) {
-				str << (first_plot ? "plot '" : "replot '") << _funcs[i]._data_filename << "' u 1:2:3 with errorbars title '" << _funcs[i]._title << "' " << _funcs[i]._extra_pars << std::endl;
+				str << (first_plot ? "plot " : "replot ") << _funcs[i]._data_filename << " u 1:2:3 with errorbars title '" << _funcs[i]._title << "' " << _funcs[i]._extra_pars << std::endl;
 			} else {
-				str << (first_plot ? "plot '" : "replot '") << _funcs[i]._data_filename << (_funcs[i].plotting_function ? "' title '" : "' u 1:2 title '")
+				str << (first_plot ? "plot " : "replot ") << _funcs[i]._data_filename << (_funcs[i].plotting_function ? " title '" : " u 1:2 title '")
 					<< _funcs[i]._title << "' " << _funcs[i]._extra_pars << std::endl;
 			}
 			first_plot = false;
 		}
-		str << _funcs[i]._extra_suffix_script << std::endl;
+		if (!_funcs[i]._extra_suffix_script.empty())
+			str << _funcs[i]._extra_suffix_script << std::endl;
 	}
 
+	str << std::endl;
 	str << "set grid" << std::endl;
 	str << "replot" << std::endl;
 	str << "refresh" << std::endl;
@@ -88,7 +92,7 @@ bool GnuplotDrawing::generate_script(std::string script_name) const
 		str << "refresh" << std::endl;
 	}
 #if !defined(__WIN32__)
-	if (ParameterPile::gnuplot_presits)
+	if (ParameterPile::gnuplot_presits || _dir_to_save.empty())
 		str << "pause -1" << std::endl;
 #endif
 	str.close();
@@ -110,6 +114,7 @@ void GnuplotDrawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std:
 	if (!f_data.is_open())
 		return;
 
+	ff._data_filename = "'" + ff._data_filename + "'";
 	ff.x_lims = std::pair<double, double>(DBL_MAX, -DBL_MAX);
 	ff.y_lims = std::pair<double, double>(DBL_MAX, -DBL_MAX);
 	for (std::size_t i = 0, i_end_ = xs.size(); i != i_end_; ++i) {
@@ -147,6 +152,7 @@ void GnuplotDrawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err, std::s
 	if (!f_data.is_open())
 		return;
 
+	ff._data_filename = "'" + ff._data_filename + "'";
 	ff.x_lims = std::pair<double, double>(DBL_MAX, -DBL_MAX);
 	ff.y_lims = std::pair<double, double>(DBL_MAX, -DBL_MAX);
 	for (std::size_t i = 0, i_end_ = xs.size(); i != i_end_; ++i) {
@@ -172,15 +178,15 @@ void GnuplotDrawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err, std::s
 
 void GnuplotDrawing::AddToDraw_baseline(double base_line, std::string title, std::string extra_txt)//May add more functions to draw, e.g. gauss
 {
-	std::string definition_lines;
-	AddToDraw(definition_lines, std::to_string(base_line), title, extra_txt);
+	std::string definition_lines = "var" + std::to_string(_funcs.size()) +"(x) = " + std::to_string(base_line);
+	AddToDraw(definition_lines, "var" + std::to_string(_funcs.size()) +"(x)", title, extra_txt);
 }
 
 void GnuplotDrawing::AddToDraw_vertical(double x_pos, double from_y, double to_y, std::string extra_txt)
 {
 	Function ff;
-	ff._extra_prefix_script = "set arrow from " + std::to_string(x_pos) + "," + std::to_string(from_y) + " to " + std::to_string(x_pos) + "," + std::to_string(to_y) + " nohead "
-		+ extra_txt;
+	ff._extra_prefix_script = "set arrow from " + std::to_string(x_pos) + "," + (from_y == -DBL_MAX ? "graph 0" : std::to_string(from_y))
+			+ " to " + std::to_string(x_pos) + "," + (to_y == DBL_MAX ? "graph 1" : std::to_string(to_y)) + " nohead " + extra_txt;
 	ff._extra_suffix_script = "show arrow";
 	_funcs.push_back(ff);
 }

@@ -210,6 +210,7 @@ namespace ParameterPile
 	area_vector ch_integrate_S2;
 	area_vector ch_use_curved_baseline;
 	area_vector ch_inverse;
+	area_vector ch_to_sum;
 
 	double MPPC_peaks_smoothing_time = 5; //us
 	int MPPC_N_trust = 1;
@@ -297,11 +298,11 @@ namespace ParameterPile
 		MPPC_threshold = 0.0070; //
 		threads_number = 1;
 		draw_only = true;
-		std::string accepted_events_fname = "../Post_processing/190404/results_v3/Cd_46V_20kV_850V/forms_Cd_peak/13_events_cuts_06+07+08+12.txt";
-		save_pics_to = "../Post_processing/190404/results_v3/Cd_46V_20kV_850V/forms_Cd_peak/events/";
-		pics_t_zoom = std::pair<double, double> (0, 160);
+		std::string accepted_events_fname = "../Post_processing/190404/results_v3/Cd_46V_8kV_850V/forms_Cd_peak/13_events_cuts_06+07+08+12+13.txt";
+		save_pics_to = "../Post_processing/190404/results_v3/Cd_46V_8kV_850V/forms_Cd_peak/events/";
+		pics_t_zoom = std::pair<double, double> (20, 90);
 		pics_trigger_position = 32;
-		max_pics_number = 50;
+		max_pics_number = 100;
 		gnuplot_presits = false;
 		read_accepted_events(accepted_events_fname, events_to_process);
 		S1_start_time = 18.5; //in us
@@ -331,52 +332,59 @@ namespace ParameterPile
 
 		PMT_thresh.insert 	(std::pair<int,double>(8,0.0031));//(channel, value)
 		PMT_thresh_edges.insert		(std::pair<int,double>(8,0.0));
-		PMT_thresh.insert 	(std::pair<int,double>(9,0.0040));
+		PMT_thresh.insert 	(std::pair<int,double>(9,0.040));
 		PMT_thresh_edges.insert		(std::pair<int,double>(9,0.0));
 		PMT_thresh.insert 	(std::pair<int,double>(10,0.0031));
 		PMT_thresh_edges.insert		(std::pair<int,double>(10,0.0));
-		PMT_thresh.insert 	(std::pair<int,double>(11,0.0060));
+		PMT_thresh.insert 	(std::pair<int,double>(11,0.060));
 		PMT_thresh_edges.insert		(std::pair<int,double>(11,0.0));
+		PMT_thresh.insert 	(std::pair<int,double>(101,0.060));
+		PMT_thresh_edges.insert		(std::pair<int,double>(101,0.0)); //virtual channel, = sum of ch_to_sum channels
 
-		PMT_thresh.insert 	(std::pair<int,double>(12,0.020));
+		PMT_thresh.insert 	(std::pair<int,double>(12,0.02));
 		PMT_thresh_edges.insert		(std::pair<int,double>(12,0.0));
-		PMT_thresh.insert 	(std::pair<int,double>(13,0.020));
+		PMT_thresh.insert 	(std::pair<int,double>(13,0.02));
 		PMT_thresh_edges.insert		(std::pair<int,double>(13,0.0));
-		PMT_thresh.insert 	(std::pair<int,double>(14,0.020));
-		PMT_thresh_edges.insert		(std::pair<int,double>(10,0.0));
-		PMT_thresh.insert 	(std::pair<int,double>(15,0.020));
+		PMT_thresh.insert 	(std::pair<int,double>(14,0.02));
+		PMT_thresh_edges.insert		(std::pair<int,double>(14,0.0));
+		PMT_thresh.insert 	(std::pair<int,double>(15,0.02));
 		PMT_thresh_edges.insert		(std::pair<int,double>(15,0.0));
 		PMT_thresh.insert 	(std::pair<int,double>(16,0.080));
 		PMT_thresh_edges.insert		(std::pair<int,double>(16,0.0));
+		PMT_thresh.insert 	(std::pair<int,double>(100,0.020));
+		PMT_thresh_edges.insert		(std::pair<int,double>(100,0.0)); //virtual channel, = sum of ch_to_sum channels
 
-		//ch_use_average.push_pair(GEM_CH_, GEM_CH_);
+		//ch_use_average.push_pair(100, 100);
 
 		//ch_integrate_S2.push_pair(12, 16);
 		ch_use_curved_baseline.push_pair(12, 15);
-		//ch_use_curved_baseline.push_pair(9, 12);
-		//ch_use_curved_baseline.push_pair(32, 64);
+		ch_use_curved_baseline.push_pair(100, 100);
+
 		ch_inverse.push_pair(8, 11);
+		ch_inverse.push_pair(101, 101);
 		ch_inverse.push_pair(32, 64);
 
-		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_20kV_850V_46V_th250mV", 20));
+		ch_to_sum.push(12, 15);
 
-		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_20kV_850V_46V_th250mV", 70));
+		S2_start_time.insert(std::pair<std::string,double>("190404_Cd_8kV_850V_46V_th140mV", 20));
+
+		S2_finish_time.insert(std::pair<std::string,double>("190404_Cd_8kV_850V_46V_th140mV", 70));
 
 		areas_to_draw.push_back(experiment_area());
 
-		areas_to_draw.back().experiments.push_back("190404_Cd_20kV_850V_46V_th250mV");
+		areas_to_draw.back().experiments.push_back("190404_Cd_8kV_850V_46V_th140mV");
 
 		areas_to_draw.back().runs.push_pair(0, 9999);
 
-		areas_to_draw.back().channels.push_pair(10, 10);
+		areas_to_draw.back().channels.push_pair(100, 100);
 
 		//areas_to_draw.back().channels.push_pair(32, 44); //13
 		//areas_to_draw.back().channels.push_pair(48, 59); //12 =>25 channels
 
 		areas_to_draw.back().sub_runs.push(0, subruns_per_file-1);
 
-		exp_area.runs.push_pair(0, 34);
-		exp_area.channels.push_pair(10, 10);
+		exp_area.runs.push_pair(201, 201);
+		exp_area.channels.push_pair(100, 100);
 		//exp_area.channels.push_pair(8, 12);
 		//exp_area.channels.push_pair(GEM_CH_, GEM_CH_);
 
@@ -385,6 +393,6 @@ namespace ParameterPile
 
 		exp_area.sub_runs.push(0, subruns_per_file-1);
 
-		exp_area.experiments.push_back("190404_Cd_20kV_850V_46V_th250mV");
+		exp_area.experiments.push_back("190404_Cd_8kV_850V_46V_th140mV");
 	}
 };

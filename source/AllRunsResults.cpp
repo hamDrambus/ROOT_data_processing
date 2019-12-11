@@ -488,10 +488,16 @@ void AllRunsResults::Merged(void)
 		for (std::size_t i = 0, i_end_ = pictures.size(); i!=i_end_; ++i) {
 			std::pair<double, double> y_range = pictures[i].get_y_limits();
 			pictures[i].SetYrange(y_range.first, y_range.second);
+			if (pictures.index(i) == 11)
+				pictures[i].SetYrange(-0.570, -0.425);
+			if (pictures.index(i) == 10)
+				pictures[i].SetYrange(-0.570, -0.425);
+			if (pictures.index(i) == 12)
+				pictures[i].SetYrange(-0.570, -0.400);
 			pictures[i].SetXrange(ParameterPile::pics_t_zoom.first, ParameterPile::pics_t_zoom.second);
 			if (ParameterPile::pics_trigger_position>=ParameterPile::pics_t_zoom.first && ParameterPile::pics_trigger_position<=ParameterPile::pics_t_zoom.second)
 				for (std::size_t p = 0, p_end_ = pictures[i].size(); p!=p_end_; ++p)
-					pictures[i].GetDrawing(p)->AddToDraw_vertical(ParameterPile::pics_trigger_position, y_range.first, y_range.second, "lc rgb \"#FF0000\"");
+					pictures[i].GetDrawing(p)->AddToDraw_vertical(ParameterPile::pics_trigger_position, -DBL_MAX, DBL_MAX, "lc rgb \"#FF0000\"");
 			pictures[i].Draw();
 		}
 		for (std::size_t ind = 0, ind_end_ = avr_channels.size(); ind!=ind_end_; ++ind) {
@@ -550,7 +556,7 @@ void AllRunsResults::Merged(void)
 				}
 				continue;
 			}
-			if (ch>=32) {
+			if (ch>=32 && ch<100) {
 				std::string MPPC_output_prefix = std::string(ParameterPile::this_path)+ std::string(OUTPUT_DIR) + OUTPUT_MPPCS_PICS + _exp.experiments.back()
 						+ "_ch_" + std::to_string(ch) + "_AVR";
 				STD_CONT<peak> no_peaks;
@@ -585,6 +591,7 @@ void AllRunsResults::Merged(void)
 			double S2_ft = ParameterPile::S2_finish_time.find(_exp.experiments.back())->second;
 			GnuplotDrawing* dr = graph_manager.GetDrawing("PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
 			dr->SetGnuplotDirectory(OUTPUT_DIR+OUTPUT_PMTS + _exp.experiments.back() + "/PMT_"  + std::to_string(ch) + "/");
+			dr->SetPngDirectory(ParameterPile::save_pics_to);
 			dr->AddToDraw(_xs_sum[ind], _ys_sum[ind], _ys_disp[ind], "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_AVR");
 			dr->AddToDraw(_xs_sum[ind], integral, integral_variance, "PMT_"+_exp.experiments.back()+"_ch_"+std::to_string(ch)+"_Int_AVR","axes x1y2");
 			dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#0000FF\"");

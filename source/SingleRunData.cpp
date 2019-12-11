@@ -25,10 +25,31 @@ void SingleRunData::readOneRun(AllRunsResults *results, int channel)
 	int ind = curr_area.channels.get_order_index_by_index(channel);
 	if (ind < 0)
 		return;
-	std::string path = DATA_PREFIX;
-	path += curr_area.experiments.back() + "/";
-	path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(channel) + ".dat";
-	file_to_vector(path, xs_channels[ind], ys_channels[ind], curr_area.sub_runs.back());
+	if (channel>=100) { //virtual channel
+		ParameterPile::ch_to_sum.reset();
+		STD_CONT<DVECTOR> xs, ys;
+		for (int ch = ParameterPile::ch_to_sum.get_next_index(); !(ch<0); ch = ParameterPile::ch_to_sum.get_next_index()) {
+			xs.push_back(DVECTOR());
+			ys.push_back(DVECTOR());
+			std::string path = DATA_PREFIX;
+			path += curr_area.experiments.back() + "/";
+			path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(ch) + ".dat";
+			file_to_vector(path, xs.back(), ys.back(), curr_area.sub_runs.back());
+			if (!xs.back().empty())
+				if (ys_channels[ind].empty()) {
+					ys_channels[ind] = ys.back();
+					xs_channels[ind] = xs.back();
+				} else {
+					for (std::size_t i=0, i_end_ = std::min(ys_channels[ind].size(), ys.back().size()); i!=i_end_; ++i)
+						ys_channels[ind][i] += ys.back()[i];
+				}
+		}
+	} else {
+		std::string path = DATA_PREFIX;
+		path += curr_area.experiments.back() + "/";
+		path += "run_" + std::to_string(curr_area.runs.back()) + "__ch_" + std::to_string(channel) + ".dat";
+		file_to_vector(path, xs_channels[ind], ys_channels[ind], curr_area.sub_runs.back());
+	}
 	if (!xs_channels[ind].empty()&&(AllRunsResults::Status::Empty==results->_status[results->N_of_runs]))
 		results->_status[results->N_of_runs] = AllRunsResults::Status::Ok;
 }
@@ -138,7 +159,7 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 	}
 	for (int ch = curr_area.channels.get_next_index(); ch != -1 && all_runs_results->_valid[run_index]; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
-		if ((ch>=32)||(ind<0)||(GEM_CH_==ch))
+		if (((ch>=32) && ch<100)||(ind<0)||(GEM_CH_==ch))
 		//if ((ch>=7)||(ind<0)||(GEM_CH_==ch))
 			continue;
 		readOneRun(all_runs_results, ch); //read all PMTs, ignore GEM and MPPCs
@@ -334,8 +355,8 @@ void SingleRunData::processSingleRun_Iter_0(AllRunsResults *all_runs_results)
 						dr->AddToDraw_baseline(threshold_edges, "threshold\\_2nd");
 					//dr->AddToDraw_vertical(S2_st, -1, 1, "lc rgb \"#FF0000\"");
 					//dr->AddToDraw_vertical(S2_ft, -1, 1, "lc rgb \"#FF0000\"");
-					dr->AddToDraw_vertical(middle_left, -1, 1, "lc rgb \"#0000FF\"");
-					dr->AddToDraw_vertical(middle_right, -1, 1, "lc rgb \"#0000FF\"");
+					dr->AddToDraw_vertical(middle_left, -DBL_MAX, DBL_MAX, "lc rgb \"#0000FF\"");
+					dr->AddToDraw_vertical(middle_right, -DBL_MAX, DBL_MAX, "lc rgb \"#0000FF\"");
 					if (!ys_int.empty()) {
 						dr->AddToDraw(xs_int, ys_int, "integral", "axis x1y2 with lines lw 2 lc rgb \"#FF00FF\"");
 					}
@@ -432,7 +453,7 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 	bool is_first_call_mppc = all_runs_results->mppc_channels.empty();
 	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
 		int ind =  curr_area.channels.get_order_index_by_index(ch);
-		if ((ind<0)||(ch>=32)) //process only GEM and PMTs
+		if ((ind<0)||(ch>=32 && ch<100)) //process only GEM and PMTs
 			continue;
 		if (ParameterPile::ch_use_average.contains(ch)) {
 			readOneRun(all_runs_results, ch);
@@ -459,7 +480,7 @@ void SingleRunData::processSingleRun_Iter_1(AllRunsResults *all_runs_results)
 	curr_area.channels.reset();
 	for (int ch = curr_area.channels.get_next_index(); ch != -1; ch = curr_area.channels.get_next_index()) {
 		int ind = curr_area.channels.get_order_index_by_index(ch);
-		if ((ind < 0)||(ch<32)) //process only mppc
+		if ((ind < 0)||(ch<32)||ch>=100) //process only mppc
 		//if ((ind < 0)||(ch<7)) //process only mppc
 			continue;
 		++mppc_ind;
@@ -808,7 +829,7 @@ void SingleRunData::processSingleRun_Iter_2(AllRunsResults *all_runs_results)
 			continue;
 		if (ParameterPile::ch_use_average.contains(ch)) {
 			readOneRun(all_runs_results, ch);
-			if ((ch>=2)&&(ch!=GEM_CH_))
+			if (ParameterPile::ch_inverse.contains(ch))
 				SignalOperations::invert_y(xs_channels[ind], ys_channels[ind]);
 			push_dispersion(ch, all_runs_results);
 			clearOneRun(ch);

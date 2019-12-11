@@ -86,6 +86,7 @@ namespace ParameterPile
 	extern area_vector ch_integrate_S2;
 	extern area_vector ch_use_curved_baseline;
 	extern area_vector ch_inverse;
+	extern area_vector ch_to_sum; //for drawing, redirected to virtual channel 100
 
 	extern double MPPC_peaks_smoothing_time;
 	extern int MPPC_N_trust;
