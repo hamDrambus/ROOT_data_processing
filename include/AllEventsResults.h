@@ -9,61 +9,26 @@ class SingleEventData;
 
 #ifdef _USE_TIME_STATISTICS
 struct time_results {
-	long long t_PMT_proc;//0st iteration
-	int n_PMT_proc;
-	long long t_PMT_baseline;//0st iteration
-	int n_PMT_baseline;
-	long long t_PMT_peaks;//0st iteration
-	int n_PMT_peaks;
-	long long t_PMT_file_reading;//0st
-	int n_PMT_file_reading;
-	long long t_PMT_filtering;//0st
-	int n_PMT_filtering;
-	//====================================
-	long long t_MPPC_proc; //all till ==...= is the 1st iteration
-	int n_MPPC_proc;
-	long long t_MPPC_file_reading;
-	int n_MPPC_file_reading;
-	long long t_MPPC_filtering;
-	int n_MPPC_filtering;
-	long long t_MPPC_threshold_and_first_baseline;
-	int n_MPPC_threshold_and_first_baseline;
-	//long long t_MPPC_threshold_and_first_baseline_peaks;
-	//int n_MPPC_threshold_and_first_baseline_peaks;
-	long long t_MPPC_curved_baseline;
-	int n_MPPC_curved_baseline;
-	long long t_MPPC_curved_baseline_v2;
-	int n_MPPC_curved_baseline_v2;
-	long long t_MPPC_curved_baseline_v3;
-	int n_MPPC_curved_baseline_v3;
-	long long t_MPPC_curved_baseline_v4;
-	int n_MPPC_curved_baseline_v4;
-	long long t_MPPC_curved_baseline_v5;
-	int n_MPPC_curved_baseline_v5;
-	long long t_MPPC_curved_baseline_v6;
-	int n_MPPC_curved_baseline_v6;
-	long long t_MPPC_curved_baseline_v7;
-	int n_MPPC_curved_baseline_v7;
-	long long t_MPPC_curved_baseline_v8;
-	int n_MPPC_curved_baseline_v8;
-
-	long long t_MPPC_curved_baseline_baseline;
-	int n_MPPC_curved_baseline_baseline;
-	long long t_MPPC_baseline_substraction;
-	int n_MPPC_baseline_substraction;
-	long long t_MPPC_peaks_finding;
-	int n_MPPC_peaks_finding;
-	long long t_MPPC_peaks_processing;
-	int n_MPPC_peaks_processing;
-	long long t_MPPC_double_I;
-	int n_MPPC_double_I;
-	//====================================
-	long long t_RUN_proc;  //both iterations, must be set at merged() proc
-	int n_RUN_proc;
-	long long t_RUN_proc_single_iter;//both iterations, used at merge() proc, set in analysis Manager, must be cleared
-	int n_RUN_proc_single_iter;
+	//proc - processing
+	long long t_total_proc;
+	std::size_t n_total_proc;
+	long long t_file_reading;
+	std::size_t n_file_reading;
+	long long t_filtering;
+	std::size_t n_filtering;
+	long long t_simple_baseline;
+	std::size_t n_simple_baseline;
+	long long t_curved_baseline;
+	std::size_t n_curved_baseline;
+	long long t_peaks;
+	std::size_t n_peaks;
+	long long t_integrals;
+	std::size_t n_integrals;
+	long long t_double_integrals;
+	std::size_t n_double_integrals;
 };
 #endif
+
 class AllEventsResults
 {
 public:

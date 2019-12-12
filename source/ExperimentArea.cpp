@@ -264,11 +264,7 @@ namespace ParameterPile {
 	}
 	void area_vector::erase() //clears vector
 	{
-#ifdef _HOTFIX_CLEAR_MEMORY
 		STD_CONT<int>().swap(_vec);
-#else
-		_vec.clear();
-#endif
 		_is_valid = false;
 		reset();
 	}

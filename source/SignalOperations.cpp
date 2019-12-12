@@ -8,15 +8,14 @@ namespace SignalOperations {
 
 	void invert_y(DVECTOR &x_in_out, DVECTOR &y_in_out)
 	{
-		auto _end_ = y_in_out.end();
-		for (auto i = y_in_out.begin(); i != _end_; ++i)
+		for (auto i = y_in_out.begin(), _end_ = y_in_out.end(); i != _end_; ++i)
 			*i = -*i;
 	}
 
-	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
+	double find_baseline_by_median(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
 	{
 		if (xs.size() != ys.size())
-			return approx;
+			return DBL_MAX;
 		DVECTOR selected_y;
 #ifndef _USE_DEQUE
 		selected_y.reserve(ys.size());
@@ -37,44 +36,44 @@ namespace SignalOperations {
 		std::sort(selected_y.begin(), selected_y.end());
 		int ind = selected_y.size();
 		if (0 == ind)
-			return approx;
+			return DBL_MAX;
 		if (0 == ind % 2)
 			return selected_y[ind / 2];
 		else
 			return 0.5*(selected_y[ind / 2] + selected_y[1 + (ind / 2)]);
 	}
 
-	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys)
+	double find_baseline_by_median(DVECTOR &xs, DVECTOR &ys)
 	{
 		if (xs.size() != ys.size())
-			return approx;
+			return DBL_MAX;
 		DVECTOR selected_y=ys;
 		std::sort(selected_y.begin(), selected_y.end());
 		int ind = selected_y.size();
 		if (0 == ind)
-			return approx;
+			return DBL_MAX;
 		if (0 == ind % 2)
 			return selected_y[ind / 2];
 		else
 			return 0.5*(selected_y[ind / 2] + selected_y[1 + (ind / 2)]);
 	}
 
-	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys)
+	double find_baseline_by_integral(DVECTOR &xs, DVECTOR &ys)
 	{
 		if ((xs.size() <= 1) || (xs.size() != ys.size()))
-			return approx;
+			return DBL_MAX;
 		double val = 0;
 		double dx = xs.back()-*(xs.begin());
 		if (0 == dx)
-			return approx;
+			return DBL_MAX;
 		integrate(xs, ys, val, xs.begin(), --xs.end(), *(++xs.begin()) - *(xs.begin()), 0);
 		return val/dx;
 	}
 
-	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
+	double find_baseline_by_integral(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
 	{
 		if ((xs.size() != ys.size())||(xs.size()<2))
-			return approx;
+			return DBL_MAX;
 		bool one_vector = true;
 		auto _end_ = xs.end();
 		auto _begin_ = xs.begin();
@@ -119,7 +118,7 @@ namespace SignalOperations {
 			}
 		//}
 		if (0 == Sum_dx)
-			return approx;
+			return DBL_MAX;
 		return (Sum_int / Sum_dx);
 	}
 
@@ -2272,7 +2271,7 @@ namespace SignalOperations {
 		const std::size_t _end_ = xs.size();
 		while (x_peak_l != _end_) {//when no peak found x_peak_l is set to xs.size()
 			x_peak_l = _end_;
-			std::size_t search_from = x_peak_r; //next peak may include this point (i.e. one pint can belong to two peaks)
+			std::size_t search_from = x_peak_r; //next peak may include this point (i.e. one point can belong to two peaks)
 			//find next peak (signal > threshold)
 			std::size_t x_start = _end_; //x_start!=_end_ == peak found
 			for (std::size_t i = search_from; i != _end_; ++i) {
@@ -2296,12 +2295,12 @@ namespace SignalOperations {
 				x_peak_l = search_from;
 			//find right peak front (either intersection with threshold_edges or minimum between this peak and the next one (above threshold).
 			//Can't take integrals and find maximum in the same loop because the integral range is unknown until completion of determining the right front
-			bool shared_l = false;
-			bool shared_r = x_peak_r == x_peak_l; //new peak's left slope is shared with previous peak
+			bool shared_r = false;
+			bool shared_l = x_peak_r == x_peak_l; //new peak's left slope is shared with previous peak's right
 			std::size_t min = _end_, thresh_intersection_1 = _end_, thresh_intersection_2 = _end_;
 			std::size_t edge_intersection = _end_;
-			for (std::size_t i = x_peak_l; i != _end_; ++i) {
-				if ((i == 0) || (i == x_peak_l)) {
+			for (std::size_t i = x_start; i != _end_; ++i) {
+				if ((i == 0) || (i == x_start)) {
 					continue;
 				}
 				if ((ys[i] - threshold_edges) <= 0 && (ys[i - 1] - threshold_edges) >= 0) { //intersection
@@ -2309,10 +2308,10 @@ namespace SignalOperations {
 					break;
 				}
 				if (_end_==thresh_intersection_1) {
-					if ((ys[i] - threshold) <= 0 && (ys[i - 1] - threshold) >= 0)
+					if ((ys[i] - threshold) <= 0 && (ys[i - 1] - threshold) > 0)
 						thresh_intersection_1 = i - 1;
 				} else {
-					if ((ys[i] - threshold) >= 0 && (ys[i - 1] - threshold) <= 0) {
+					if ((ys[i] - threshold) > 0 && (ys[i - 1] - threshold) <= 0) {
 						thresh_intersection_2 = i - 1;
 						break;
 					}
@@ -2321,7 +2320,7 @@ namespace SignalOperations {
 					if (min == _end_)
 						min = i;
 					else
-						min = (ys[i]<ys[min] ? i : min);
+						min = (ys[i]<=ys[min] ? i : min);
 				}
 			}
 			//case when signal ended before peak:
@@ -2527,13 +2526,8 @@ namespace SignalOperations {
 	void spread_peaks(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
 		//doesn't check whether peaks are valid (e.g. peak.A<0)
-#ifdef _HOTFIX_CLEAR_MEMORY
 		DVECTOR().swap(xs_out);
 		DVECTOR().swap(ys_out);
-#else
-		xs_out.clear();
-		ys_out.clear();
-#endif
 		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp){
 			bool is_first = (pp == peaks.begin());
 			double x_l = is_first ? x_left - 1e-7 : ((pp - 1)->left + (pp - 1)->right) / 2;
@@ -2558,13 +2552,8 @@ namespace SignalOperations {
 	void spread_peaks_v2(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out, double min_dx)
 	{
 		//doesn't check whether peaks are valid (e.g. peak.A<0)
-#ifdef _HOTFIX_CLEAR_MEMORY
 		DVECTOR().swap(xs_out);
 		DVECTOR().swap(ys_out);
-#else
-		xs_out.clear();
-		ys_out.clear();
-#endif
 		double current_left_x;
 		bool uniting_several_peaks = false;
 		double y_v=0;
@@ -2606,13 +2595,8 @@ namespace SignalOperations {
 
 	void peaks_to_yx(double x_left, double x_right, STD_CONT<peak> &peaks, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
-#ifdef _HOTFIX_CLEAR_MEMORY
 		DVECTOR().swap(xs_out);
 		DVECTOR().swap(ys_out);
-#else
-		xs_out.clear();
-		ys_out.clear();
-#endif
 		xs_out.push_back(x_left);
 		ys_out.push_back(0);
 		for (auto pp = peaks.begin(); pp != peaks.end(); ++pp) {
@@ -2632,13 +2616,8 @@ namespace SignalOperations {
 
 	void spread_peaks(DVECTOR &xs_in, DVECTOR &ys_in, DVECTOR &xs_out, DVECTOR& ys_out)
 	{
-#ifdef _HOTFIX_CLEAR_MEMORY
 		DVECTOR().swap(xs_out);
 		DVECTOR().swap(ys_out);
-#else
-		xs_out.clear();
-		ys_out.clear();
-#endif
 #ifndef _USE_DEQUE
 		xs_out.reserve(xs_in.size());
 		ys_out.reserve(ys_in.size());

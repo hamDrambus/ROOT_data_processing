@@ -4,58 +4,22 @@ AllEventsResults::AllEventsResults(const ParameterPile::experiment_manifest* to_
 {
 	Iteration_N = 0;
 #ifdef _USE_TIME_STATISTICS
-	time_stat.t_PMT_proc=0;//0st iteration
-	time_stat.n_PMT_proc=0;
-	time_stat.t_PMT_baseline=0;//0st iteration
-	time_stat.n_PMT_baseline=0;
-	time_stat.t_PMT_peaks=0;//0st iteration
-	time_stat.n_PMT_peaks=0;
-	time_stat.t_PMT_file_reading=0;//0st
-	time_stat.n_PMT_file_reading=0;
-	time_stat.t_PMT_filtering = 0;//0st
-	time_stat.n_PMT_filtering = 0;
-	//====================================
-	time_stat.t_MPPC_proc=0; //all till ==...= is the 1st iteration
-	time_stat.n_MPPC_proc=0;
-	time_stat.t_MPPC_file_reading=0;
-	time_stat.n_MPPC_file_reading=0;
-	time_stat.t_MPPC_filtering = 0;
-	time_stat.n_MPPC_filtering = 0;
-	time_stat.t_MPPC_threshold_and_first_baseline=0;
-	time_stat.n_MPPC_threshold_and_first_baseline=0;
-	//time_stat.t_MPPC_threshold_and_first_baseline_peaks=0;
-	//time_stat.n_MPPC_threshold_and_first_baseline_peaks=0;
-	time_stat.t_MPPC_curved_baseline=0;
-	time_stat.n_MPPC_curved_baseline=0;
-	time_stat.t_MPPC_curved_baseline_v2 = 0;
-	time_stat.n_MPPC_curved_baseline_v2 = 0;
-	time_stat.t_MPPC_curved_baseline_v3 = 0;
-	time_stat.n_MPPC_curved_baseline_v3 = 0;
-	time_stat.t_MPPC_curved_baseline_v4 = 0;
-	time_stat.n_MPPC_curved_baseline_v4 = 0;
-	time_stat.t_MPPC_curved_baseline_v5 = 0;
-	time_stat.n_MPPC_curved_baseline_v5 = 0;
-	time_stat.t_MPPC_curved_baseline_v6 = 0;
-	time_stat.n_MPPC_curved_baseline_v6 = 0;
-	time_stat.t_MPPC_curved_baseline_v7 = 0;
-	time_stat.n_MPPC_curved_baseline_v7 = 0;
-	time_stat.t_MPPC_curved_baseline_v8 = 0;
-	time_stat.n_MPPC_curved_baseline_v8 = 0;
-	time_stat.t_MPPC_curved_baseline_baseline=0;
-	time_stat.n_MPPC_curved_baseline_baseline=0;
-	time_stat.t_MPPC_baseline_substraction=0;
-	time_stat.n_MPPC_baseline_substraction=0;
-	time_stat.t_MPPC_peaks_finding=0;
-	time_stat.n_MPPC_peaks_finding=0;
-	time_stat.t_MPPC_peaks_processing=0;
-	time_stat.n_MPPC_peaks_processing=0;
-	time_stat.t_MPPC_double_I = 0;
-	time_stat.n_MPPC_double_I = 0;
-	//====================================
-	time_stat.t_RUN_proc=0;  //both iterations, must be set at merge() proc
-	time_stat.n_RUN_proc=0;
-	time_stat.t_RUN_proc_single_iter = 0;//both iterations, used at merge() proc, set in analysis Manager, must be cleared
-	time_stat.n_RUN_proc_single_iter = 0;
+	time_stat.t_total_proc = 0; //this one is in milliseconds, the rest is in nanoseconds
+	time_stat.n_total_proc = 0;
+	time_stat.t_simple_baseline = 0;
+	time_stat.n_simple_baseline = 0;
+	time_stat.t_curved_baseline = 0;
+	time_stat.n_curved_baseline = 0;
+	time_stat.t_peaks = 0;
+	time_stat.n_peaks = 0;
+	time_stat.t_file_reading = 0;
+	time_stat.n_file_reading = 0;
+	time_stat.t_filtering = 0;
+	time_stat.n_filtering = 0;
+	time_stat.t_integrals = 0;
+	time_stat.n_integrals = 0;
+	time_stat.t_double_integrals = 0;
+	time_stat.n_double_integrals = 0;
 #endif
 }
 
@@ -143,61 +107,23 @@ void AllEventsResults::Merge(AllEventsResults* with)
 	}
 
 #ifdef _USE_TIME_STATISTICS
-	time_stat.t_RUN_proc_single_iter += with->time_stat.t_RUN_proc_single_iter;
-	time_stat.n_RUN_proc_single_iter += with->time_stat.n_RUN_proc_single_iter;
-	
-	if (0 == Iteration_N) {
-		time_stat.t_PMT_proc += with->time_stat.t_PMT_proc;//0st iteration
-		time_stat.n_PMT_proc += with->time_stat.n_PMT_proc;
-		time_stat.t_PMT_baseline += with->time_stat.t_PMT_baseline;//0st iteration
-		time_stat.n_PMT_baseline += with->time_stat.n_PMT_baseline;
-		time_stat.t_PMT_peaks += with->time_stat.t_PMT_peaks;//0st iteration
-		time_stat.n_PMT_peaks += with->time_stat.n_PMT_peaks;
-		time_stat.t_PMT_file_reading += with->time_stat.t_PMT_file_reading;//0st
-		time_stat.n_PMT_file_reading += with->time_stat.n_PMT_file_reading;
-		time_stat.t_PMT_filtering += with->time_stat.t_PMT_filtering;//0st
-		time_stat.n_PMT_filtering += with->time_stat.n_PMT_filtering;
-	}
-	//====================================
-	if (1 == Iteration_N) {
-		time_stat.t_PMT_proc += with->time_stat.t_PMT_proc;
-		time_stat.n_PMT_proc += with->time_stat.n_PMT_proc
-		time_stat.t_MPPC_proc += with->time_stat.t_MPPC_proc; //all till ==...= is the 1st iteration
-		time_stat.n_MPPC_proc += with->time_stat.n_MPPC_proc;
-		time_stat.t_MPPC_file_reading += with->time_stat.t_MPPC_file_reading;
-		time_stat.n_MPPC_file_reading += with->time_stat.n_MPPC_file_reading;
-		time_stat.t_MPPC_filtering += with->time_stat.t_MPPC_filtering;
-		time_stat.n_MPPC_filtering += with->time_stat.n_MPPC_filtering;
-		time_stat.t_MPPC_threshold_and_first_baseline += with->time_stat.t_MPPC_threshold_and_first_baseline;
-		time_stat.n_MPPC_threshold_and_first_baseline += with->time_stat.n_MPPC_threshold_and_first_baseline;
-		//time_stat.t_MPPC_threshold_and_first_baseline_peaks += with->time_stat.t_MPPC_threshold_and_first_baseline_peaks;
-		//time_stat.n_MPPC_threshold_and_first_baseline_peaks += with->time_stat.n_MPPC_threshold_and_first_baseline_peaks;
-		time_stat.t_MPPC_curved_baseline += with->time_stat.t_MPPC_curved_baseline;
-		time_stat.n_MPPC_curved_baseline += with->time_stat.n_MPPC_curved_baseline;
-		time_stat.t_MPPC_curved_baseline_v2 += with->time_stat.t_MPPC_curved_baseline_v2;
-		time_stat.n_MPPC_curved_baseline_v2 += with->time_stat.n_MPPC_curved_baseline_v2;
-		time_stat.t_MPPC_curved_baseline_v3 += with->time_stat.t_MPPC_curved_baseline_v3;
-		time_stat.n_MPPC_curved_baseline_v3 += with->time_stat.n_MPPC_curved_baseline_v3;
-		time_stat.t_MPPC_curved_baseline_v4 += with->time_stat.t_MPPC_curved_baseline_v4;
-		time_stat.n_MPPC_curved_baseline_v4 += with->time_stat.n_MPPC_curved_baseline_v4;
-		time_stat.t_MPPC_curved_baseline_v5 += with->time_stat.t_MPPC_curved_baseline_v5;
-		time_stat.n_MPPC_curved_baseline_v5 += with->time_stat.n_MPPC_curved_baseline_v5;
-		time_stat.t_MPPC_curved_baseline_v6 += with->time_stat.t_MPPC_curved_baseline_v6;
-		time_stat.n_MPPC_curved_baseline_v6 += with->time_stat.n_MPPC_curved_baseline_v6;
-		time_stat.t_MPPC_curved_baseline_v7 += with->time_stat.t_MPPC_curved_baseline_v7;
-		time_stat.n_MPPC_curved_baseline_v7 += with->time_stat.n_MPPC_curved_baseline_v7;
-		time_stat.t_MPPC_curved_baseline_v8 += with->time_stat.t_MPPC_curved_baseline_v8;
-		time_stat.n_MPPC_curved_baseline_v8 += with->time_stat.n_MPPC_curved_baseline_v8;
-		time_stat.t_MPPC_curved_baseline_baseline += with->time_stat.t_MPPC_curved_baseline_baseline;
-		time_stat.n_MPPC_curved_baseline_baseline += with->time_stat.n_MPPC_curved_baseline_baseline;
-		time_stat.t_MPPC_baseline_substraction += with->time_stat.t_MPPC_baseline_substraction;
-		time_stat.n_MPPC_baseline_substraction += with->time_stat.n_MPPC_baseline_substraction;
-		time_stat.t_MPPC_peaks_finding += with->time_stat.t_MPPC_peaks_finding;
-		time_stat.n_MPPC_peaks_finding += with->time_stat.n_MPPC_peaks_finding;
-		time_stat.t_MPPC_peaks_processing += with->time_stat.t_MPPC_peaks_processing;
-		time_stat.n_MPPC_peaks_processing += with->time_stat.n_MPPC_peaks_processing;
-		time_stat.t_MPPC_double_I += with->time_stat.t_MPPC_double_I;
-		time_stat.n_MPPC_double_I += with->time_stat.n_MPPC_double_I;
+	if (ParameterPile::Max_iteration_N == Iteration_N) {
+		time_stat.t_total_proc += with->time_stat.t_total_proc;
+		time_stat.n_total_proc += with->time_stat.n_total_proc;
+		time_stat.t_simple_baseline += with->time_stat.t_simple_baseline;
+		time_stat.n_simple_baseline += with->time_stat.n_simple_baseline;
+		time_stat.t_curved_baseline += with->time_stat.t_curved_baseline;
+		time_stat.n_curved_baseline += with->time_stat.n_curved_baseline;
+		time_stat.t_peaks += with->time_stat.t_peaks;
+		time_stat.n_peaks += with->time_stat.n_peaks;
+		time_stat.t_file_reading += with->time_stat.t_file_reading;
+		time_stat.n_file_reading += with->time_stat.n_file_reading;
+		time_stat.t_filtering += with->time_stat.t_filtering;
+		time_stat.n_filtering += with->time_stat.n_filtering;
+		time_stat.t_integrals += with->time_stat.t_integrals;
+		time_stat.n_integrals += with->time_stat.n_integrals;
+		time_stat.t_double_integrals += with->time_stat.t_double_integrals;
+		time_stat.n_double_integrals += with->time_stat.n_double_integrals;
 	}
 #endif
 	with->Clear();
@@ -256,7 +182,7 @@ void AllEventsResults::Merged(void)
 			DVECTOR ys_before_S2 = averages[ind].ys_sum;
 			double delta_x = *(xs_before_S2.begin() + 1) - *xs_before_S2.begin();
 			SignalOperations::apply_time_limits(xs_before_S2, ys_before_S2, man->baseline.baseline_range.first, man->baseline.baseline_range.second, delta_x);
-			double baseline = SignalOperations::find_baseline_by_integral(0, xs_before_S2, ys_before_S2);
+			double baseline = SignalOperations::find_baseline_by_integral(xs_before_S2, ys_before_S2);
 			SignalOperations::substract_baseline(averages[ind].ys_sum, baseline);
 			DVECTOR integral, integral_variance;
 			SignalOperations::integrate_with_variance(averages[ind].xs_sum, averages[ind].ys_sum, averages[ind].ys_disp, integral, integral_variance, 0);
@@ -433,9 +359,6 @@ void AllEventsResults::Merged(void)
 		}
 	}
 #ifdef _USE_TIME_STATISTICS
-	time_stat.t_RUN_proc += time_stat.t_RUN_proc_single_iter;
-	if (0==Iteration_N)
-		time_stat.n_RUN_proc = time_stat.n_RUN_proc_single_iter;
 	if (ParameterPile::Max_iteration_N == Iteration_N)
 		report_time_statistics();
 #endif
@@ -458,12 +381,25 @@ void AllEventsResults::Clear(void)
 		pictures.clear();
 		STD_CONT<SingleEventData>().swap(events_data);
 		averages.clear();
-	}
-
 #ifdef _USE_TIME_STATISTICS
-	time_stat.t_RUN_proc_single_iter=0;
-	time_stat.n_RUN_proc_single_iter=0;
+		time_stat.t_total_proc = 0;
+		time_stat.n_total_proc = 0;
+		time_stat.t_simple_baseline = 0;
+		time_stat.n_simple_baseline = 0;
+		time_stat.t_curved_baseline = 0;
+		time_stat.n_curved_baseline = 0;
+		time_stat.t_peaks = 0;
+		time_stat.n_peaks = 0;
+		time_stat.t_file_reading = 0;
+		time_stat.n_file_reading = 0;
+		time_stat.t_filtering = 0;
+		time_stat.n_filtering = 0;
+		time_stat.t_integrals = 0;
+		time_stat.n_integrals = 0;
+		time_stat.t_double_integrals = 0;
+		time_stat.n_double_integrals = 0;
 #endif
+	}
 }
 
 void AllEventsResults::ClearMerged(void)
@@ -483,125 +419,50 @@ AllEventsResults& AllEventsResults::operator=(const AllEventsResults& right)
 void AllEventsResults::report_time_statistics()
 {
 	double coeff = 1e-6;//to milliseconds
-	std::cout << "________________________________________________" << std::endl;
-	std::cout << "RUN TIMES:" << std::endl;
-	std::cout << "Experiment: " << _exp.experiments.back()<<std::endl;
+	std::size_t N_events = events_data.size();
+	std::size_t N_valid_events = 0;
+	for (std::size_t i = 0, i_end_ = events_data.size(); i != i_end_; ++i)
+		N_valid_events += events_data[i].isValid() ? 1 : 0;
+
+	std::cout << "_____________________TIME STATS_____________________" << std::endl;
+	std::cout << "Folder: " << processing_manifest->in_folder<<std::endl;
 	std::cout << "All times are in milliseconds" << std::endl;
-	std::cout << "Number of runs: " << N_of_runs<<std::endl;
-	std::cout << "T:" << (double)time_stat.t_RUN_proc*coeff << "\tN: "
-		<< time_stat.n_RUN_proc << "\tAvr: " << ((double)time_stat.t_RUN_proc*coeff) / time_stat.n_RUN_proc << std::endl;
+	std::cout << "Number of events: " << N_events<<std::endl;
+	std::cout << "Number of valid events: " << N_events << std::endl;
+	std::cout << "T:" << (double)time_stat.t_total_proc << "\tN: "
+		<< time_stat.n_total_proc << "\tAvr: " << ((double)time_stat.t_total_proc) / time_stat.n_total_proc << std::endl;
 	std::cout << "|" << std::endl;
-	std::cout << "|____" << "PMT processing:" << std::endl;
-	std::cout << "   | " << "T: " << (double)time_stat.t_PMT_proc*coeff << "\tN: "
-		<< time_stat.n_PMT_proc << "\tAvr: " << ((double)time_stat.t_PMT_proc*coeff) / time_stat.n_PMT_proc << std::endl;
-	std::cout << "   | " << "  |" << std::endl;
-	std::cout << "   | " << "  |____" << "Reading:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_file_reading*coeff << "\tN: "
-		<< time_stat.n_PMT_file_reading << "\tAvr: " << ((double)time_stat.t_PMT_file_reading*coeff) / time_stat.n_PMT_file_reading << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Filtering:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_filtering*coeff << "\tN: "
-		<< time_stat.n_PMT_filtering << "\tAvr: " << ((double)time_stat.t_PMT_filtering*coeff) / time_stat.n_PMT_filtering << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Baseline:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_baseline*coeff << "\tN: "
-		<< time_stat.n_PMT_baseline << "\tAvr: " << ((double)time_stat.t_PMT_baseline*coeff) / time_stat.n_PMT_baseline << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Peaks:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_PMT_peaks*coeff << "\tN: "
-		<< time_stat.n_PMT_peaks << "\tAvr: " << ((double)time_stat.t_PMT_peaks*coeff) / time_stat.n_PMT_peaks << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Residual time:" << std::endl;
-	std::cout << "   | " << "     | " << coeff*(double)(time_stat.t_PMT_proc
-		- time_stat.t_PMT_file_reading - time_stat.t_PMT_filtering - time_stat.t_PMT_baseline - time_stat.t_PMT_peaks) << std::endl;
-	std::cout << "   | " << std::endl;
-	std::cout << "   | " << std::endl;
-	std::cout << "   |_" << "MPPC processing:" << std::endl;
-	std::cout << "   | " << "T: " << (double)time_stat.t_MPPC_proc*coeff << "\tN: "
-		<< time_stat.n_MPPC_proc << "\tAvr: " << ((double)time_stat.t_MPPC_proc*coeff) / time_stat.n_MPPC_proc << std::endl;
-	std::cout << "   | " << "  |" << std::endl;
-	std::cout << "   | " << "  |____" << "Reading:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_file_reading*coeff << "\tN: "
-		<< time_stat.n_MPPC_file_reading << "\tAvr: " << ((double)time_stat.t_MPPC_file_reading*coeff) / time_stat.n_MPPC_file_reading << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Filtering:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_filtering*coeff << "\tN: "
-		<< time_stat.n_MPPC_filtering << "\tAvr: " << ((double)time_stat.t_MPPC_filtering*coeff) / time_stat.n_MPPC_filtering << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Threshold and first baseline:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_threshold_and_first_baseline*coeff << "\tN: "
-		<< time_stat.n_MPPC_threshold_and_first_baseline << "\tAvr: " <<
-		((double)time_stat.t_MPPC_threshold_and_first_baseline*coeff) / time_stat.n_MPPC_threshold_and_first_baseline << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline*coeff) / time_stat.n_MPPC_curved_baseline << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline v2:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v2*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v2 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v2*coeff) / time_stat.n_MPPC_curved_baseline_v2 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline v3:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v3*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v3 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v3*coeff) / time_stat.n_MPPC_curved_baseline_v3 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline v4:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v4*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v4 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v4*coeff) / time_stat.n_MPPC_curved_baseline_v4 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	/*std::cout << "   | " << "     |_" << "Curved baseline v5:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v5*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v5 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v5*coeff) / time_stat.n_MPPC_curved_baseline_v5 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline v6:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v6*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v6 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v6*coeff) / time_stat.n_MPPC_curved_baseline_v6 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline v7:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v7*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v7 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v7*coeff) / time_stat.n_MPPC_curved_baseline_v7 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Curved baseline v8:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_v8*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_v8 << "\tAvr: " <<
-		((double)time_stat.t_MPPC_curved_baseline_v8*coeff) / time_stat.n_MPPC_curved_baseline_v8 << std::endl;
-	std::cout << "   | " << "     |" << std::endl;*/
-	std::cout << "   | " << "     |_" << "Curved baseline's baseline:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_curved_baseline_baseline*coeff << "\tN: "
-		<< time_stat.n_MPPC_curved_baseline_baseline << "\tAvr: " << 
-		((double)time_stat.t_MPPC_curved_baseline_baseline*coeff) / time_stat.n_MPPC_curved_baseline_baseline << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Baseline's substraction:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_baseline_substraction*coeff << "\tN: "
-		<< time_stat.n_MPPC_baseline_substraction << "\tAvr: " << 
-		((double)time_stat.t_MPPC_baseline_substraction*coeff) / time_stat.n_MPPC_baseline_substraction << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Peaks finding:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_peaks_finding*coeff << "\tN: "
-		<< time_stat.n_MPPC_peaks_finding << "\tAvr: " <<
-		((double)time_stat.t_MPPC_peaks_finding*coeff) / time_stat.n_MPPC_peaks_finding << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Peaks processing:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_peaks_processing*coeff << "\tN: "
-		<< time_stat.n_MPPC_peaks_processing << "\tAvr: " <<
-		((double)time_stat.t_MPPC_peaks_processing*coeff) / time_stat.n_MPPC_peaks_processing << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Double integral:" << std::endl;
-	std::cout << "   | " << "     | " << "T:" << (double)time_stat.t_MPPC_double_I*coeff << "\tN: "
-		<< time_stat.n_MPPC_double_I << "\tAvr: " << ((double)time_stat.t_MPPC_double_I*coeff) / time_stat.n_MPPC_double_I << std::endl;
-	std::cout << "   | " << "     |" << std::endl;
-	std::cout << "   | " << "     |_" << "Residual time:" << std::endl;
-	std::cout << "   | " << "     | " << coeff*(double)(time_stat.t_MPPC_proc
-		- time_stat.t_MPPC_file_reading - time_stat.t_MPPC_filtering - time_stat.t_MPPC_threshold_and_first_baseline
-		- time_stat.t_MPPC_curved_baseline - time_stat.t_MPPC_curved_baseline_baseline - time_stat.t_MPPC_baseline_substraction
-		- time_stat.t_MPPC_peaks_finding - time_stat.t_MPPC_peaks_processing - time_stat.t_MPPC_double_I) << std::endl;
-	std::cout << "________________________________________________" << std::endl;
+	std::cout << "|____" << "Reading:" << std::endl;
+	std::cout << "|    " << "T:" << (double)time_stat.t_file_reading*coeff << "\tN: "
+		<< time_stat.n_file_reading << "\tAvr: " << ((double)time_stat.t_file_reading*coeff) / time_stat.n_file_reading << std::endl;
+	std::cout << "|    " << std::endl;
+	std::cout << "|____" << "Simple baseline:" << std::endl;
+	std::cout << "|    " << "T: " << (double)time_stat.t_simple_baseline*coeff << "\tN: "
+		<< time_stat.n_simple_baseline << "\tAvr: " << ((double)time_stat.t_simple_baseline*coeff) / time_stat.n_simple_baseline << std::endl;
+	std::cout << "|    " << std::endl;
+	std::cout << "|____" << "Filtering:" << std::endl;
+	std::cout << "|    " << "T:" << (double)time_stat.t_filtering*coeff << "\tN: "
+		<< time_stat.n_filtering << "\tAvr: " << ((double)time_stat.t_filtering*coeff) / time_stat.n_filtering << std::endl;
+	std::cout << "|    " << std::endl;
+	std::cout << "|____" << "Curved baseline restoration:" << std::endl;
+	std::cout << "|    " << "T:" << (double)time_stat.t_curved_baseline*coeff << "\tN: "
+		<< time_stat.n_curved_baseline << "\tAvr: " << ((double)time_stat.t_curved_baseline*coeff) / time_stat.n_curved_baseline << std::endl;
+	std::cout << "|    " << std::endl;
+	std::cout << "|____" << "Finding peaks:" << std::endl;
+	std::cout << "|    " << "T:" << (double)time_stat.t_peaks*coeff << "\tN: "
+		<< time_stat.n_peaks << "\tAvr: " << ((double)time_stat.t_peaks*coeff) / time_stat.n_peaks << std::endl;
+	std::cout << "|    " << std::endl;
+	std::cout << "|____" << "Finding integral:" << std::endl;
+	std::cout << "|    " << "T:" << (double)time_stat.t_integrals*coeff << "\tN: "
+		<< time_stat.n_integrals << "\tAvr: " << ((double)time_stat.t_integrals*coeff) / time_stat.n_integrals << std::endl;
+	std::cout << "|____" << "Finding double integral:" << std::endl;
+	std::cout << "|    " << "T:" << (double)time_stat.t_double_integrals*coeff << "\tN: "
+		<< time_stat.n_double_integrals << "\tAvr: " << ((double)time_stat.t_double_integrals*coeff) / time_stat.n_double_integrals << std::endl;
+	std::cout << "|    " << std::endl;
+	double resudial = coeff * ((double)time_stat.t_total_proc - time_stat.t_file_reading - time_stat.t_simple_baseline - time_stat.t_filtering -
+		time_stat.t_curved_baseline - time_stat.t_peaks - time_stat.t_integrals - time_stat.t_double_integrals);
+	std::cout << "|____" << "Resudial time:" << std::endl;
+	std::cout << "     " << "T:" << resudial << "\tN: " << time_stat.n_total_proc << "\tAvr: " << resudial / time_stat.n_total_proc << std::endl;
+	std::cout << "____________________________________________________" << std::endl;
 }
 #endif

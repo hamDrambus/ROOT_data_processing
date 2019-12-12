@@ -67,6 +67,9 @@ void AnalysisManager::processOneEvent_first_iteration(AllEventsResults *_all_res
 		}
 		//_all_results->events_data.pop_back();
 	} else {
+#ifdef _USE_TIME_STATISTICS
+		_all_results->time_stat.n_total_proc++;
+#endif
 		std::cout<<"processed"<<_all_results->Iteration()<<": "<< manifest_single_event.name << "_run_" << manifest_single_event.runs.back() << "_sub_"
 			<< manifest_single_event.sub_runs.back() << std::endl;
 	}
@@ -101,16 +104,14 @@ void AnalysisManager::processAllEvents(void)
 	all_events_results.push_back(AllEventsResults(&manifest_under_processing));
 	std::cout<<"PROCESSING \""<<manifest_under_processing.in_folder<<"\""<<std::endl;
 	while (all_events_results.back().Iteration() <= ParameterPile::Max_iteration_N) {
+
 #ifdef _USE_TIME_STATISTICS
-		time_t runs_start_timer;
-		time_t runs_end_timer;
-		time(&runs_start_timer);
+		auto start_filter = std::chrono::high_resolution_clock::now();
 #endif
 		loopAllEvents(&all_events_results.back());
 #ifdef _USE_TIME_STATISTICS
-		time(&runs_end_timer);
-		all_runs_results.back().time_stat.n_RUN_proc = all_runs_results.back().N_of_runs;
-		all_runs_results.back().time_stat.t_RUN_proc += difftime(runs_end_timer, runs_start_timer);
+		auto end_filter = std::chrono::high_resolution_clock::now();
+		all_events_results.back().time_stat.t_total_proc += std::chrono::duration_cast<std::chrono::milliseconds>(end_filter - start_filter).count();
 #endif
 		all_events_results.back().Merged();//all in one thread, so it is already joined. Merge == iteration++
 	}
@@ -130,9 +131,7 @@ void AnalysisManager::processAllExperiments(void)
 void AnalysisManager::proceessAllEventsOneThread(void)
 {
 #ifdef _USE_TIME_STATISTICS
-	time_t runs_start_timer;
-	time_t runs_end_timer;
-	time(&runs_start_timer);
+	auto start_filter = std::chrono::high_resolution_clock::now();
 #endif
 	if (all_events_results.empty()) {
 		nextEvent();
@@ -151,9 +150,8 @@ void AnalysisManager::proceessAllEventsOneThread(void)
 		nextEvent();
 
 #ifdef _USE_TIME_STATISTICS
-	time(&runs_end_timer);
-	all_runs_results.back().time_stat.n_RUN_proc_single_iter = all_runs_results.back().N_of_runs;
-	all_runs_results.back().time_stat.t_RUN_proc_single_iter = difftime(runs_end_timer,runs_start_timer);
+	auto end_filter = std::chrono::high_resolution_clock::now();
+	all_events_results.back().time_stat.t_total_proc += std::chrono::duration_cast<std::chrono::milliseconds>(end_filter - start_filter).count();
 #endif
 	//std::cout << "finish_proceessAllRunsOneThread" << std::endl;
 }

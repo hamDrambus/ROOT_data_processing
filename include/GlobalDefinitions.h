@@ -30,11 +30,7 @@
 #undef max
 #undef min
 
-#define _HOTFIX_DECREASE_MPPC_MEMORY_USAGE
-#define _HOTFIX_CLEAR_MEMORY
-//#define _NO_PMT_SELECTION
-#define _NO_AUTO_PMT_SELECTION
-//#define _USE_TIME_STATISTICS
+#define _USE_TIME_STATISTICS
 
 #define STD_CONT std::deque
 

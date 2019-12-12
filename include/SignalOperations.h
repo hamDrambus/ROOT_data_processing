@@ -7,10 +7,10 @@ namespace SignalOperations
 {
 
 	void invert_y(DVECTOR &x_in_out, DVECTOR &y_in_out);
-	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
-	double find_baseline_by_median(double approx, DVECTOR &xs, DVECTOR &ys);
-	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys);
-	double find_baseline_by_integral(double approx, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
+	double find_baseline_by_median(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
+	double find_baseline_by_median(DVECTOR &xs, DVECTOR &ys);
+	double find_baseline_by_integral(DVECTOR &xs, DVECTOR &ys);
+	double find_baseline_by_integral(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks);
 	void find_baseline_by_ROOT(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out,
 		int numberIterations, int direction, int filterOrder, bool smoothing, int smoothWindow, bool compton, int sparse);
 	void find_baseline_by_ROOT_advanced(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_out,
