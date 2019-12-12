@@ -1733,7 +1733,7 @@ namespace SignalOperations {
 			bool was_in_peak = in_peak;
 			if (xs[i] < peaks[pk].left)
 				continue;
-			if (xs[i]>=peaks[pk].left && xs[i]<peaks[pk].right) {
+			if (xs[i]>=peaks[pk].left && xs[i]<=peaks[pk].right) {
 				in_peak = true;
 				if (!was_in_peak) {
 					if (even) {
@@ -1748,6 +1748,7 @@ namespace SignalOperations {
 						output.second.second.back().push_back(baseline);
 					}
 				}
+				was_in_peak = in_peak;
 				if (even) {
 					output.first.first.back().push_back(xs[i]);
 					output.first.second.back().push_back(ys[i]);
@@ -2075,7 +2076,7 @@ namespace SignalOperations {
 		}
 	}
 
-	//seaches peak from x_start, in difference to find_next peak this one first finds peak by threshold_finder and then finds its edges (wider 
+	//searches peak from x_start, in difference to find_next peak this one first finds peak by threshold_finder and then finds its edges (wider
 	//than intersection of threshold and signal) using thresh_edges.
 	void find_next_peak_fine(DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, DITERATOR &x_finish, double &Amp,
 		double thresh_finder, double thresh_edges, int N_trust)
@@ -2086,7 +2087,7 @@ namespace SignalOperations {
 		DITERATOR minimal_iterator = x_start;
 		DITERATOR pk_max;
 		bool use_fit = true;
-		if (N_trust < 3) {//2nd order polynom
+		if (N_trust < 3) {//2nd order polynomial
 			N_trust = 1;
 			use_fit = false;
 		}
@@ -2227,6 +2228,7 @@ namespace SignalOperations {
 		x_finish = xs.begin();
 		return;
 	}
+
 	void find_peaks_fine(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust)
 	{
 		if (threshold_edges >= threshold)
@@ -2253,6 +2255,118 @@ namespace SignalOperations {
 				int delta_i = std::max(N_trust / 3, 1);
 				x_peak_l = ((_end_ - x_peak_l) < delta_i) ? _end_ : (x_peak_l + delta_i);
 			}
+		}
+	}
+
+	//only N_trust==1 is supported atm.
+	//Assumes xs are equidistant
+	void find_peaks_fine_v2(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double baseline, double threshold, double threshold_edges, int N_trust)
+	{
+		if (threshold_edges >= threshold)
+			threshold_edges = baseline;
+		peaks.clear();
+		if (xs.size() <= 1)
+			return;
+		double delta_x = *(++xs.begin()) - *(xs.begin());
+		std::size_t x_peak_l = 0, x_peak_r = 0;
+		const std::size_t _end_ = xs.size();
+		while (x_peak_l != _end_) {//when no peak found x_peak_l is set to xs.size()
+			x_peak_l = _end_;
+			std::size_t search_from = x_peak_r; //next peak may include this point (i.e. one pint can belong to two peaks)
+			//find next peak (signal > threshold)
+			std::size_t x_start = _end_; //x_start!=_end_ == peak found
+			for (std::size_t i = search_from; i != _end_; ++i) {
+				if (ys[i] >= threshold) {
+					x_start = i;
+					break;
+				}
+			}
+			if (x_start == _end_)
+				continue; //no more peaks found
+			//find left peak front (signal < threshold_edges, but not x>=search_from)
+			for (std::size_t i = x_start; i >= search_from && i<_end_; --i) {
+				if (i == 0)
+					continue;
+				if ((ys[i] - threshold_edges)*(ys[i - 1] - threshold_edges) <= 0) {
+					x_peak_l = i;
+					break;
+				}
+			}
+			if (x_peak_l == _end_)
+				x_peak_l = search_from;
+			//find right peak front (either intersection with threshold_edges or minimum between this peak and the next one (above threshold).
+			//Can't take integrals and find maximum in the same loop because the integral range is unknown until completion of determining the right front
+			bool shared_l = false;
+			bool shared_r = x_peak_r == x_peak_l; //new peak's left slope is shared with previous peak
+			std::size_t min = _end_, thresh_intersection_1 = _end_, thresh_intersection_2 = _end_;
+			std::size_t edge_intersection = _end_;
+			for (std::size_t i = x_peak_l; i != _end_; ++i) {
+				if ((i == 0) || (i == x_peak_l)) {
+					continue;
+				}
+				if ((ys[i] - threshold_edges) <= 0 && (ys[i - 1] - threshold_edges) >= 0) { //intersection
+					edge_intersection = i - 1;
+					break;
+				}
+				if (_end_==thresh_intersection_1) {
+					if ((ys[i] - threshold) <= 0 && (ys[i - 1] - threshold) >= 0)
+						thresh_intersection_1 = i - 1;
+				} else {
+					if ((ys[i] - threshold) >= 0 && (ys[i - 1] - threshold) <= 0) {
+						thresh_intersection_2 = i - 1;
+						break;
+					}
+				}
+				if (_end_!=thresh_intersection_1) {
+					if (min == _end_)
+						min = i;
+					else
+						min = (ys[i]<ys[min] ? i : min);
+				}
+			}
+			//case when signal ended before peak:
+			if ((thresh_intersection_2 == _end_) && (edge_intersection == _end_)) {
+				x_peak_r = _end_ - 1;
+			} else {
+				if (thresh_intersection_2!=_end_) {
+					x_peak_r = min;
+					shared_r = true;
+				}
+				else
+					x_peak_r = edge_intersection;
+			}
+			peak pk;
+			double A_weight = 0;
+			pk.A = -DBL_MAX;
+			pk.S = 0;
+			pk.t = 0;
+			pk.left = xs[x_peak_l];
+			pk.right = xs[x_peak_r];
+			for (std::size_t i = x_peak_l; i <= x_peak_r; ++i) {
+				A_weight += ys[i]-baseline;
+				pk.t += (ys[i]-baseline)*xs[i];
+				pk.A = std::max(pk.A, ys[i] - baseline);
+				if (i == x_peak_l) {
+					if (x_peak_r == x_peak_l) {
+						pk.S += (ys[i] - baseline) * delta_x *((shared_l ? 0.5 : 1.0) + (shared_r ? 0.5 : 1.0));
+						continue;
+					}
+					pk.S += (ys[i] - baseline)*delta_x*(shared_l ? 0.5 : 1.0);
+					continue;
+				}
+				if (i == x_peak_r) {
+					pk.S += (ys[i] - baseline) * delta_x *(shared_r ? 0.5 : 1.0);
+					continue;
+				}
+				pk.S += (ys[i] - baseline)*delta_x;
+			}
+
+			pk.t /= A_weight;
+
+			if ((pk.S>0) && (pk.A>0)&&(pk.right>=pk.left)&&(pk.t>=0))
+				peaks.push_back(pk);
+			if (!shared_r)
+				++x_peak_r; //otherwise loop is stuck at one-point peaks
 		}
 	}
 
@@ -2368,7 +2482,7 @@ namespace SignalOperations {
 			return;
 		}
 		bool use_fit = true;
-		if (N_trust < 3) {//2nd order polynom
+		if (N_trust < 3) {//2nd order polynomial
 			N_trust = 1;
 			use_fit = false;
 		}

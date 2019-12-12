@@ -12,12 +12,12 @@ void process_runs_in_thread(void* manager)
 	//std::cout << "Exiting thread" << std::endl;
 }
 
-void MTAnalysisManager::processOneRun(void)
+void MTAnalysisManager::processOneEvent(void)
 {
 	//not called
 }
 
-void MTAnalysisManager::nextRun(void)
+void MTAnalysisManager::nextEvent(void)
 {
 	if (LoopStatus::Null == curr_run) {
 		index_manifest_under_processing = 0;
@@ -41,7 +41,7 @@ void MTAnalysisManager::nextRun(void)
 	//No runs or subruns switch, the MultithreadAnalysisManager is only responsible for experiments switching and runs splitting
 }
 
-void MTAnalysisManager::processAllRuns(void)
+void MTAnalysisManager::processAllEvents(void)
 {
 	std::vector<TThread*> pThreads;
 	std::vector<AnalysisManager*> _submanagers;
@@ -91,14 +91,14 @@ void MTAnalysisManager::processAllRuns(void)
 		delete mutexes[n];
 		delete thread_mutexes[n];
 	}
-	nextRun();
+	nextEvent();
 }
 
-void MTAnalysisManager::loopAllRuns(void)
+void MTAnalysisManager::loopAllEvents(void)
 {
 	//not called
 }
-void MTAnalysisManager::loopAllRuns(AllEventsResults *_all_results)
+void MTAnalysisManager::loopAllEvents(AllEventsResults *_all_results)
 {
 	//not called
 }

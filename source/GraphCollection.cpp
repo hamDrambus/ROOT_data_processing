@@ -330,7 +330,7 @@ void GraphCollection::SetPngDirectory(std::string path) //For all GnuplotDrawing
 
 void GraphCollection::SetGnuplotDirectory(std::string path) //For all GnuplotDrawing, including future ones. Does not move already existing files
 {
-	_dir_to_save = path;
+	_storage_dir = path;
 	for (std::size_t i = 0, i_end_ = _graphs.size(); i != i_end_; ++i) {
 		_graphs[i].SetGnuplotDirectory(path);
 	}

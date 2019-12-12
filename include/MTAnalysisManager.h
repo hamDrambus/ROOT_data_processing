@@ -11,11 +11,11 @@ class MTAnalysisManager : public AnalysisManager
 {
 protected:
 	
-	virtual void processOneRun(void);
-	virtual void nextRun(void);
-	virtual void processAllRuns(void);
-	virtual void loopAllRuns(void);
-	virtual void loopAllRuns(AllEventsResults *_all_results);
+	virtual void processOneEvent(void);
+	virtual void nextEvent(void);
+	virtual void processAllEvents(void);
+	virtual void loopAllEvents(void);
+	virtual void loopAllEvents(AllEventsResults *_all_results);
 
 	STD_CONT<ParameterPile::experiment_manifest> split_exp_area(ParameterPile::experiment_manifest area_to_split, int N);
 public:

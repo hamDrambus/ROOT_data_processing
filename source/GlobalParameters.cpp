@@ -207,7 +207,7 @@ namespace ParameterPile
 				this_path.push_back('/');
 
 		TThread::Initialize();
-		threads_number = 1;
+		threads_number = 9;
 		max_pics_number = 50;
 		gnuplot_presits = false;
 
@@ -240,12 +240,12 @@ namespace ParameterPile
 		default_exp_manifest.out_picture_folder = "";//Do not save pictures
 		default_exp_manifest.draw_only = false;
 		default_exp_manifest.accepted_events_fname = "";
-		default_exp_manifest.runs.push(33, 33);
-		default_exp_manifest.sub_runs.push(0, 0);// default_exp_manifest.subruns_per_file - 1);
+		default_exp_manifest.runs.push(0, 9999);
+		default_exp_manifest.sub_runs.push(0, 2);// default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = 32;
 
 		area_vector chs_to_draw;
-		chs_to_draw.push(12);
+		//chs_to_draw.push(32, 38);
 		//chs_to_draw.push(38);
 		//END OF MODIFY ONLY THIS BLOCK
 
@@ -285,8 +285,8 @@ namespace ParameterPile
 		//Set channel specifics for all experiments (kV)
 		//----------------------------------------------
 		//fast PMTs
-		ch_manifest.invert = true;
 		ch_manifest.device = "PMT";
+		ch_manifest.invert = true;
 		ch_manifest.display.do_draw = chs_to_draw.contains(8);
 		ch_manifest.peaks.threshold = 0.0031;
 		default_exp_manifest.channels.push(8, ch_manifest);
@@ -327,7 +327,15 @@ namespace ParameterPile
 		ch_manifest.invert = true;
 		ch_manifest.baseline.do_find_curved = false;
 		ch_manifest.device = "SiPM";
-		ch_manifest.peaks.threshold = 0.0070;
+		ch_manifest.display.Y_limits = PAIR(-0.04, 0.0);
+		ch_manifest.filter.order = 4;
+		ch_manifest.filter.n_points = 15;
+		ch_manifest.filter.n_iterations = 1;
+		ch_manifest.baseline.do_find_curved = false;
+		ch_manifest.baseline.curved_range = PAIR(10, 65);
+		ch_manifest.baseline.curved_center = PAIR(20, 50);
+		ch_manifest.baseline.curved_trim = PAIR(1, 1);
+		ch_manifest.peaks.threshold = 0.0080;
 		for (int ch = SiPM_channels.get_next_index(); ch>=0; ch = SiPM_channels.get_next_index()) {
 			ch_manifest.display.do_draw = chs_to_draw.contains(ch);
 			default_exp_manifest.channels.push(ch, ch_manifest);
@@ -338,6 +346,8 @@ namespace ParameterPile
 		ch_manifest.peaks.do_find = false;
 		ch_manifest.baseline.do_find_curved = true;
 		ch_manifest.device = "Virtual";
+		ch_manifest.display.Y_limits = PAIR(-DBL_MAX, -DBL_MAX);
+		ch_manifest.filter.n_iterations = 0;
 		ch_manifest.baseline.curved_range = PAIR(10, 110);
 		ch_manifest.baseline.curved_center = PAIR(20, 89);
 		ch_manifest.baseline.curved_trim = PAIR(1, 1);

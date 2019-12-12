@@ -56,6 +56,7 @@ namespace SignalOperations
 	//seaches peak from x_start, in difference to find_next peak this one first finds peak by threshold_finder and then finds its edges (wider 
 	//than intersection of threshold and signal) using thresh_edges.
 	void find_peaks_fine(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust);
+	void find_peaks_fine_v2(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks, double base_line, double threshold, double threshold_edges, int N_trust);
 
 	void find_next_extremum_faster (DVECTOR &xs, DVECTOR &ys, DITERATOR &x_start, int N_trust=5);
 	void find_previous_extremum_faster(DVECTOR &xs, DVECTOR &ys, D_REV_ITERATOR &x_start, int N_trust=5);

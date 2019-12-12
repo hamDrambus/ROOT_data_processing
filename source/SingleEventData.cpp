@@ -208,7 +208,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 			//TODO: optimize this function, using the fact that the ROOT's baseline has definite x points [from, to] (- [xs.begin(),xs.end())
 		//================================================================================
 		}
-		SignalOperations::find_peaks_fine(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].peaks, channel_data[ch_ind].found_baseline,
+		SignalOperations::find_peaks_fine_v2(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].peaks, channel_data[ch_ind].found_baseline,
 			threshold, threshold_edges, manifest->channels[ch_ind].N_extrapolation);
 		//=========================================================================
 		std::string plot_title = manifest->name + "_run" + std::to_string(index.run) +
@@ -230,7 +230,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 				if (channel_data[ch_ind].curved_bl_xs.empty()) { //simple baseline case
 					dr->AddToDraw(channel_data[ch_ind].xs, ys_raw, "raw_" + plot_title, "with lines");
 					if (!ys_filtered.empty())
-						dr->AddToDraw(channel_data[ch_ind].xs, ys_filtered, "filtered_" + plot_title, "with lines lw 2");
+						dr->AddToDraw(channel_data[ch_ind].xs, ys_filtered, "filtered_" + plot_title, "with lines lw 2 lc rgb \"#000000\"");
 					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#FF0000\"");
 					if (threshold_edges != channel_data[ch_ind].found_baseline)
 						dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
@@ -303,7 +303,7 @@ void SingleEventData::calculate_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys,
 		: SignalOperations::find_baseline_by_median(0, xs_before_S2, ys_before_S2);
 	//calculate first-order baseline
 	threshold = man->peaks.threshold;
-	SignalOperations::find_peaks_fine(xs_before_S2, ys_before_S2, peaks_before_S2,
+	SignalOperations::find_peaks_fine_v2(xs_before_S2, ys_before_S2, peaks_before_S2,
 		baseline, threshold + baseline, baseline, man->N_extrapolation);
 	if (!peaks_before_S2.empty()) {
 		/*exact*/baseline = SignalOperations::find_baseline_by_integral(0, xs_before_S2, ys_before_S2, peaks_before_S2);
