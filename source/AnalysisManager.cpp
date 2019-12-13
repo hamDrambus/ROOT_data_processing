@@ -1,6 +1,6 @@
 #include "AnalysisManager.h"
 
-AnalysisManager::AnalysisManager(ParameterPile::analysis_manifest exp_area) : manifest_all(exp_area), 
+AnalysisManager::AnalysisManager(ParameterPile::analysis_manifest exp_area) : className("AnalysisManager"), manifest_all(exp_area),
 	index_manifest_under_processing(0), curr_run(LoopStatus::Null), _cond(NULL), _thread_mutex(NULL)
 {}
 
@@ -15,7 +15,7 @@ void AnalysisManager::nextExperiment(void)
 		manifest_single_event = manifest_under_processing;
 		if (manifest_under_processing.runs.empty() || manifest_under_processing.sub_runs.empty()) {
 			++index_manifest_under_processing;
-			std::cout << "AnalysisManager::nextExperiment: Warning: Folder \"" << manifest_under_processing.in_folder << "\" does not contain data to process!" << std::endl;
+			std::cout << className<<"::nextExperiment: Warning: Folder \"" << manifest_under_processing.in_folder << "\" does not contain data to process!" << std::endl;
 			continue;
 		}
 		manifest_single_event.runs.erase();
@@ -70,8 +70,9 @@ void AnalysisManager::processOneEvent_first_iteration(AllEventsResults *_all_res
 #ifdef _USE_TIME_STATISTICS
 		_all_results->time_stat.n_total_proc++;
 #endif
-		std::cout<<"processed"<<_all_results->Iteration()<<": "<< manifest_single_event.name << "_run_" << manifest_single_event.runs.back() << "_sub_"
-			<< manifest_single_event.sub_runs.back() << std::endl;
+		if (!ParameterPile::quiet_mode)
+			std::cout<<"processed"<<_all_results->Iteration()<<": "<< manifest_single_event.name << "_run_" << manifest_single_event.runs.back() << "_sub_"
+				<< manifest_single_event.sub_runs.back() << std::endl;
 	}
 }
 
@@ -94,8 +95,9 @@ void AnalysisManager::loopAllEvents(AllEventsResults *_all_results)
 				std::cout << "invalid: " << j->manifest->name << "/run_" << j->index.run << "_sub_"	<< j->index.subrun << ": "<<j->Status()<< std::endl;
 			}
 		}
-		std::cout << "processed"<<_all_results->Iteration()<<": "<< j->manifest->name << "_run" << j->index.run << "_sub"
-			<< j->index.subrun << std::endl;
+		if (!ParameterPile::quiet_mode)
+			std::cout << "processed"<<_all_results->Iteration()<<": "<< j->manifest->name << "_run" << j->index.run << "_sub"
+				<< j->index.subrun << std::endl;
 	}
 }
 
@@ -181,7 +183,6 @@ TMutex* AnalysisManager::getThreadMutex(void)
 
 ParameterPile::experiment_manifest AnalysisManager::refine_exp_area(ParameterPile::experiment_manifest area)//looks up the existing runs in data directory 
 //and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally
-//depr: TODO: maybe also move to the AnalysisManager
 {
 	ParameterPile::experiment_manifest out_area = area;
 	out_area.runs.erase();

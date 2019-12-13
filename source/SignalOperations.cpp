@@ -58,7 +58,7 @@ namespace SignalOperations {
 			return 0.5*(selected_y[ind / 2] + selected_y[1 + (ind / 2)]);
 	}
 
-	double find_baseline_by_integral(DVECTOR &xs, DVECTOR &ys)
+	double find_baseline_by_integral(double approx_baseline, DVECTOR &xs, DVECTOR &ys)
 	{
 		if ((xs.size() <= 1) || (xs.size() != ys.size()))
 			return DBL_MAX;
@@ -66,11 +66,11 @@ namespace SignalOperations {
 		double dx = xs.back()-*(xs.begin());
 		if (0 == dx)
 			return DBL_MAX;
-		integrate(xs, ys, val, xs.begin(), --xs.end(), *(++xs.begin()) - *(xs.begin()), 0);
-		return val/dx;
+		integrate(xs, ys, val, xs.begin(), --xs.end(), *(++xs.begin()) - *(xs.begin()), approx_baseline);
+		return approx_baseline + val/dx;
 	}
 
-	double find_baseline_by_integral(DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
+	double find_baseline_by_integral(double approx_baseline, DVECTOR &xs, DVECTOR &ys, STD_CONT<peak> &peaks)
 	{
 		if ((xs.size() != ys.size())||(xs.size()<2))
 			return DBL_MAX;
@@ -93,7 +93,7 @@ namespace SignalOperations {
 				if ((x_cut_right!=_end_)&&(x_cut_right-x_cut_left>= 1)){
 					Sum_dx += *x_cut_right - *x_cut_left + delta_x;
 					double val;
-					integrate(xs, ys, val, x_cut_left, x_cut_right, delta_x, 0);
+					integrate(xs, ys, val, x_cut_left, x_cut_right, delta_x, approx_baseline);
 					Sum_int += val;
 				}
 				x_cut_right = _end_;
@@ -113,13 +113,13 @@ namespace SignalOperations {
 				Sum_dx += *x_cut_right - *x_cut_left + delta_x;
 				double val;
 				int temp = x_cut_right - x_cut_left;
-				integrate(xs, ys, val, x_cut_left, x_cut_right, delta_x, 0);
+				integrate(xs, ys, val, x_cut_left, x_cut_right, delta_x, approx_baseline);
 				Sum_int += val;
 			}
 		//}
 		if (0 == Sum_dx)
 			return DBL_MAX;
-		return (Sum_int / Sum_dx);
+		return approx_baseline + (Sum_int / Sum_dx);
 	}
 
 	//Not used, too unstable and very expensive

@@ -17,30 +17,6 @@ void MTAnalysisManager::processOneEvent(void)
 	//not called
 }
 
-void MTAnalysisManager::nextEvent(void)
-{
-	if (LoopStatus::Null == curr_run) {
-		index_manifest_under_processing = 0;
-		if (index_manifest_under_processing >= manifest_all.manifests.size()) {
-			curr_run = LoopStatus::Null;
-			return;
-		}
-		manifest_under_processing = manifest_all.manifests[index_manifest_under_processing];
-		curr_run = LoopStatus::NextExperiment;
-		return;
-	}
-	if (++index_manifest_under_processing < manifest_all.manifests.size()) {
-		manifest_under_processing = manifest_all.manifests[index_manifest_under_processing];
-		curr_run = LoopStatus::NextExperiment;
-		return;
-	} else {
-		manifest_under_processing = ParameterPile::experiment_manifest();
-		curr_run = LoopStatus::Null;
-		return;
-	}
-	//No runs or subruns switch, the MultithreadAnalysisManager is only responsible for experiments switching and runs splitting
-}
-
 void MTAnalysisManager::processAllEvents(void)
 {
 	std::vector<TThread*> pThreads;
@@ -91,7 +67,7 @@ void MTAnalysisManager::processAllEvents(void)
 		delete mutexes[n];
 		delete thread_mutexes[n];
 	}
-	nextEvent();
+	nextExperiment();
 }
 
 void MTAnalysisManager::loopAllEvents(void)
@@ -104,7 +80,9 @@ void MTAnalysisManager::loopAllEvents(AllEventsResults *_all_results)
 }
 
 MTAnalysisManager::MTAnalysisManager(ParameterPile::analysis_manifest area) : AnalysisManager(area)
-{}
+{
+	className = "MTAnalysisManager";
+}
 
 void MTAnalysisManager::processAllExperiments(void)
 {

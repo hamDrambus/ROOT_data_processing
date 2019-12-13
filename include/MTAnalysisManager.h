@@ -12,7 +12,6 @@ class MTAnalysisManager : public AnalysisManager
 protected:
 	
 	virtual void processOneEvent(void);
-	virtual void nextEvent(void);
 	virtual void processAllEvents(void);
 	virtual void loopAllEvents(void);
 	virtual void loopAllEvents(AllEventsResults *_all_results);

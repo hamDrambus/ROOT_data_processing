@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	
 #ifdef _USE_TIME_STATISTICS
 	auto start = std::chrono::system_clock::now();
-	std::cout << "Starting processing data at ";
+	std::cout << "Starting processing data on ";
 	std::time_t start_time = std::chrono::system_clock::to_time_t(start);
 	std::cout << std::ctime(&start_time) << std::endl;
 #endif
@@ -32,14 +32,14 @@ int main(int argc, char *argv[])
 	}
 	std::cout<<std::endl<<"========================================="<<std::endl << "Finished" << std::endl;
 #ifdef _USE_TIME_STATISTICS
-	std::cout << "Started processing data at ";
+	std::cout << "Started processing data on ";
 	std::cout << std::ctime(&start_time) << std::endl;
 	auto end = std::chrono::system_clock::now();
 	auto diff = end - start;
-	std::cout << "Finished processing at ";
+	std::cout << "Finished processing on ";
 	start_time = std::chrono::system_clock::to_time_t(end);
 	std::cout << std::ctime(&start_time) << std::endl;
-	std::cout << "Elapsed time  = \t" << diff.count() << " s."<< std::endl;
+	std::cout << "Elapsed time  = \t" << std::chrono::duration_cast<std::chrono::seconds>(diff).count() << " s."<< std::endl;
 #endif
 	return 0;
 }

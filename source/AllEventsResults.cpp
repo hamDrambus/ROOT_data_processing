@@ -182,7 +182,7 @@ void AllEventsResults::Merged(void)
 			DVECTOR ys_before_S2 = averages[ind].ys_sum;
 			double delta_x = *(xs_before_S2.begin() + 1) - *xs_before_S2.begin();
 			SignalOperations::apply_time_limits(xs_before_S2, ys_before_S2, man->baseline.baseline_range.first, man->baseline.baseline_range.second, delta_x);
-			double baseline = SignalOperations::find_baseline_by_integral(xs_before_S2, ys_before_S2);
+			double baseline = SignalOperations::find_baseline_by_integral(0, xs_before_S2, ys_before_S2);
 			SignalOperations::substract_baseline(averages[ind].ys_sum, baseline);
 			DVECTOR integral, integral_variance;
 			SignalOperations::integrate_with_variance(averages[ind].xs_sum, averages[ind].ys_sum, averages[ind].ys_disp, integral, integral_variance, 0);
@@ -459,8 +459,8 @@ void AllEventsResults::report_time_statistics()
 	std::cout << "|    " << "T:" << (double)time_stat.t_double_integrals*coeff << "\tN: "
 		<< time_stat.n_double_integrals << "\tAvr: " << ((double)time_stat.t_double_integrals*coeff) / time_stat.n_double_integrals << std::endl;
 	std::cout << "|    " << std::endl;
-	double resudial = coeff * ((double)time_stat.t_total_proc - time_stat.t_file_reading - time_stat.t_simple_baseline - time_stat.t_filtering -
-		time_stat.t_curved_baseline - time_stat.t_peaks - time_stat.t_integrals - time_stat.t_double_integrals);
+	double resudial = (double) time_stat.t_total_proc - coeff *( time_stat.t_file_reading + time_stat.t_simple_baseline + time_stat.t_filtering +
+		time_stat.t_curved_baseline + time_stat.t_peaks + time_stat.t_integrals + time_stat.t_double_integrals);
 	std::cout << "|____" << "Resudial time:" << std::endl;
 	std::cout << "     " << "T:" << resudial << "\tN: " << time_stat.n_total_proc << "\tAvr: " << resudial / time_stat.n_total_proc << std::endl;
 	std::cout << "____________________________________________________" << std::endl;

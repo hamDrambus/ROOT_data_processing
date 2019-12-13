@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sstream>
 #include <functional>
+#include <chrono>
 #if defined(__WIN32__)
 #include <sehmap.h>
 #include <direct.h>

@@ -10,6 +10,8 @@ class AnalysisManager
 public:
 	AnalysisManager(ParameterPile::analysis_manifest to_process);
 protected:
+	std::string className;
+
 	ParameterPile::analysis_manifest manifest_all;
 	ParameterPile::experiment_manifest manifest_under_processing; //corresponds to single experiment/folder
 	ParameterPile::experiment_manifest manifest_single_event; //Contains only single run and subrun

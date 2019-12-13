@@ -51,7 +51,9 @@ void SavitzkyGolayFilter::operator ()(DVECTOR &xs_in_out, DVECTOR &ys_in_out) co
 {
 	if ((xs_in_out.size() != ys_in_out.size())||(xs_in_out.size() < _n_points)||(0==_n_iterations))
 		return;
-	DVECTOR ys_out = ys_in_out;
+	DVECTOR ys_out (ys_in_out.size());
+	PolynomialFit fit(_order);
+	TVectorD A;
 	for (int iter = 0; iter < _n_iterations; ++iter) {
 		int start_index = 0;
 		for (int h = 0, h_end_ = xs_in_out.size(); h <h_end_ ; ++h) {
@@ -60,8 +62,6 @@ void SavitzkyGolayFilter::operator ()(DVECTOR &xs_in_out, DVECTOR &ys_in_out) co
 			if (start_index > xs_in_out.size() - _n_points)
 				start_index = xs_in_out.size() - _n_points;
 
-			PolynomialFit fit(_order);
-			TVectorD A;
 			fit(xs_in_out, ys_in_out, start_index, _n_points, A, xs_in_out[h]);
 			ys_out[h] = A[0]; //I moved X coordinates to the point of interest (xs_in_out[h]) in the matrix construction
 			/*xs_out[h] = 0;

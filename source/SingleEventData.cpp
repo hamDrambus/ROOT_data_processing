@@ -222,7 +222,8 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 			STD_CONT<peak> exclude_middle(1, peak());
 			middle_left = exclude_middle.back().left = manifest->channels[ch_ind].baseline.curved_center.first;
 			middle_right = exclude_middle.back().right = manifest->channels[ch_ind].baseline.curved_center.second;
-			channel_data[ch_ind].curved_bl_baseline = SignalOperations::find_baseline_by_integral(channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys, exclude_middle);
+			channel_data[ch_ind].curved_bl_baseline = SignalOperations::find_baseline_by_integral(channel_data[ch_ind].found_baseline,
+					channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys, exclude_middle);
 		//================================================================================
 			//This fixes baseline of signal when ROOT's baseline is subtracted before the start of strong curvature
 			DITERATOR min_signal_pos;
@@ -357,13 +358,13 @@ void SingleEventData::calculate_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys,
 	double delta_x = *(xs.begin() + 1) - *xs.begin();
 	SignalOperations::apply_time_limits(xs_before_S2, ys_before_S2, man->baseline.baseline_range.first, man->baseline.baseline_range.second, delta_x);
 
-	/*approx*/ch_data->found_baseline = man->baseline.baseline_by_average ? SignalOperations::find_baseline_by_integral(xs_before_S2, ys_before_S2)
+	/*approx*/ch_data->found_baseline = man->baseline.baseline_by_average ? SignalOperations::find_baseline_by_integral(0, xs_before_S2, ys_before_S2)
 		: SignalOperations::find_baseline_by_median(xs_before_S2, ys_before_S2);
 	//calculate first-order baseline
 	threshold = man->peaks.threshold;
 #ifdef _USE_TIME_STATISTICS
 	auto finish_baseline_1 = std::chrono::high_resolution_clock::now();
-	all_events_results->time_stat.t_simple_baseline++;
+	all_events_results->time_stat.n_simple_baseline++;
 	all_events_results->time_stat.t_simple_baseline += std::chrono::duration_cast<std::chrono::nanoseconds>(finish_baseline_1 - start_baseline_1).count();
 	auto start_peaks = std::chrono::high_resolution_clock::now();
 #endif
@@ -372,17 +373,13 @@ void SingleEventData::calculate_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys,
 #ifdef _USE_TIME_STATISTICS
 	auto finish_peaks = std::chrono::high_resolution_clock::now();
 	all_events_results->time_stat.t_peaks += std::chrono::duration_cast<std::chrono::nanoseconds>(finish_peaks - start_peaks).count();
+	auto start_baseline_2 = std::chrono::high_resolution_clock::now();
 #endif
-	if (!peaks_before_S2.empty()) {
+	/*exact*/ch_data->found_baseline = SignalOperations::find_baseline_by_integral(ch_data->found_baseline, xs_before_S2, ys_before_S2, peaks_before_S2);
 #ifdef _USE_TIME_STATISTICS
-		auto start_baseline_2 = std::chrono::high_resolution_clock::now();
+	auto finish_baseline_2 = std::chrono::high_resolution_clock::now();
+	all_events_results->time_stat.t_simple_baseline += std::chrono::duration_cast<std::chrono::nanoseconds>(finish_baseline_2 - start_baseline_2).count();
 #endif
-		/*exact*/ch_data->found_baseline = SignalOperations::find_baseline_by_integral(xs_before_S2, ys_before_S2, peaks_before_S2);
-#ifdef _USE_TIME_STATISTICS
-		auto finish_baseline_2 = std::chrono::high_resolution_clock::now();
-		all_events_results->time_stat.t_simple_baseline += std::chrono::duration_cast<std::chrono::nanoseconds>(finish_baseline_2 - start_baseline_2).count();
-#endif
-	}
 	threshold += ch_data->found_baseline;
 	threshold_edges = ch_data->found_baseline + man->peaks.threshold_cutoff;
 }
