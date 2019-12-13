@@ -10,6 +10,8 @@ class PolynomialFit {
 protected:
 	Int_t _order;
 	TVectorD _last_coefs;
+protected:
+    double pown(double val, unsigned int n) const;
 public:
 	PolynomialFit(Int_t order);
 	virtual void setOrder(Int_t n); //TODO: actualluy is is a bad practice to call virtual method from the constructor

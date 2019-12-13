@@ -2,12 +2,12 @@
 #include "MTAnalysisManager.h"
 
 //13.12.2019 TODO: so much rework is required
-//	0) add description of programm structure as well as algorithms
+//	0) add description of program structure as well as algorithms
 //	1) ParameterPile--->gSettings (renaming)
 //	2) make area_vector to be thread-save
 //	3) support writing data in ROOT trees, not only in my custom files (too cumbersome hierarchy)
 //	*4) Qt (Python?) interactive signal displaying and on-the run selection of processing parameters (like oscilloscope)
-//	5) Imporove reaability of SignalOperations
+//	5) Improve readability of SignalOperations
 //	!!!6) Algorithm for separation of slightly merged peaks f(baseline, threshold, running_threshold = fraction of peak maximum)
 //	7) add Vlad's algorithm for peak search
 //	8) Remove ROOT dependency (use boost instead). Except for potential trees.

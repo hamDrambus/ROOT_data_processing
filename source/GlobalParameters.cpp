@@ -96,26 +96,6 @@ std::string strtoken(std::string &in, std::string break_symbs)
 	return out;
 }
 
-bool isSameChannels(const STD_CONT<int>& a, const STD_CONT<int>& b)
-{
-	if (a.size() != b.size())
-		return false;
-	else {
-		for (std::size_t ind = 0, ind_end_ = a.size(); ind<ind_end_; ++ind)
-			if (a[ind]!=b[ind])
-				return false;
-	}
-	return true;
-}
-
-int getIndex(const STD_CONT<int>& channels, int ch)
-{
-	for (std::size_t i = 0, i_end_ = channels.size(); i!=i_end_; ++i)
-		if (channels[i]==ch)
-			return i;
-	return -1;
-}
-
 void DrawFileData(std::string name, std::vector<double> xs, std::vector<double> ys, ParameterPile::DrawEngine de)
 {
 	if (xs.size() != ys.size()){
@@ -214,7 +194,7 @@ namespace ParameterPile
 		quiet_mode = true;
 
 		Init190404(gManifest);
-		Init180705(gManifest);
+        Init180705(gManifest);
 	}
 
 	bool Init190404(analysis_manifest& manifest)
@@ -245,15 +225,15 @@ namespace ParameterPile
 		default_exp_manifest.accepted_events_fname = "";
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
-		default_exp_manifest.runs.push(199, 227);
-		default_exp_manifest.runs.push(172, 197);
-		default_exp_manifest.runs.push(149, 170);
-		default_exp_manifest.runs.push(127, 147);
-		default_exp_manifest.runs.push(96, 125);
-		default_exp_manifest.runs.push(64, 94);
+        default_exp_manifest.runs.push(199, 227);
+        default_exp_manifest.runs.push(172, 197);
+        default_exp_manifest.runs.push(149, 170);
+        default_exp_manifest.runs.push(127, 147);
+        default_exp_manifest.runs.push(96, 125);
+        default_exp_manifest.runs.push(64, 94);
 		default_exp_manifest.runs.push(33, 62);
-		default_exp_manifest.runs.push(1, 31);
-		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
+        default_exp_manifest.runs.push(1, 31);
+        default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = 32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels

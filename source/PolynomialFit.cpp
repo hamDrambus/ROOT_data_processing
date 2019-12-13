@@ -18,6 +18,20 @@ int PolynomialFit::getOrder(void) const
 	return _order;
 }
 
+double PolynomialFit::pown(double val, unsigned int n) const
+{
+    double result = 1;
+    while (true) {
+        if (n & 1)
+            result *= val;
+        n >>= 1;
+        if (!n)
+            break;
+        val *= val;
+    }
+    return result;
+}
+
 void PolynomialFit::getCoefs(TVectorD &pars) const
 {
 	pars.ResizeTo(_last_coefs);
@@ -40,9 +54,9 @@ void PolynomialFit::operator ()(std::vector<double> &xs_in, std::vector<double> 
 		return;
 
 	TMatrixD mat(N_points, _order + 1);
-	for (int col = 0; col < mat.GetNcols(); col++)
-		for (int row = 0; row < mat.GetNrows(); row++)
-			mat[row][col] = pow(xs_in[offset+ row] - in_x0, col);
+    for (int col = 0, col_end_ = mat.GetNcols(); col != col_end_; ++col)
+        for (int row = 0, row_end_ = mat.GetNrows(); row != row_end_; ++row)
+            mat[row][col] = pown(xs_in[offset+ row] - in_x0, col);
 	TVectorD Y(N_points);
 	for (int row = 0; row < Y.GetNrows(); row++)
 		Y[row] = ys_in[offset + row];
