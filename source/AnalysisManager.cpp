@@ -1,7 +1,7 @@
 #include "AnalysisManager.h"
 
 AnalysisManager::AnalysisManager(ParameterPile::analysis_manifest exp_area) : className("AnalysisManager"), manifest_all(exp_area),
-	index_manifest_under_processing(0), curr_run(LoopStatus::Null), _cond(NULL), _thread_mutex(NULL)
+	index_manifest_under_processing(0), curr_run(LoopStatus::Null)
 {}
 
 void AnalysisManager::nextExperiment(void)
@@ -170,16 +170,6 @@ void AnalysisManager::setAllEventsResults(AllEventsResults* to_what)
 	else
 		all_events_results.back() = *to_what;
 }
-
-void AnalysisManager::setCondition(TCondition* cond)
-{	_cond = cond;}
-TCondition* AnalysisManager::getCondition(void)
-{	return _cond;}
-void AnalysisManager::setThreadMutex(TMutex* mutex)
-{	_thread_mutex = mutex;}
-TMutex* AnalysisManager::getThreadMutex(void)
-{	return _thread_mutex;}
-
 
 ParameterPile::experiment_manifest AnalysisManager::refine_exp_area(ParameterPile::experiment_manifest area)//looks up the existing runs in data directory 
 //and intersects them with input area (from ParameterPile::exp_area). This is required in order to split runs between threads equally

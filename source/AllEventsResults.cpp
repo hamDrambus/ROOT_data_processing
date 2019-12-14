@@ -183,7 +183,7 @@ void AllEventsResults::Merged(void)
 			double delta_x = *(xs_before_S2.begin() + 1) - *xs_before_S2.begin();
 			SignalOperations::apply_time_limits(xs_before_S2, ys_before_S2, man->baseline.baseline_range.first, man->baseline.baseline_range.second, delta_x);
 			double baseline = SignalOperations::find_baseline_by_integral(0, xs_before_S2, ys_before_S2);
-			SignalOperations::substract_baseline(averages[ind].ys_sum, baseline);
+			SignalOperations::subtract_baseline(averages[ind].ys_sum, baseline);
 			DVECTOR integral, integral_variance;
 			SignalOperations::integrate_with_variance(averages[ind].xs_sum, averages[ind].ys_sum, averages[ind].ys_disp, integral, integral_variance, 0);
 

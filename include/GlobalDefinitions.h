@@ -3,18 +3,32 @@
 
 //#define __WIN32__
 
+#ifdef __WIN32__
+#define _AVOID_CERN_ROOT
+#endif //__WIN32__
+
+#define _USE_TIME_STATISTICS
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <deque>
-#include <string.h>
+#include <string>
 #include <sstream>
 #include <functional>
+#ifdef _USE_TIME_STATISTICS
 #include <chrono>
+#endif
+
+#include <algorithm>
 #if defined(__WIN32__)
-#include <sehmap.h>
 #include <direct.h>
+#ifndef _AVOID_CERN_ROOT
+#include <sehmap.h>
 #include <Windows4Root.h>
+#else
+#include "windows.h"
+#endif _AVOID_CERN_ROOT
 #else
 #include <dirent.h>
 #include <errno.h>
@@ -23,15 +37,37 @@
 #include <limits>
 #include <float.h>
 
+#ifndef _AVOID_CERN_ROOT
 #include <TThread.h>
 #include <TSpectrum.h>
 #include <TApplication.h>
 #include <TMath.h>
 
+#else //_AVOID_CERN_ROOT
+class TSpectrum {
+public:
+	enum {
+		kBackOrder2 = 0,
+		kBackOrder4 = 1,
+		kBackOrder6 = 2,
+		kBackOrder8 = 3,
+		kBackIncreasingWindow = 0,
+		kBackDecreasingWindow = 1,
+		kBackSmoothing3 = 3,
+		kBackSmoothing5 = 5,
+		kBackSmoothing7 = 7,
+		kBackSmoothing9 = 9,
+		kBackSmoothing11 = 11,
+		kBackSmoothing13 = 13,
+		kBackSmoothing15 = 15
+	};
+	TSpectrum() {}
+};
+
+#endif //_AVOID_CERN_ROOT
+
 #undef max
 #undef min
-
-#define _USE_TIME_STATISTICS
 
 #define STD_CONT std::deque
 

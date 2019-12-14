@@ -4,11 +4,9 @@
 #include "GlobalParameters.h"
 #include "GraphCollection.h"
 #include "SignalOperations.h"
-#include "AllEventsResults.h"
 
 class AnalysisManager;
 class AllEventsResults;
-class TVirtualFFT;
 
 class SingleEventData
 {

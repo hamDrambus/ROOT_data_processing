@@ -2,8 +2,10 @@
 #define SAVITZKY_GOLAY_FILTER_H
 
 #include "GlobalParameters.h"
+#ifndef _AVOID_CERN_ROOT
 #include "TMatrixD.h"
 #include "TVectorD.h"
+#endif //_AVOID_CERN_ROOT
 #include "PolynomialFit.h"
 //TODO: add const S y(x)dx condition
 

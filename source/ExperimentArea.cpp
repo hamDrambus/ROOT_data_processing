@@ -6,6 +6,15 @@ namespace ParameterPile {
 	{
 		_last_returned_index_left = _vec.end();
 	}
+
+	area_vector::area_vector(const area_vector& a)
+	{
+		_is_valid = a._is_valid;
+		_vec = a._vec;
+		_last_returned_index = a._last_returned_index;
+		_last_returned_index_left = _vec.begin() + (a._last_returned_index_left - a._vec.begin());
+	}
+
 	std::size_t area_vector::real_size(void) const
 	{
 		return sizeof(*this)+sizeof(int)*_vec.size();
@@ -33,7 +42,7 @@ namespace ParameterPile {
 	{
 		if (!_is_valid)
 			return -1;
-		Bool_t even = kTRUE;
+		bool even = true;
 		int l = -1, r = -1, N = 0;
 		for (auto i = _vec.begin(), i_end_ = _vec.end(); i != i_end_; ++i, even = !even) {
 			if (even)
@@ -52,7 +61,7 @@ namespace ParameterPile {
 	{
 		if (!_is_valid)
 			return 0;
-		Bool_t even = kTRUE;
+		bool even = true;
 		int l = -1, r = -1;
 		std::size_t N = 0;
 		for (auto i = _vec.begin(), i_end_ = _vec.end(); i != i_end_; ++i, even = !even) {

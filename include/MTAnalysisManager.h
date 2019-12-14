@@ -1,8 +1,7 @@
 #ifndef MT_ANALYSIS_MANAGER_H
 #define MT_ANALYSIS_MANAGER_H
 
-#include "TMutex.h"
-#include "TThread.h"
+#include <thread>
 #include "AnalysisManager.h"
 
 void process_runs_in_thread(void* manager);

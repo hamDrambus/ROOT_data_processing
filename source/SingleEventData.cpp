@@ -1,6 +1,6 @@
-#include "SingleEventData.h"
-#include <string>
 #include "Savitzky_Golay_filter.h"
+#include "SingleEventData.h"
+#include "AllEventsResults.h"
 
 SingleEventData::SingleEventData(const ParameterPile::experiment_manifest *to_process) : manifest(to_process), status(Status::Empty)
 {
@@ -90,7 +90,6 @@ void SingleEventData::file_to_vector(std::string fname, DVECTOR &xs, DVECTOR &ys
 			unsigned char b2_ = static_cast<unsigned char>(bytes[0]);
 			unsigned int val_ = ((b1_ << 8) | b2_);
 			double val = val_;
-			//TODO: use ParameterPile instead of #defines
 			val = manifest->data_voltage_amplitude*(val / manifest->data_voltage_channels) + manifest->data_voltage_of_zero_channel;
 			xs.push_back(read_N*manifest->data_time_constant + trigger_offset);
 			ys.push_back(val);
@@ -164,8 +163,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 			SignalOperations::integrate(channel_data[ch_ind].xs, channel_data[ch_ind].ys, xs_int, ys_int,
 				manifest->channels[ch_ind].integral_range.first, manifest->channels[ch_ind].integral_range.second,
 				delta_x, channel_data[ch_ind].found_baseline);
-			DITERATOR x_max;
-			SignalOperations::get_max(xs_int, ys_int, x_max, channel_data[ch_ind].integral, manifest->channels[ch_ind].N_extrapolation);
+			channel_data[ch_ind].integral = SignalOperations::get_max(xs_int, ys_int).first;
 #ifdef _USE_TIME_STATISTICS
 			auto end_integral = std::chrono::high_resolution_clock::now();
 			all_runs_results->time_stat.n_integrals++;
@@ -183,10 +181,9 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 			DITERATOR x_ii_max = xs_int.end();
 			double y_ii_max, y_ii_min;
 			if (xs_int.size() >= 2) {
-				SignalOperations::integrate(xs_int, ys_int, ys_i, delta_x, channel_data[ch_ind].found_baseline);
-				SignalOperations::integrate(xs_int, ys_i, ys_ii, delta_x, 0);
-				//TODO: ParameterPile
-				SignalOperations::get_max(xs_int, ys_ii, x_ii_max, y_ii_max, manifest->channels[ch_ind].N_extrapolation);
+				SignalOperations::integrate(ys_int, ys_i, delta_x, channel_data[ch_ind].found_baseline);
+				SignalOperations::integrate(ys_i, ys_ii, delta_x, 0);
+				y_ii_max = SignalOperations::get_max(xs_int, ys_ii).first;
 				y_ii_min = ys_ii.front();
 				channel_data[ch_ind].double_integral = y_ii_max - y_ii_min;
 			}
@@ -226,12 +223,10 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 					channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys, exclude_middle);
 		//================================================================================
 			//This fixes baseline of signal when ROOT's baseline is subtracted before the start of strong curvature
-			DITERATOR min_signal_pos;
-			double min_signal_val;
-			SignalOperations::get_min(channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys,
-				channel_data[ch_ind].curved_bl_xs.begin(), channel_data[ch_ind].curved_bl_xs.end(), min_signal_pos, min_signal_val, 1);
-			if (channel_data[ch_ind].curved_bl_xs.end() != min_signal_pos) {
-				double x_min = std::min(*min_signal_pos, middle_right);
+			std::pair<double, DITERATOR> min_signal;
+			min_signal = SignalOperations::get_min(channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys);
+			if (channel_data[ch_ind].curved_bl_xs.end() != min_signal.second) {
+				double x_min = std::min(*min_signal.second, middle_right);
 				for (std::size_t i = 0, i_end_ = std::min(channel_data[ch_ind].curved_bl_ys.size(), channel_data[ch_ind].curved_bl_xs.size());
 					i != i_end_ && channel_data[ch_ind].curved_bl_xs[i] < x_min; ++i) {
 					if (channel_data[ch_ind].curved_bl_ys[i] > channel_data[ch_ind].curved_bl_baseline)
@@ -241,7 +236,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 		//================================================================================
 			//So in result I have to do 2 baseline subtractions no matter what.
 			//One of them is hidden in SignalOperations::substract_baseline(DV&,DV&,DV&,DV&,double), so it doesn't cost anything
-			SignalOperations::substract_baseline(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].curved_bl_xs,
+			SignalOperations::subtract_baseline(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].curved_bl_xs,
 				channel_data[ch_ind].curved_bl_ys, channel_data[ch_ind].curved_bl_baseline); //handles that 2 signals have different x spans
 			//TODO: optimize this function, using the fact that the ROOT's baseline has definite x points [from, to] (- [xs.begin(),xs.end())
 		//================================================================================
@@ -258,7 +253,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 			auto start_peaks = std::chrono::high_resolution_clock::now();
 #endif
 			SignalOperations::find_peaks_fine_v2(channel_data[ch_ind].xs, channel_data[ch_ind].ys, channel_data[ch_ind].peaks, channel_data[ch_ind].found_baseline,
-				threshold, threshold_edges, manifest->channels[ch_ind].N_extrapolation);
+				threshold, threshold_edges);
 #ifdef _USE_TIME_STATISTICS
 			auto end_peaks = std::chrono::high_resolution_clock::now();
 			all_runs_results->time_stat.n_peaks++;
@@ -369,7 +364,7 @@ void SingleEventData::calculate_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys,
 	auto start_peaks = std::chrono::high_resolution_clock::now();
 #endif
 	SignalOperations::find_peaks_fine_v2(xs_before_S2, ys_before_S2, peaks_before_S2,
-		ch_data->found_baseline, threshold + ch_data->found_baseline, ch_data->found_baseline, man->N_extrapolation);
+		ch_data->found_baseline, threshold + ch_data->found_baseline, ch_data->found_baseline);
 #ifdef _USE_TIME_STATISTICS
 	auto finish_peaks = std::chrono::high_resolution_clock::now();
 	all_events_results->time_stat.t_peaks += std::chrono::duration_cast<std::chrono::nanoseconds>(finish_peaks - start_peaks).count();

@@ -20,9 +20,6 @@ protected:
 	//STD_CONT<SingleRunData> one_run_data;
 	STD_CONT<AllEventsResults> all_events_results;
 
-	TCondition* _cond;
-	TMutex* _thread_mutex;
-
 	enum LoopStatus {NextEvent, LastEvent, NextExperiment, LastExperiment, Null} curr_run; //Null - initial and final (after everything was processed) states
 	virtual void processOneEvent_first_iteration(AllEventsResults *_all_results);
 	virtual void nextEvent(void);
@@ -37,10 +34,6 @@ public:
 	virtual void proceessAllEventsOneThread(void);//Process only single experiment (folder)
 	STD_CONT<AllEventsResults>* getAllEventsResults(void);
 	void setAllEventsResults(AllEventsResults* to_what);
-	void setCondition(TCondition* cond);
-	TCondition* getCondition(void);
-	void setThreadMutex(TMutex* mutex);
-	TMutex* getThreadMutex(void);
 };
 
 #endif

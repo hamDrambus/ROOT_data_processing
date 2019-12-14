@@ -53,7 +53,11 @@ void SavitzkyGolayFilter::operator ()(DVECTOR &xs_in_out, DVECTOR &ys_in_out) co
 		return;
 	DVECTOR ys_out (ys_in_out.size());
 	PolynomialFit fit(_order);
+#ifndef _AVOID_CERN_ROOT
 	TVectorD A;
+#else
+	std::vector<double> A;
+#endif
 	for (int iter = 0; iter < _n_iterations; ++iter) {
 		int start_index = 0;
 		for (int h = 0, h_end_ = xs_in_out.size(); h <h_end_ ; ++h) {
@@ -61,8 +65,12 @@ void SavitzkyGolayFilter::operator ()(DVECTOR &xs_in_out, DVECTOR &ys_in_out) co
 			start_index = start_index < 0 ? 0 : start_index;
 			if (start_index > xs_in_out.size() - _n_points)
 				start_index = xs_in_out.size() - _n_points;
-
+#ifndef _AVOID_CERN_ROOT
 			fit(xs_in_out, ys_in_out, start_index, _n_points, A, xs_in_out[h]);
+#else
+			boost::optional<double> x0(xs_in_out[h]);
+			A = fit(xs_in_out, ys_in_out, start_index, _n_points, x0);
+#endif
 			ys_out[h] = A[0]; //I moved X coordinates to the point of interest (xs_in_out[h]) in the matrix construction
 			/*xs_out[h] = 0;
 			for (int row = 0; row < A.GetNrows(); row++)
