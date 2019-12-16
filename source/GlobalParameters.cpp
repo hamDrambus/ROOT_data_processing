@@ -233,13 +233,11 @@ namespace ParameterPile
         default_exp_manifest.runs.push(64, 94);
 		default_exp_manifest.runs.push(33, 62);
         default_exp_manifest.runs.push(1, 31);
-        default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
+		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = 32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
 		//chs_to_draw.push(11, 12);
-		//chs_to_draw.push(44);
-		//chs_to_draw.push(42);
 		//END OF MODIFY ONLY THIS BLOCK
 
 		channel_manifest ch_manifest;
