@@ -11,8 +11,8 @@ namespace ParameterPile {
 	{
 		_is_valid = a._is_valid;
 		_vec = a._vec;
-		_last_returned_index = a._last_returned_index;
-		_last_returned_index_left = _vec.begin() + (a._last_returned_index_left - a._vec.begin());
+		_last_returned_index = -1;
+		_last_returned_index_left = _vec.end();
 	}
 
 	std::size_t area_vector::real_size(void) const

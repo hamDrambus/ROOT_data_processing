@@ -2,6 +2,8 @@
 
 double PolynomialFit::pown(double val, unsigned int n) const
 {
+	if (0==val)
+		return val;
 	double result = 1;
 	while (true) {
 		if (n & 1)
@@ -110,7 +112,7 @@ std::vector<double> PolynomialFit::operator ()(const std::vector<std::pair<doubl
 	in_x0 = (in_x0 ? *in_x0 : vals[offset].first); //It is bad to set x0 to some fixed value (e.g. 0) because
 	//interpolating too far from it will result in unstable results due to limited precision.
 	//Ideally x0 should be set to the point at which we interpolate the data.
-	if (1 == _order) {
+	if (1 == _order && 2 == N_points ) {
 		out.resize(2);
 		out[1] = (vals[offset + 1].second - vals[offset].second) / (vals[offset + 1].first - vals[offset].first);
 		out[0] = vals[offset].second + (*in_x0 - vals[offset].first)*out[1];

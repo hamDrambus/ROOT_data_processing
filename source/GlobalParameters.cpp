@@ -166,7 +166,8 @@ namespace ParameterPile
 
 		//Init190404(gManifest);
         //Init180705(gManifest);
-		Init180705_tests(gManifest);
+		//Init180705_tests(gManifest);
+		Init190404_tests(gManifest);
 	}
 
 };

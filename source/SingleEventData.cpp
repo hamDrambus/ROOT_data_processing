@@ -141,12 +141,13 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 #ifdef _USE_TIME_STATISTICS
 				auto start_filter = std::chrono::high_resolution_clock::now();
 #endif
-				SGfilter(channel_data[ch_ind].xs, channel_data[ch_ind].ys);
+				//SGfilter(channel_data[ch_ind].xs, channel_data[ch_ind].ys); //- old, same results as SGfilter(channel_data[ch_ind].ys), but ~600 times slower
+				SGfilter(channel_data[ch_ind].ys);
 				ys_filtered = channel_data[ch_ind].ys;
 #ifdef _USE_TIME_STATISTICS
-			auto end_filter = std::chrono::high_resolution_clock::now();
-			all_runs_results->time_stat.n_filtering++;
-			all_runs_results->time_stat.t_filtering += std::chrono::duration_cast<std::chrono::nanoseconds>(end_filter - start_filter).count();
+				auto end_filter = std::chrono::high_resolution_clock::now();
+				all_runs_results->time_stat.n_filtering++;
+				all_runs_results->time_stat.t_filtering += std::chrono::duration_cast<std::chrono::nanoseconds>(end_filter - start_filter).count();
 #endif
 			}
 		}
@@ -301,8 +302,8 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 					}
 				} else { //curved baseline case
 					if (!ys_filtered.empty()) {
+						dr->AddToDraw(channel_data[ch_ind].xs, ys_raw, "raw_" + plot_title, "w l lc rgb \"#FF00FF\"");
 						dr->AddToDraw(channel_data[ch_ind].xs, ys_filtered, "filtered_" + plot_title, "w l lc rgb \"#0000FF\"");
-						//dr->AddToDraw(xs_channels[ind], ys_raw, "raw_" + plot_title, "w l lc rgb \"#FF00FF\"");
 					} else
 						dr->AddToDraw(channel_data[ch_ind].xs, ys_raw, "raw_" + plot_title, "w l lc rgb \"#0000FF\"");
 					dr->AddToDraw(channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys, "ROOT baseline V0", "w l lw 2 lc rgb \"#00FF00\"");

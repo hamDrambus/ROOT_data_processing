@@ -7,6 +7,7 @@
 #define _AVOID_CERN_ROOT
 #endif //__WIN32__
 
+#define _AVOID_CERN_ROOT
 #define _USE_TIME_STATISTICS
 
 #include <iostream>
@@ -34,6 +35,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #endif
+#include <unistd.h>
 #include <limits>
 #include <float.h>
 
