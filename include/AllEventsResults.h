@@ -4,9 +4,6 @@
 #include "GlobalParameters.h"
 #include "SingleEventData.h"
 
-class AnalysisManager;
-class SingleEventData;
-
 #ifdef _USE_TIME_STATISTICS
 struct time_results {
 	//proc - processing

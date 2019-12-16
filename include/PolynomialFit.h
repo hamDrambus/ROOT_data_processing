@@ -2,6 +2,11 @@
 #define POLYNOMIAL_FIT_H
 
 #include "GlobalParameters.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cfloat>
+#ifndef _AVOID_CERN_ROOT
 #include "TMatrixD.h"
 #include "TVectorD.h"
 
@@ -26,5 +31,37 @@ public:
 	virtual void operator ()(std::vector<double> &xs_in, std::vector<double> &ys_in,
 		int offset, int N_points, TVectorD &pars_out, double in_x0=0); //only for a part of a vector
 };
+
+#else //_AVOID_CERN_ROOT
+
+#include <boost/optional.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+
+class PolynomialFit {
+protected:
+	std::size_t _order;
+	double pown(double val, unsigned int n) const;
+public:
+	PolynomialFit(std::size_t order);
+	~PolynomialFit();
+	void setOrder(std::size_t n) {
+		_order = n;
+	}
+	std::size_t getOrder(void) const {
+		return _order;
+	}
+	//in_x0 - relative to what point carry out fit. Automatic value is set if boost::none is passed.
+	std::vector<double> operator ()(const std::vector<std::pair<double, double>> &vals_in, boost::optional<double> &in_x0) const;
+	//Fit only part of a vector. offset+N_points-1 must be in the range of the vector
+	std::vector<double> operator ()(const std::vector<std::pair<double, double>> &vals_in, int offset, int N_points, boost::optional<double> &in_x0) const;
+	//in_x0 - relative to what point carry out fit. Automatic value is set if boost::none is passed.
+	std::vector<double> operator ()(const std::vector<double> &xs, const std::vector<double> &ys, boost::optional<double> &in_x0) const;
+	//Fit only part of a vector. offset+N_points-1 must be in the range of the vector
+	std::vector<double> operator ()(const std::vector<double> &xs, const std::vector<double> &ys, int offset, int N_points, boost::optional<double> &in_x0) const;
+};
+
+#endif //_AVOID_CERN_ROOT
 
 #endif

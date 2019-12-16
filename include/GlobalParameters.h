@@ -3,9 +3,6 @@
 
 #include "GlobalDefinitions.h"
 #include "ExperimentArea.h"
-#ifdef _USE_TIME_STATISTICS
-#include <chrono>
-#endif
 
 //unmodified algorithm parameters:
 //find_background_v_raw(f_ys, ys.size(), 60,	TSpectrum::kBackDecreasingWindow, TSpectrum::kBackOrder2, true, TSpectrum::kBackSmoothing3, false);
@@ -40,10 +37,11 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	extern analysis_manifest gManifest;
 	//Following functions extend manifest, not erase already present data
 	bool Init190404(analysis_manifest& manifest);
+	bool Init190404_tests(analysis_manifest& manifest);
 	bool Init180705(analysis_manifest& manifest);
+	bool Init180705_tests(analysis_manifest& manifest);
 
-	bool draw_required(ParameterPile::experiment_area what);
-	bool read_accepted_events(std::string file, accepted_events<double> &info); //does not erase present data in info
+	bool read_accepted_events(std::string file, accepted_events<double> &info); //does not erase already present data in info
 
 	extern std::string this_path;
 	extern int threads_number;
@@ -59,6 +57,5 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 
 	void Init_globals(void);
 };
-void DrawFileData(std::string name, DVECTOR xs, DVECTOR ys, ParameterPile::DrawEngine de = ParameterPile::DrawEngine::ROOT);
 
 #endif

@@ -1,3 +1,4 @@
+#include <ctime>
 #include "GlobalParameters.h"
 #include "MTAnalysisManager.h"
 
@@ -10,7 +11,6 @@
 //	5) Improve readability of SignalOperations
 //	!!!6) Algorithm for separation of slightly merged peaks f(baseline, threshold, running_threshold = fraction of peak maximum)
 //	7) add Vlad's algorithm for peak search
-//	8) Remove ROOT dependency (use boost instead). Except for potential trees.
 
 int main(int argc, char *argv[])
 {

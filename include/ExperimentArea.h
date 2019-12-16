@@ -310,6 +310,7 @@ namespace ParameterPile {
 		STD_CONT<int>::iterator _last_returned_index_left;
 	public:
 		area_vector(void);
+		area_vector(const area_vector& a);
 		//area_vector(STD_CONT<int> channels); //TODO:
 		int get_order_index_by_index(int ind) const;
 		int get_index_by_order_index(std::size_t ind) const;
@@ -406,7 +407,7 @@ namespace ParameterPile {
 		bool find_double_integral;
 		std::pair<double, double> double_integral_range;
 		bool find_average;
-		std::size_t N_extrapolation;
+		std::size_t N_extrapolation; //Not supported - using it will drastically slow down the analysis without thorough optimization
 
 	};
 
