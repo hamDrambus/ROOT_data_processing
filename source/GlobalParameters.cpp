@@ -159,15 +159,15 @@ namespace ParameterPile
 			if (this_path.back()!='/')
 				this_path.push_back('/');
 
-		threads_number = 9; //obv. must be >=1
-		max_pics_number = 25;
-		gnuplot_presits = false;
+		threads_number = 1; //obv. must be >=1
+		max_pics_number = 50;
+		gnuplot_presits = false; //TODO: ->gnuplot_persist
 		quiet_mode = true;
 
 		//Init190404(gManifest);
         //Init180705(gManifest);
-		//Init180705_tests(gManifest);
-		Init190404_tests(gManifest);
+		Init180705_tests(gManifest);
+		//Init190404_tests(gManifest);
 	}
 
 };

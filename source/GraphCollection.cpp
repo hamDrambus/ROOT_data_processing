@@ -121,7 +121,7 @@ void GnuplotDrawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, std::string title, std:
 		f_data << xs[i] << "\t" << ys[i] << std::endl;
 		ff.x_lims.first = std::min(xs[i], ff.x_lims.first);
 		ff.y_lims.first = std::min(ys[i], ff.y_lims.first);
-		ff.x_lims.second = std::max(ys[i], ff.x_lims.second);
+		ff.x_lims.second = std::max(xs[i], ff.x_lims.second);
 		ff.y_lims.second = std::max(ys[i], ff.y_lims.second);
 	}
 	if (ff.x_lims.first == DBL_MAX)
@@ -165,7 +165,7 @@ void GnuplotDrawing::AddToDraw(STD_CONT<DVECTOR> &xs, STD_CONT<DVECTOR> &ys, std
 			f_data << xs[a][i] << "\t" << ys[a][i] << std::endl;
 			ff.x_lims.first = std::min(xs[a][i], ff.x_lims.first);
 			ff.y_lims.first = std::min(ys[a][i], ff.y_lims.first);
-			ff.x_lims.second = std::max(ys[a][i], ff.x_lims.second);
+			ff.x_lims.second = std::max(xs[a][i], ff.x_lims.second);
 			ff.y_lims.second = std::max(ys[a][i], ff.y_lims.second);
 		}
 		f_data << std::endl;
@@ -205,7 +205,7 @@ void GnuplotDrawing::AddToDraw(DVECTOR &xs, DVECTOR &ys, DVECTOR &ys_err, std::s
 		f_data << xs[i] << "\t" << ys[i] << "\t" << ys_err[i] << std::endl;
 		ff.x_lims.first = std::min(xs[i], ff.x_lims.first);
 		ff.y_lims.first = std::min(ys[i], ff.y_lims.first);
-		ff.x_lims.second = std::max(ys[i], ff.x_lims.second);
+		ff.x_lims.second = std::max(xs[i], ff.x_lims.second);
 		ff.y_lims.second = std::max(ys[i], ff.y_lims.second);
 	}
 	if (ff.x_lims.first == DBL_MAX)
