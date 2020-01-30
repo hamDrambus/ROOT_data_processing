@@ -143,6 +143,9 @@ void GnuplotDrawing::AddToDraw(STD_CONT<DVECTOR> &xs, STD_CONT<DVECTOR> &ys, std
 		std::cerr << "GnuplotDrawing::AddToDraw: Error! x-y size mismatch for plot '" << _name << "': '" << title << "'" << std::endl;
 		return;
 	}
+	if (xs.size()==0) {
+		return;
+	}
 	for (std::size_t a = 0, a_end_ = xs.size(); a!=a_end_; ++a)
 		if (xs[a].size()!=ys[a].size()) {
 			std::cerr << "GnuplotDrawing::AddToDraw: Error! x-y size mismatch for plot '" << _name << "': '" << title << "'" << std::endl;

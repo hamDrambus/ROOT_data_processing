@@ -128,8 +128,12 @@ namespace ParameterPile
 					continue;
 			try {
 				word = strtoken(line, "\t ");
+				if (word.empty())
+					continue;
 				int run = std::stoi(word);
 				word = strtoken(line, "\t ");
+				if (word.empty())
+					continue;
 				int subrun = std::stoi(word);
 				word = strtoken(line, "\t ");
 				double trigger = 0;
@@ -166,8 +170,9 @@ namespace ParameterPile
 
 		//Init190404(gManifest);
         //Init180705(gManifest);
-		Init180705_tests(gManifest);
-		//Init190404_tests(gManifest);
+		//Init180705_tests(gManifest);
+		Init190404_tests(gManifest);
+		//Init191107(gManifest);
 	}
 
 };
