@@ -19,7 +19,7 @@ namespace ParameterPile
 		default_exp_manifest.in_folder = "../Data/190404/";
 		default_exp_manifest.out_folder = "../Data/190404/results_vt/";
 		default_exp_manifest.write_event_indices = false;
-		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v1/Cd_46V_20kV_850V/forms_Cd_peak/events.txt";
+		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v5/Cd_46V_20kV_850V/cut_events/cut6/events.txt";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
 			std::cout << "Init190404_tests:: No event selection - processing everything" << std::endl;
 			default_exp_manifest.accepted_events_data.clear();
@@ -29,8 +29,8 @@ namespace ParameterPile
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v1/Cd_46V_20kV_850V/forms_Cd_peak/events/gnuplot/";
-		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v1/Cd_46V_20kV_850V/forms_Cd_peak/events/";//Do not save pictures
+		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v5/Cd_46V_20kV_850V/cut_events/cut6/gnuplot/";
+		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v5/Cd_46V_20kV_850V/cut_events/cut6/";//Do not save pictures
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
@@ -40,17 +40,17 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(127, 147);
 		//default_exp_manifest.runs.push(96, 125);
 		//default_exp_manifest.runs.push(64, 94);
-		//default_exp_manifest.runs.push(33, 62);
+		default_exp_manifest.runs.push(33, 62);
 		//default_exp_manifest.runs.push(1, 31);
-		default_exp_manifest.runs.push(33, 33);
+		//default_exp_manifest.runs.push(0, 9999);
 		default_exp_manifest.sub_runs.push(0, 9999);
 		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
 		//chs_to_draw.push(44);
-		chs_to_draw.push(101, 102);
-		chs_to_draw.push(38);
-		chs_to_draw.push(39);
+		chs_to_draw.push(100, 101);
+		//chs_to_draw.push(38);
+		//chs_to_draw.push(39);
 		//chs_to_draw.push(42);
 		//END OF MODIFY ONLY THIS BLOCK
 

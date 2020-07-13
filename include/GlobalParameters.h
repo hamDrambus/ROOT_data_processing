@@ -42,6 +42,12 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	bool Init180705_tests(analysis_manifest& manifest);
 	bool Init191107(analysis_manifest& manifest);
 	bool Init191107_tests(analysis_manifest& manifest);
+	bool Init191128(analysis_manifest& manifest);
+	bool Init191128_tests(analysis_manifest& manifest);
+	bool Init200116(analysis_manifest& manifest);
+	bool Init200116_tests(analysis_manifest& manifest);
+	bool Init200213(analysis_manifest& manifest);
+	bool Init200213_tests(analysis_manifest& manifest);
 
 	bool read_accepted_events(std::string file, accepted_events<double> &info); //does not erase already present data in info
 
