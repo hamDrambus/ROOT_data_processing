@@ -115,7 +115,7 @@ namespace ParameterPile
 		std::ifstream str;
 		str.open(file);
 		if (!str.is_open()) {
-			std::cerr << "ParameterPile::read_accepted_events: Error: Failed to open \"" << file << "\"" << std::endl;
+			std::cerr << "ParameterPile::read_accepted_events: Warning: Failed to open \"" << file << "\"" << std::endl;
 			return false;
 		}
 		std::string line, word;
@@ -178,7 +178,9 @@ namespace ParameterPile
 		//Init200116_tests(gManifest);
 		//Init200116(gManifest);
 		//Init200213_tests(gManifest);
-		Init200213(gManifest);
+		//Init200213(gManifest);
+		//Init170622Cd_tests(gManifest);
+		Init170622Cd(gManifest);
 	}
 
 };
