@@ -19,7 +19,7 @@ namespace ParameterPile
 		default_exp_manifest.in_folder = "../Data/190404/";
 		default_exp_manifest.out_folder = "../Data/190404/results_vt/";
 		default_exp_manifest.write_event_indices = false;
-		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v5/Cd_46V_20kV_850V/cut_events/cut6/events.txt";
+		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_48V_20kV_850V/forms_Cd_peak_v2/events.txt";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
 			std::cout << "Init190404_tests:: No event selection - processing everything" << std::endl;
 			default_exp_manifest.accepted_events_data.clear();
@@ -29,8 +29,8 @@ namespace ParameterPile
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v5/Cd_46V_20kV_850V/cut_events/cut6/gnuplot/";
-		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v5/Cd_46V_20kV_850V/cut_events/cut6/";//Do not save pictures
+		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v6/Cd_48V_20kV_850V/forms_Cd_peak_v2/events/";
+		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v6/Cd_48V_20kV_850V/forms_Cd_peak_v2/events/";
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
@@ -40,15 +40,17 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(127, 147);
 		//default_exp_manifest.runs.push(96, 125);
 		//default_exp_manifest.runs.push(64, 94);
-		default_exp_manifest.runs.push(33, 62);
+		//default_exp_manifest.runs.push(33, 62);
 		//default_exp_manifest.runs.push(1, 31);
-		//default_exp_manifest.runs.push(0, 9999);
-		default_exp_manifest.sub_runs.push(0, 9999);
+		//default_exp_manifest.runs.push(229, 250);
+
+		default_exp_manifest.runs.push(229, 229);
+		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
-		//chs_to_draw.push(44);
-		chs_to_draw.push(100, 101);
+		chs_to_draw.push(102);
+		chs_to_draw.push(100);
 		//chs_to_draw.push(38);
 		//chs_to_draw.push(39);
 		//chs_to_draw.push(42);
@@ -176,7 +178,7 @@ namespace ParameterPile
 		ch_manifest.device = "Virtual";
 		ch_manifest.invert = true;
 		ch_manifest.peaks.do_find = false;
-		ch_manifest.baseline.do_find_curved = true;
+		ch_manifest.baseline.do_find_curved = false;
 		ch_manifest.display.Y_limits = PAIR(-DBL_MAX, DBL_MAX);
 		ch_manifest.filter.order = 4;
 		ch_manifest.filter.n_points = 15;
@@ -186,13 +188,18 @@ namespace ParameterPile
 		ch_manifest.baseline.curved_trim = PAIR(1, 1);
 		ch_manifest.peaks.threshold = 0.0160; //Still required for baseline restoration
 		ch_manifest.summarize_channels.erase();
-		ch_manifest.summarize_channels.push(32, 36);
+		ch_manifest.summarize_channels.push(51); //central
+		ch_manifest.summarize_channels.push(53); //central
+		ch_manifest.summarize_channels.push(38, 39); //central
+		ch_manifest.summarize_channels.push(41); //central
+		//ch_manifest.summarize_channels.push(32, 44);
+		//ch_manifest.summarize_channels.push(48, 59);
 		ch_manifest.display.do_draw = chs_to_draw.contains(102);
 		if (ch_manifest.display.do_draw || ch_manifest.find_average)
 			default_exp_manifest.channels.push(102, ch_manifest);
 
 		//ALL PARAMETERS (THRESHOLDS) ARE THE SAME FOR ALL FOLDERS FOR 190404 DATA!
-		//Only SiPM thresholds are different for 46 and 48 V
+		//Only SiPM thresholds may be different for 46 and 48 V
 
 		experiment_manifest new_manifest = default_exp_manifest;
 		new_manifest.append_folder((new_manifest.name = "190404_Cd_20kV_850V_46V_th250mV") + "/");
@@ -232,6 +239,44 @@ namespace ParameterPile
 		new_manifest.append_folder((new_manifest.name = "190404_Cd_8kV_850V_46V_th140mV") + "/");
 		manifest.manifests.push_back(new_manifest);
 
+		for (int ch = SiPM_channels.get_next_index(); ch >= 0; ch = SiPM_channels.get_next_index()) {
+			default_exp_manifest.channels.info(ch)->baseline.do_find_curved = true;
+			default_exp_manifest.channels.info(ch)->peaks.threshold = 0.013;
+		}
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_20kV_850V_48V_th230mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_18kV_850V_48V_th210mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_16kV_850V_48V_th200mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		for (int ch = SiPM_channels.get_next_index(); ch >= 0; ch = SiPM_channels.get_next_index()) {
+			default_exp_manifest.channels.info(ch)->baseline.do_find_curved = false;
+		}
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_14kV_850V_48V_th160mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_12kV_850V_48V_th150mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_10kV_850V_48V_th150mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_8kV_850V_48V_th140mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+
 #undef PAIR
 		for (std::size_t m = 0, m_end_ = manifest.manifests.size(); m != m_end_; ++m)
 			manifest.manifests[m].channels.sort();
@@ -270,16 +315,17 @@ namespace ParameterPile
 		default_exp_manifest.accepted_events_fname = "";
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
-		default_exp_manifest.runs.push(199, 227);
-		default_exp_manifest.runs.push(172, 197);
-		default_exp_manifest.runs.push(149, 170);
-		default_exp_manifest.runs.push(127, 147);
-		default_exp_manifest.runs.push(96, 125);
-		default_exp_manifest.runs.push(64, 94);
-		default_exp_manifest.runs.push(33, 62);
-		default_exp_manifest.runs.push(1, 31);
+		//default_exp_manifest.runs.push(199, 227);
+		//default_exp_manifest.runs.push(172, 197);
+		//default_exp_manifest.runs.push(149, 170);
+		//default_exp_manifest.runs.push(127, 147);
+		//default_exp_manifest.runs.push(96, 125);
+		//default_exp_manifest.runs.push(64, 94);
+		//default_exp_manifest.runs.push(33, 62);
+		//default_exp_manifest.runs.push(1, 31);
+		default_exp_manifest.runs.push(0, 9999);
 		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
-		default_exp_manifest.trigger_at = 32;
+		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
 		//END OF MODIFY ONLY THIS BLOCK
@@ -404,7 +450,7 @@ namespace ParameterPile
 
 
 		//ALL PARAMETERS (THRESHOLDS) ARE THE SAME FOR ALL FOLDERS FOR 190404 DATA!
-		//Only SiPM thresholds are different for 46 and 48 V
+		//Only SiPM thresholds may be different for 46 and 48 V
 
 		experiment_manifest new_manifest = default_exp_manifest;
 		new_manifest.append_folder((new_manifest.name = "190404_Cd_20kV_850V_46V_th250mV") + "/");
@@ -442,6 +488,43 @@ namespace ParameterPile
 
 		new_manifest = default_exp_manifest;
 		new_manifest.append_folder((new_manifest.name = "190404_Cd_8kV_850V_46V_th140mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		for (int ch = SiPM_channels.get_next_index(); ch >= 0; ch = SiPM_channels.get_next_index()) {
+			default_exp_manifest.channels.info(ch)->baseline.do_find_curved = true;
+			default_exp_manifest.channels.info(ch)->peaks.threshold = 0.013;
+		}
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_20kV_850V_48V_th230mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_18kV_850V_48V_th210mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_16kV_850V_48V_th200mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		for (int ch = SiPM_channels.get_next_index(); ch >= 0; ch = SiPM_channels.get_next_index()) {
+			default_exp_manifest.channels.info(ch)->baseline.do_find_curved = false;
+		}
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_14kV_850V_48V_th160mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_12kV_850V_48V_th150mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_10kV_850V_48V_th150mV") + "/");
+		manifest.manifests.push_back(new_manifest);
+
+		new_manifest = default_exp_manifest;
+		new_manifest.append_folder((new_manifest.name = "190404_Cd_8kV_850V_48V_th140mV") + "/");
 		manifest.manifests.push_back(new_manifest);
 
 #undef PAIR
