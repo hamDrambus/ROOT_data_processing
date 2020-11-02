@@ -19,7 +19,7 @@ namespace ParameterPile
 		default_exp_manifest.in_folder = "../Data/190404/";
 		default_exp_manifest.out_folder = "../Data/190404/results_vt/";
 		default_exp_manifest.write_event_indices = false;
-		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_48V_20kV_850V/forms_Cd_peak_v2/events.txt";
+		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v5/Cd_46V_08kV_850V/iteration_01/05_events.txt";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
 			std::cout << "Init190404_tests:: No event selection - processing everything" << std::endl;
 			default_exp_manifest.accepted_events_data.clear();
@@ -29,8 +29,8 @@ namespace ParameterPile
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v6/Cd_48V_20kV_850V/forms_Cd_peak_v2/events/";
-		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v6/Cd_48V_20kV_850V/forms_Cd_peak_v2/events/";
+		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v5/Cd_46V_08kV_850V/iteration_01/05_events/";
+		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v5/Cd_46V_08kV_850V/iteration_01/05_events/";
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
@@ -44,12 +44,12 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(1, 31);
 		//default_exp_manifest.runs.push(229, 250);
 
-		default_exp_manifest.runs.push(229, 229);
+		default_exp_manifest.runs.push(199, 205);
 		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
-		chs_to_draw.push(102);
+		//chs_to_draw.push(102);
 		chs_to_draw.push(100);
 		//chs_to_draw.push(38);
 		//chs_to_draw.push(39);
