@@ -67,6 +67,7 @@ protected:
 	void clearOneRun(int channel);
 	void calculate_threshold_and_baseline(DVECTOR &xs, DVECTOR &ys, double &threshold, double &threshold_edges, int channel, AllEventsResults *all_events_results);
 	void push_average (int ch, AllEventsResults *all_runs_results);
+	void push_average_thresholded (int ch, double baseline, double threshold, AllEventsResults *all_events_results);
 	void push_dispersion (int ch, AllEventsResults *all_runs_results);
 public:
 	SingleEventData(const ParameterPile::experiment_manifest *to_process);

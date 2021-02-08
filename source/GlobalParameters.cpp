@@ -164,7 +164,7 @@ namespace ParameterPile
 				this_path.push_back('/');
 
 		threads_number = 8; //obv. must be >=1
-		max_pics_number = 100;
+		max_pics_number = 40;
 		gnuplot_presits = false; //TODO: ->gnuplot_persist
 		quiet_mode = true;
 
@@ -187,6 +187,12 @@ namespace ParameterPile
 		//Init190307Xray(gManifest);
 		//Init201015_tests(gManifest);
 		//Init201015(gManifest);
+		//Init201217_tests(gManifest);
+		//Init201217(gManifest);
+		//Init210121_tests(gManifest);
+		//Init210121(gManifest);
+		//Init210128_tests(gManifest);
+		//Init210128(gManifest);
 	}
 
 };

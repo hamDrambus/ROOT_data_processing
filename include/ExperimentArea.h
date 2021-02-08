@@ -395,7 +395,7 @@ namespace ParameterPile {
 
 		channel_manifest() : invert(false), device("none"), save_with_indices(false), display(), peaks(), filter(),
 			find_integral(false), integral_range(-DBL_MAX, DBL_MAX), find_double_integral(false), double_integral_range(-DBL_MAX, DBL_MAX),
-			find_average(false), N_extrapolation(1) {}
+			find_average(false), find_average_thresholded(false), N_extrapolation(1) {}
 
 		bool invert;
 		std::string device; //{"PMT", "SiPM", "GEM"}
@@ -407,6 +407,7 @@ namespace ParameterPile {
 		bool find_double_integral;
 		std::pair<double, double> double_integral_range;
 		bool find_average;
+		bool find_average_thresholded;
 		std::size_t N_extrapolation; //Not supported - using it will drastically slow down the analysis without thorough optimization
 
 	};

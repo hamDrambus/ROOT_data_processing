@@ -45,6 +45,7 @@ protected:
 	GraphCollection graph_manager;
 	indexed_info<GraphCollection> pictures; //per channel, all plots for the same channel (for all runs/events) are stored in single GraphCollection
 	indexed_info<AverageData> averages;
+	indexed_info<AverageData> averages_thresholded; //averaging with everything below threshold taken as 0. (Buzulutskov's idea)
 
 #ifdef _USE_TIME_STATISTICS
 	time_results time_stat;

@@ -248,6 +248,9 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 #endif
 		}
 
+		if (manifest->channels[ch_ind].find_average_thresholded)
+			push_average_thresholded(ch, channel_data[ch_ind].found_baseline, threshold, all_runs_results);
+
 		//Find peaks if necessary
 		if (manifest->channels[ch_ind].peaks.do_find) {
 #ifdef _USE_TIME_STATISTICS
@@ -394,7 +397,30 @@ void SingleEventData::push_average (int ch, AllEventsResults *all_events_results
 	} else {
 		for (auto j = avr_data->ys_sum.begin(), i = ch_data->ys.begin(), j_end_ = avr_data->ys_sum.end(), i_end_ = ch_data->ys.end();
 			(i != i_end_) && (j != j_end_); ++i, ++j) {
-			*i += *j;
+			*j += *i;
+		}
+	}
+	++avr_data->average_event_n;
+}
+
+void SingleEventData::push_average_thresholded (int ch, double baseline, double threshold, AllEventsResults *all_events_results)
+{
+	ChannelData *ch_data = channel_data.info(ch); //guaranteed to be not NULL
+	AllEventsResults::AverageData* avr_data = all_events_results->averages_thresholded.info(ch);
+	if (NULL == avr_data) {
+		all_events_results->averages_thresholded.push(ch, AllEventsResults::AverageData());
+		avr_data = all_events_results->averages_thresholded.info(ch);
+	}
+	if (avr_data->xs_sum.empty()) {
+		avr_data->xs_sum = ch_data->xs;
+		avr_data->ys_sum = ch_data->ys;
+		for (auto j = avr_data->ys_sum.begin(), j_end_ = avr_data->ys_sum.end(); j != j_end_; ++j) {
+			*j = (*j < threshold ? 0 : *j - baseline);
+		}
+	} else {
+		for (auto j = avr_data->ys_sum.begin(), i = ch_data->ys.begin(), j_end_ = avr_data->ys_sum.end(), i_end_ = ch_data->ys.end();
+				(i != i_end_) && (j != j_end_); ++i, ++j) {
+			*j += (*i < threshold ? 0 : *i - baseline);
 		}
 	}
 	++avr_data->average_event_n;
@@ -407,8 +433,8 @@ void SingleEventData::push_dispersion (int ch, AllEventsResults *all_events_resu
 	if (avr_data->ys_disp.empty())
 		avr_data->ys_disp.resize(avr_data->ys_sum.size(), 0.0);
 	for (auto j = ch_data->ys.begin(), a = avr_data->ys_sum.begin(), d = avr_data->ys_disp.begin(),
-		j_end_ = ch_data->ys.end(), a_end_ = avr_data->ys_sum.end(), d_end_ = avr_data->ys_disp.end();
-		(d != d_end_) && (a != a_end_) && (j != j_end_); ++a, ++j, ++d) {
+			j_end_ = ch_data->ys.end(), a_end_ = avr_data->ys_sum.end(), d_end_ = avr_data->ys_disp.end();
+			(d != d_end_) && (a != a_end_) && (j != j_end_); ++a, ++j, ++d) {
 		*d += std::pow(*j - *a, 2);
 	}
 	++avr_data->dispersion_event_n;

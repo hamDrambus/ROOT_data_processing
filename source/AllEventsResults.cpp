@@ -52,6 +52,29 @@ void AllEventsResults::Merge(AllEventsResults* with)
 				}
 			}
 		}
+		if (averages_thresholded.empty()) {
+			averages_thresholded = with->averages_thresholded;
+		} else {
+			if (!averages_thresholded.isSameIndices(with->averages_thresholded)) {
+				std::cerr << "AllEventsResults::Merge: Warning: average thresholded data channel mismatch!" << std::endl;
+			}
+			for (std::size_t i = 0, i_end_ = with->averages_thresholded.size(); i != i_end_; ++i) {
+				int channel = with->averages_thresholded.index(i);
+				AverageData* data = averages_thresholded.info(channel);
+				if (NULL == data) {
+					averages_thresholded.push(channel, with->averages_thresholded[i]);
+				} else {
+					data->average_event_n += with->averages_thresholded[i].average_event_n;
+					if (data->xs_sum.size() != with->averages_thresholded[i].xs_sum.size()) {
+						std::cerr << "AllEventsResults::Merge: Warning: average thresholded data size mismatch for" << std::endl
+							<< "\tchannel " << channel << " (" << data->xs_sum.size() << " vs " << with->averages_thresholded[i].xs_sum.size() << ")!" << std::endl;
+					}
+					for (auto y1 = data->ys_sum.begin(), y1_end_ = data->ys_sum.end(), y2 = with->averages_thresholded[i].ys_sum.begin(), y2_end_ = with->averages_thresholded[i].ys_sum.end();
+						(y1 != y1_end_) && (y2 != y2_end_); ++y1, ++y2)
+						*y1 += *y2;
+				}
+			}
+		}
 	}
 	
 	if (pictures.empty()) {
@@ -104,6 +127,7 @@ void AllEventsResults::Merge(AllEventsResults* with)
 				}
 			}
 		}
+		//No dispersion for averages_thresholded!
 	}
 
 #ifdef _USE_TIME_STATISTICS
@@ -141,6 +165,9 @@ void AllEventsResults::Merged(void)
 		for (std::size_t i = 0, i_end_ = averages.size(); i != i_end_; ++i) 
 			for (auto y = averages[i].ys_sum.begin(), y_end_ = averages[i].ys_sum.end(); y!=y_end_; ++y)
 				*y/=(double)averages[i].average_event_n;
+		for (std::size_t i = 0, i_end_ = averages_thresholded.size(); i != i_end_; ++i)
+			for (auto y = averages_thresholded[i].ys_sum.begin(), y_end_ = averages_thresholded[i].ys_sum.end(); y!=y_end_; ++y)
+				*y/=(double)averages_thresholded[i].average_event_n;
 	}
 	if (1 == Iteration_N) {
 		for (std::size_t i = 0, i_end_ = averages.size(); i != i_end_; ++i)
@@ -196,8 +223,24 @@ void AllEventsResults::Merged(void)
 			dr->AddToDraw(averages[ind].xs_sum, averages[ind].ys_sum, averages[ind].ys_disp, man->device + processing_manifest->name+"_ch_"+std::to_string(channel)+"_AVR");
 			dr->AddToDraw(averages[ind].xs_sum, integral, integral_variance, man->device + processing_manifest->name+"_ch_"+std::to_string(channel)+"_Int_AVR", "axes x1y2");
 			dr->SetXrange(man->display.X_limits.first, man->display.X_limits.second);
-
-
+		}
+		for (std::size_t ind = 0, ind_end_ = averages_thresholded.size(); ind!=ind_end_; ++ind) {
+			int channel = averages_thresholded.index(ind);
+			const ParameterPile::channel_manifest *man = processing_manifest->channels.info(channel);
+			if (NULL == man) {
+				std::cout<<"AllEventsResults::Merged:averages_thresholded: Error:"<<std::endl;
+				std::cout<<"\tNo manifest found, skipping channel "<<channel<<std::endl;
+				continue;
+			}
+			std::string output_prefix = std::string(ParameterPile::this_path) + processing_manifest->out_folder +  man->device + "_" + std::to_string(channel) + "/";
+			GnuplotDrawing* dr = graph_manager.GetDrawing(man->device + processing_manifest->name+"_ch_"+std::to_string(channel)+"_AVR");
+			if (processing_manifest->draw_only)
+				dr->SetGnuplotDirectory(processing_manifest->out_gnuplot_folder);
+			else
+				dr->SetGnuplotDirectory(output_prefix);
+			dr->SetPngDirectory(processing_manifest->out_picture_folder);
+			dr->AddToDraw(averages_thresholded[ind].xs_sum, averages_thresholded[ind].ys_sum, man->device + processing_manifest->name+"_ch_"+std::to_string(channel)+"_AVR_THR");
+			dr->SetXrange(man->display.X_limits.first, man->display.X_limits.second);
 		}
 	}
 

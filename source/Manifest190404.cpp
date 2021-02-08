@@ -19,7 +19,14 @@ namespace ParameterPile
 		default_exp_manifest.in_folder = "../Data/190404/";
 		default_exp_manifest.out_folder = "../Data/190404/results_vt/";
 		default_exp_manifest.write_event_indices = false;
-		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v5/Cd_46V_08kV_850V/iteration_01/05_events.txt";
+		//default_exp_manifest.accepted_events_fname = "";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_20kV_850V/forms_Cd_peak/events.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_18kV_850V/forms_Cd_peak/events.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_16kV_850V/forms_Cd_peak/events.txt";
+		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_14kV_850V/forms_Cd_peak/events.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_12kV_850V/forms_Cd_peak/events.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_10kV_850V/forms_Cd_peak/events.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_08kV_850V/forms_Cd_peak/events.txt";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
 			std::cout << "Init190404_tests:: No event selection - processing everything" << std::endl;
 			default_exp_manifest.accepted_events_data.clear();
@@ -28,29 +35,32 @@ namespace ParameterPile
 		default_exp_manifest.runs_to_draw.push(0, 9999); //DRAW all
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
+		//double fPMT_thresh = 0.0200;
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Post_processing/190404/results_v5/Cd_46V_08kV_850V/iteration_01/05_events/";
-		default_exp_manifest.out_picture_folder = "../Post_processing/190404/results_v5/Cd_46V_08kV_850V/iteration_01/05_events/";
+		default_exp_manifest.out_gnuplot_folder = "";//"../Data/190404/results_vt_fPMTs/gnuplot_th=0.0200/";
+		default_exp_manifest.out_picture_folder = "";
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
-		//default_exp_manifest.runs.push(199, 227);
-		//default_exp_manifest.runs.push(172, 197);
-		//default_exp_manifest.runs.push(149, 170);
-		//default_exp_manifest.runs.push(127, 147);
-		//default_exp_manifest.runs.push(96, 125);
-		//default_exp_manifest.runs.push(64, 94);
-		//default_exp_manifest.runs.push(33, 62);
-		//default_exp_manifest.runs.push(1, 31);
-		//default_exp_manifest.runs.push(229, 250);
+		//default_exp_manifest.runs.push(199, 227); //8kV, 29k
+		//default_exp_manifest.runs.push(172, 197); //10kV, 26k
+		//default_exp_manifest.runs.push(149, 170); //12kV, 22k
+		//default_exp_manifest.runs.push(127, 147); //14kV, 21k
+		//default_exp_manifest.runs.push(96, 125); //16kV, 30k
+		//default_exp_manifest.runs.push(64, 94); //18kV, 31k
+		//default_exp_manifest.runs.push(33, 62); //20kV, 30k
+		//default_exp_manifest.runs.push(1, 31); //20kV_0, 31k
+		//48V on SiPM:
+		//default_exp_manifest.runs.push(229, 250); //20kV, 22k
 
-		default_exp_manifest.runs.push(199, 205);
-		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
+		default_exp_manifest.runs.push(127, 127);
+		default_exp_manifest.sub_runs.push(0, 300);
 		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
-		//chs_to_draw.push(102);
-		chs_to_draw.push(100);
+		//chs_to_draw.push(102); //Sum of 5 SiPMs
+		chs_to_draw.push(101); //Sum of fast PMTs
+		//chs_to_draw.push(100); //Sum of slow PMTs
 		//chs_to_draw.push(38);
 		//chs_to_draw.push(39);
 		//chs_to_draw.push(42);
@@ -94,20 +104,29 @@ namespace ParameterPile
 		//fast PMTs
 		ch_manifest.device = "PMT";
 		ch_manifest.invert = true;
+		ch_manifest.peaks.do_find = true;
+		ch_manifest.find_average_thresholded = false;
 		ch_manifest.display.do_draw = chs_to_draw.contains(8);
 		ch_manifest.peaks.threshold = 0.0031;
+		//ch_manifest.peaks.threshold = fPMT_thresh;
 		default_exp_manifest.channels.push(8, ch_manifest);
 		ch_manifest.display.do_draw = chs_to_draw.contains(9);
 		ch_manifest.peaks.threshold = 0.0040;
+		//ch_manifest.peaks.threshold = fPMT_thresh;
 		default_exp_manifest.channels.push(9, ch_manifest);
 		ch_manifest.display.do_draw = chs_to_draw.contains(10);
 		ch_manifest.peaks.threshold = 0.0031;
+		//ch_manifest.peaks.threshold = fPMT_thresh;
 		default_exp_manifest.channels.push(10, ch_manifest);
 		ch_manifest.display.do_draw = chs_to_draw.contains(11);
 		ch_manifest.peaks.threshold = 0.0060;
+		//ch_manifest.peaks.threshold = fPMT_thresh;
 		default_exp_manifest.channels.push(11, ch_manifest);
+		ch_manifest.peaks.do_find = true;
+		ch_manifest.find_average_thresholded = false;
 
 		//slow PMTs and trigger
+
 		ch_manifest.invert = false;
 		ch_manifest.baseline.do_find_curved = true;
 		ch_manifest.baseline.curved_range = PAIR(10, 110);
@@ -130,7 +149,9 @@ namespace ParameterPile
 		ch_manifest.peaks.threshold = 0.080;
 		default_exp_manifest.channels.push(16, ch_manifest);
 
+
 		//SiPMs
+
 		ch_manifest.device = "SiPM";
 		ch_manifest.invert = true;
 		ch_manifest.display.Y_limits = PAIR(-0.04, 0.0);
@@ -157,7 +178,7 @@ namespace ParameterPile
 		ch_manifest.baseline.curved_range = PAIR(10, 110);
 		ch_manifest.baseline.curved_center = PAIR(20, 89);
 		ch_manifest.baseline.curved_trim = PAIR(1, 1);
-		ch_manifest.peaks.threshold = 0.020; //Still required for baseline restoration
+		ch_manifest.peaks.threshold = 0.030; //Still required for baseline restoration
 		ch_manifest.summarize_channels.erase();
 		ch_manifest.summarize_channels.push(12, 15);
 		ch_manifest.display.do_draw = chs_to_draw.contains(100);
@@ -239,6 +260,7 @@ namespace ParameterPile
 		new_manifest.append_folder((new_manifest.name = "190404_Cd_8kV_850V_46V_th140mV") + "/");
 		manifest.manifests.push_back(new_manifest);
 
+
 		for (int ch = SiPM_channels.get_next_index(); ch >= 0; ch = SiPM_channels.get_next_index()) {
 			default_exp_manifest.channels.info(ch)->baseline.do_find_curved = true;
 			default_exp_manifest.channels.info(ch)->peaks.threshold = 0.013;
@@ -255,6 +277,7 @@ namespace ParameterPile
 		new_manifest = default_exp_manifest;
 		new_manifest.append_folder((new_manifest.name = "190404_Cd_16kV_850V_48V_th200mV") + "/");
 		manifest.manifests.push_back(new_manifest);
+
 
 		for (int ch = SiPM_channels.get_next_index(); ch >= 0; ch = SiPM_channels.get_next_index()) {
 			default_exp_manifest.channels.info(ch)->baseline.do_find_curved = false;
