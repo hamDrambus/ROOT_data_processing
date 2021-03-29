@@ -27,8 +27,17 @@ namespace ParameterPile
 		//double fPMT_thresh = 0.0020;
 		//double sPMT_thresh = 0.050;
 		default_exp_manifest.out_gnuplot_folder = "../Data/180705/results_vt/gnuplot/";
-		default_exp_manifest.out_picture_folder = "../Data/180705/results_vt/gnuplot/";//Do not save pictures
+		default_exp_manifest.out_picture_folder = "";//Do not save pictures
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_8kV_800V/forms_Cd_peak/14_events_cuts_07+08+12+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_9kV_800V/forms_Cd_peak/14_events_cuts_07+08+09+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_10kV_800V/forms_Cd_peak/14_events_cuts_07+08+09+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_11kV_800V/forms_Cd_peak/14_events_cuts_07+08+09+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_12kV_800V/forms_Cd_peak/14_events_cuts_07+08+09+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_13kV_800V/forms_Cd_peak/14_events_cuts_07+08+09+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_14kV_800V/forms_Cd_peak/14_events_cuts_07+08+09+14.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_16kV_800V/forms_Cd_peak/15_events_cuts_07+08+09+15.txt";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_18kV_800V/forms_Cd_peak/15_events_cuts_07+08+09+15.txt";
 		default_exp_manifest.accepted_events_fname = "../Post_processing/180705/results_v1/Cd_48V_20kV_800V/forms_Cd_peak/15_events_cuts_07+08+09+15.txt";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
 			std::cout << "Init180705_tests:: No event selection - processing everything" << std::endl;
@@ -47,12 +56,12 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(349, 358); //18kV
 		//default_exp_manifest.runs.push(360, 369); //20kV
 		default_exp_manifest.runs.push(360, 360);
-		default_exp_manifest.sub_runs.push(0, 999);// default_exp_manifest.subruns_per_file - 1);
+		default_exp_manifest.sub_runs.push(0, 100);// default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
 		chs_to_draw.push(0);
-		chs_to_draw.push(12);
+		//chs_to_draw.push(12);
 		//chs_to_draw.push(42);
 		//END OF MODIFY ONLY THIS BLOCK
 

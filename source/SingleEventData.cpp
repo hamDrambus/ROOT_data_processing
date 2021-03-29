@@ -224,14 +224,16 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 					channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys, exclude_middle);
 		//================================================================================
 			//This fixes baseline of signal when ROOT's baseline is subtracted before the start of strong curvature
-			std::pair<double, DITERATOR> min_signal;
-			min_signal = SignalOperations::get_min(channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys);
-			if (channel_data[ch_ind].curved_bl_xs.end() != min_signal.second) {
-				double x_min = std::min(*min_signal.second, middle_right);
-				for (std::size_t i = 0, i_end_ = std::min(channel_data[ch_ind].curved_bl_ys.size(), channel_data[ch_ind].curved_bl_xs.size());
-					i != i_end_ && channel_data[ch_ind].curved_bl_xs[i] < x_min; ++i) {
-					if (channel_data[ch_ind].curved_bl_ys[i] > channel_data[ch_ind].curved_bl_baseline)
-						channel_data[ch_ind].curved_bl_ys[i] = channel_data[ch_ind].curved_bl_baseline;
+			if (manifest->channels[ch_ind].baseline.curved_fix_baseline) {
+				std::pair<double, DITERATOR> min_signal;
+				min_signal = SignalOperations::get_min(channel_data[ch_ind].curved_bl_xs, channel_data[ch_ind].curved_bl_ys);
+				if (channel_data[ch_ind].curved_bl_xs.end() != min_signal.second) {
+					double x_min = std::min(*min_signal.second, middle_right);
+					for (std::size_t i = 0, i_end_ = std::min(channel_data[ch_ind].curved_bl_ys.size(), channel_data[ch_ind].curved_bl_xs.size());
+						i != i_end_ && channel_data[ch_ind].curved_bl_xs[i] < x_min; ++i) {
+						if (channel_data[ch_ind].curved_bl_ys[i] > channel_data[ch_ind].curved_bl_baseline)
+							channel_data[ch_ind].curved_bl_ys[i] = channel_data[ch_ind].curved_bl_baseline;
+					}
 				}
 			}
 		//================================================================================
