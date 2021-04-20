@@ -40,6 +40,8 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	bool Init190404_tests(analysis_manifest& manifest);
 	bool Init180705(analysis_manifest& manifest);
 	bool Init180705_tests(analysis_manifest& manifest);
+	bool Init180830Xray(analysis_manifest& manifest);
+	bool Init180830Xray_tests(analysis_manifest& manifest);
 	bool Init191107(analysis_manifest& manifest);
 	bool Init191107_tests(analysis_manifest& manifest);
 	bool Init191128(analysis_manifest& manifest);
@@ -56,6 +58,8 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	bool Init190307Xray_tests(analysis_manifest& manifest);
 	bool Init201015(analysis_manifest& manifest);
 	bool Init201015_tests(analysis_manifest& manifest);
+	bool Init201015Xray(analysis_manifest& manifest);
+	bool Init201015Xray_tests(analysis_manifest& manifest);
 	bool Init201217(analysis_manifest& manifest);
 	bool Init201217_tests(analysis_manifest& manifest);
 	bool Init210121(analysis_manifest& manifest);
