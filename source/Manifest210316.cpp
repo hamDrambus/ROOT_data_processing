@@ -316,7 +316,7 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(102, 201); //f2, 7.6kV, 256K
 		//default_exp_manifest.runs.push(203, 302); //f3, 7.6kV, 200K
 
-		default_exp_manifest.runs.push(1, 20); //SiPM have too many peaks (noise) for room temp. - too much data for 100k events
+		default_exp_manifest.runs.push(1, 100); //SiPM have too many peaks (noise) for room temp. - too much data for 100k events
 		default_exp_manifest.runs.push(102, 302);
 		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = -32;

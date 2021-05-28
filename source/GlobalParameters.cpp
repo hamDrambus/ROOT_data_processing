@@ -173,7 +173,7 @@ namespace ParameterPile
 		//Init180705_tests(gManifest);
         //Init180705(gManifest);
 		//Init180830Xray_tests(gManifest);
-		Init180830Xray(gManifest);
+		//Init180830Xray(gManifest);
 		//Init191107(gManifest);
 		//Init191128_tests(gManifest);
 		//Init191128(gManifest);
@@ -205,6 +205,10 @@ namespace ParameterPile
 		//Init210311(gManifest);
 		//Init210316_tests(gManifest);
 		//Init210316(gManifest);
+		//Init210429_tests(gManifest);
+		//Init210429(gManifest);
+		//Init210513_tests(gManifest);
+		Init210513(gManifest);
 	}
 
 };
