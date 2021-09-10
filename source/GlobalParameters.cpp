@@ -208,7 +208,11 @@ namespace ParameterPile
 		//Init210429_tests(gManifest);
 		//Init210429(gManifest);
 		//Init210513_tests(gManifest);
-		Init210513(gManifest);
+		//Init210513(gManifest);
+		//Init210603_tests(gManifest);
+		//Init210603(gManifest);
+		//Init210902_tests(gManifest);
+		Init210902(gManifest);
 	}
 
 };
