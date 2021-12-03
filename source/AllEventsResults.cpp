@@ -121,9 +121,13 @@ void AllEventsResults::Merge(AllEventsResults* with)
 						std::cerr << "AllEventsResults::Merge: Warning: average data size mismatch for" << std::endl
 							<< "\tchannel " << channel << " (" << data->xs_sum.size() << " vs " << with->averages[i].xs_sum.size() << ")!" << std::endl;
 					}
-					for (auto y1 = data->ys_disp.begin(), y1_end_ = data->ys_disp.end(), y2 = with->averages[i].ys_disp.begin(), y2_end_ = with->averages[i].ys_disp.end();
-						(y1 != y1_end_) && (y2 != y2_end_); ++y1, ++y2)
-						*y1 += *y2;
+					if (data->ys_disp.empty())
+						data->ys_disp = with->averages[i].ys_disp;
+					else {
+						for (auto y1 = data->ys_disp.begin(), y1_end_ = data->ys_disp.end(), y2 = with->averages[i].ys_disp.begin(), y2_end_ = with->averages[i].ys_disp.end();
+							(y1 != y1_end_) && (y2 != y2_end_); ++y1, ++y2)
+							*y1 += *y2;
+					}
 				}
 			}
 		}
@@ -204,7 +208,7 @@ void AllEventsResults::Merged(void)
 				std::cout<<"\tNo manifest found, skipping channel "<<channel<<std::endl;
 				continue;
 			}
-			std::string output_prefix = std::string(ParameterPile::this_path) + processing_manifest->out_folder +  man->device + "_" + std::to_string(channel) + "/";
+			std::string output_prefix = processing_manifest->out_folder +  man->device + "_" + std::to_string(channel) + "/";
 			DVECTOR xs_before_S2 = averages[ind].xs_sum;
 			DVECTOR ys_before_S2 = averages[ind].ys_sum;
 			double delta_x = *(xs_before_S2.begin() + 1) - *xs_before_S2.begin();
@@ -232,7 +236,7 @@ void AllEventsResults::Merged(void)
 				std::cout<<"\tNo manifest found, skipping channel "<<channel<<std::endl;
 				continue;
 			}
-			std::string output_prefix = std::string(ParameterPile::this_path) + processing_manifest->out_folder +  man->device + "_" + std::to_string(channel) + "/";
+			std::string output_prefix = processing_manifest->out_folder +  man->device + "_" + std::to_string(channel) + "/";
 			GnuplotDrawing* dr = graph_manager.GetDrawing(man->device + processing_manifest->name+"_ch_"+std::to_string(channel)+"_AVR");
 			if (processing_manifest->draw_only)
 				dr->SetGnuplotDirectory(processing_manifest->out_gnuplot_folder);
