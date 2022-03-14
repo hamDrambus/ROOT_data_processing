@@ -19,7 +19,7 @@ namespace ParameterPile
 		default_exp_manifest.in_folder = "../Data/210128/";
 		default_exp_manifest.out_folder = "../Data/210128/results_vt/";
 		default_exp_manifest.write_event_indices = false;
-		default_exp_manifest.accepted_events_fname = "../Post_processing/210128/results_v6/Pu_46V_19kV_850V/forms_Alpha_peak/events.txt";
+		default_exp_manifest.accepted_events_fname = "../Post_processing/210128/results_v6/Pu_46V_18kV_850V/forms_Alpha_peak/events.txt";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
 			std::cout << "Init210128_tests:: No event selection - processing everything" << std::endl;
 			default_exp_manifest.accepted_events_data.clear();
@@ -29,8 +29,8 @@ namespace ParameterPile
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Post_processing/210128/results_v6/Pu_46V_19kV_850V/forms_Alpha_peak/events/";
-		default_exp_manifest.out_picture_folder = "../Post_processing/210128/results_v6/Pu_46V_19kV_850V/forms_Alpha_peak/events/";
+		default_exp_manifest.out_gnuplot_folder = "../Post_processing/210128/results_v6/Pu_46V_18kV_850V/forms_Alpha_peak/events/";
+		default_exp_manifest.out_picture_folder = "../Post_processing/210128/results_v6/Pu_46V_18kV_850V/forms_Alpha_peak/events/";
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
@@ -44,7 +44,7 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(309, 358); //10kV
 		//default_exp_manifest.runs.push(360, 409); //9kV
 
-		default_exp_manifest.runs.push(1, 2);
+		default_exp_manifest.runs.push(1, 1);
 		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = -32;
 
@@ -149,7 +149,7 @@ namespace ParameterPile
 		//SiPMs
 		ch_manifest.device = "SiPM";
 		ch_manifest.invert = true;
-		ch_manifest.display.Y_limits = PAIR(-0.04, 0.0);
+		ch_manifest.display.Y_limits = PAIR(-0.04, 0.06);
 		ch_manifest.filter.order = 4;
 		ch_manifest.filter.n_points = 15;
 		ch_manifest.filter.n_iterations = 1;
@@ -186,7 +186,8 @@ namespace ParameterPile
 		ch_manifest.baseline.do_find_curved = false;
 		ch_manifest.peaks.threshold = 0.0080;
 		ch_manifest.summarize_channels.erase();
-		ch_manifest.summarize_channels.push(5, 8);
+		ch_manifest.summarize_channels.push(6, 6);
+		ch_manifest.summarize_channels.push(8, 8);
 		ch_manifest.display.do_draw = chs_to_draw.contains(101);
 		if (ch_manifest.display.do_draw || ch_manifest.find_average)
 			default_exp_manifest.channels.push(101, ch_manifest);

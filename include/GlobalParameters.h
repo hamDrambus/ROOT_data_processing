@@ -58,6 +58,8 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	bool Init190307Xray_tests(analysis_manifest& manifest);
 	bool Init201015(analysis_manifest& manifest);
 	bool Init201015_tests(analysis_manifest& manifest);
+	bool Init201015S1(analysis_manifest& manifest);
+	bool Init201015S1_tests(analysis_manifest& manifest);
 	bool Init201015Xray(analysis_manifest& manifest);
 	bool Init201015Xray_tests(analysis_manifest& manifest);
 	bool Init201217(analysis_manifest& manifest);
@@ -103,6 +105,10 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	bool Init211202_tests(analysis_manifest& manifest);
 	bool Init211223(analysis_manifest& manifest);
 	bool Init211223_tests(analysis_manifest& manifest);
+	bool Init220113(analysis_manifest& manifest);
+	bool Init220113_tests(analysis_manifest& manifest);
+	bool Init220203(analysis_manifest& manifest);
+	bool Init220203_tests(analysis_manifest& manifest);
 
 	bool read_accepted_events(std::string file, accepted_events<double> &info); //does not erase already present data in info
 

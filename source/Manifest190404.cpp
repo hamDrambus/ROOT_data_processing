@@ -338,15 +338,15 @@ namespace ParameterPile
 		default_exp_manifest.accepted_events_fname = "";
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
 		//List of valid files (runs):
-		//default_exp_manifest.runs.push(199, 227);
-		//default_exp_manifest.runs.push(172, 197);
-		//default_exp_manifest.runs.push(149, 170);
-		//default_exp_manifest.runs.push(127, 147);
-		//default_exp_manifest.runs.push(96, 125);
-		//default_exp_manifest.runs.push(64, 94);
-		//default_exp_manifest.runs.push(33, 62);
-		//default_exp_manifest.runs.push(1, 31);
-		default_exp_manifest.runs.push(0, 9999);
+		default_exp_manifest.runs.push(199, 227);
+		default_exp_manifest.runs.push(172, 197);
+		default_exp_manifest.runs.push(149, 170);
+		default_exp_manifest.runs.push(127, 147);
+		default_exp_manifest.runs.push(96, 125);
+		default_exp_manifest.runs.push(64, 94);
+		default_exp_manifest.runs.push(33, 62);
+		default_exp_manifest.runs.push(1, 31);
+
 		default_exp_manifest.sub_runs.push(0, default_exp_manifest.subruns_per_file - 1);
 		default_exp_manifest.trigger_at = -32;
 
