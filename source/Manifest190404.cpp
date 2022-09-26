@@ -19,8 +19,8 @@ namespace ParameterPile
 		default_exp_manifest.in_folder = "../Data/190404/";
 		default_exp_manifest.out_folder = "../Data/190404/results_vt/";
 		default_exp_manifest.write_event_indices = false;
-		//default_exp_manifest.accepted_events_fname = "";
-		default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_20kV_850V/forms_Cd_peak/events.txt";
+		default_exp_manifest.accepted_events_fname = "";
+		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_20kV_850V/forms_Cd_peak/events.txt";
 		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_18kV_850V/forms_Cd_peak/events.txt";
 		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_16kV_850V/forms_Cd_peak/events.txt";
 		//default_exp_manifest.accepted_events_fname = "../Post_processing/190404/results_v6/Cd_46V_14kV_850V/forms_Cd_peak/events.txt";
@@ -54,16 +54,17 @@ namespace ParameterPile
 		//default_exp_manifest.runs.push(229, 250); //20kV, 22k
 
 		default_exp_manifest.runs.push(33, 33);
-		default_exp_manifest.sub_runs.push(0, 100);
+		default_exp_manifest.sub_runs.push(0, 19);
 		default_exp_manifest.trigger_at = -32;
 
 		area_vector chs_to_draw;	 //DRAW only these channels
-		chs_to_draw.push(102); //Sum of 5 SiPMs
+		//chs_to_draw.push(102); //Sum of 5 SiPMs
 		//chs_to_draw.push(101); //Sum of fast PMTs
 		//chs_to_draw.push(100); //Sum of slow PMTs
 		//chs_to_draw.push(38);
 		//chs_to_draw.push(39);
 		//chs_to_draw.push(42);
+		chs_to_draw.push(15);
 		//END OF MODIFY ONLY THIS BLOCK
 
 		channel_manifest ch_manifest;
