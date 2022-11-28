@@ -201,7 +201,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 			auto start_curved = std::chrono::high_resolution_clock::now();
 #endif
 			channel_data[ch_ind].curved_bl_xs = channel_data[ch_ind].xs;
-			DVECTOR ys_cut = channel_data[ch_ind].ys;
+			DVECTOR ys_cut = manifest->channels[ch_ind].baseline.curved_use_unfiltered ? ys_raw : channel_data[ch_ind].ys;
 			double root_start_t = manifest->channels[ch_ind].baseline.curved_range.first; //TODO: add check for validity of parameters (automatic search for invalid?)
 			double root_finish_t = manifest->channels[ch_ind].baseline.curved_range.second;
 			SignalOperations::apply_time_limits(channel_data[ch_ind].curved_bl_xs, ys_cut, root_start_t, root_finish_t, delta_x);

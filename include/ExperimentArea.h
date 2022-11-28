@@ -358,11 +358,12 @@ namespace ParameterPile {
 			bool curved_compton;
 			int curved_sparse;
 			bool curved_fix_baseline;
+			bool curved_use_unfiltered;
 			Baseline() : baseline_by_average(true), baseline_range(-DBL_MAX, DBL_MAX), do_find_curved(false), curved_range(-DBL_MAX, DBL_MAX),
 				curved_trim(0, 0), curved_center(0, 0), curved_numberIterations(0),
 				curved_direction(TSpectrum::kBackDecreasingWindow), curved_filterOrder(TSpectrum::kBackOrder2),
 				curved_smoothing(true), curved_smoothWindow(TSpectrum::kBackSmoothing3),
-				curved_compton(false), curved_sparse(1), curved_fix_baseline(true)
+				curved_compton(false), curved_sparse(1), curved_fix_baseline(true), curved_use_unfiltered(false)
 			{}
 		} baseline;
 
