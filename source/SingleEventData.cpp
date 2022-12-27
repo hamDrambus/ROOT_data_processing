@@ -287,7 +287,7 @@ void SingleEventData::processSingleEvent_Iter_0(AllEventsResults *all_runs_resul
 				if (channel_data[ch_ind].curved_bl_xs.empty()) { //simple baseline case
 					dr->AddToDraw(channel_data[ch_ind].xs, ys_raw, "raw_" + plot_title, "with lines");
 					if (!ys_filtered.empty())
-						dr->AddToDraw(channel_data[ch_ind].xs, ys_filtered, "filtered_" + plot_title, "with lines lw 2 lc rgb \"#000000\"");
+						dr->AddToDraw(channel_data[ch_ind].xs, ys_filtered, "filtered_" + plot_title, "with lines lc rgb \"#000000\"");
 					dr->AddToDraw_baseline(threshold, "threshold", "w l lc rgb \"#FF0000\"");
 					if (threshold_edges != channel_data[ch_ind].found_baseline)
 						dr->AddToDraw_baseline(threshold_edges, "threshold 2nd", "w l lc rgb \"#AC0ECD\"");
