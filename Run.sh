@@ -7,7 +7,7 @@ SCRIPTPATH=$(dirname "$SCRIPT")
 PROJECTNAME=$(basename "$SCRIPTPATH")
 #BUILDTYPE=Debug
 #BUILDTYPE=RelWithDebInfo
-BUILDTYPE=Release
+BUILDTYPE=build
 
 cd ${SCRIPTPATH}
 ./${BUILDTYPE}/Data_processing | tee ${BUILDTYPE}/Log.txt
