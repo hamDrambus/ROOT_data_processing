@@ -92,7 +92,7 @@ bool GnuplotDrawing::generate_script(std::string script_name) const
 		str << "refresh" << std::endl;
 	}
 #if !defined(__WIN32__)
-	if (ParameterPile::gnuplot_presits || _dir_to_save.empty())
+	if (ParameterPile::gnuplot_persist || _dir_to_save.empty())
 		str << "pause -1" << std::endl;
 #endif
 	str.close();

@@ -126,13 +126,16 @@ namespace ParameterPile //TODO: rename to Settings or gSettings. Maybe move to c
 	bool Init231012(analysis_manifest& manifest);
 	bool Init231012_tests(analysis_manifest& manifest);
 	bool Init231012_Q(analysis_manifest& manifest);
+	bool Init231109_1ph(analysis_manifest& manifest); // Two-phase (2ph) and single-phase (1ph) expreiments require different processing.
+	bool Init231109_1ph_tests(analysis_manifest& manifest);
+	bool Init231109_Q(analysis_manifest& manifest);
 
 	bool read_accepted_events(std::string file, accepted_events<double> &info); //does not erase already present data in info
 
 	extern std::string this_path;
 	extern int threads_number;
 	extern std::size_t max_pics_number;
-	extern bool gnuplot_presits;
+	extern bool gnuplot_persist;
 	extern bool quiet_mode;
 
 	extern int Max_iteration_N;

@@ -101,7 +101,7 @@ namespace ParameterPile
 	std::string this_path;
 	int threads_number; //obv. must be >=1
 	std::size_t max_pics_number;
-	bool gnuplot_presits;
+	bool gnuplot_persist;
 	bool quiet_mode;
 
 	int Max_iteration_N = 1;
@@ -165,9 +165,9 @@ namespace ParameterPile
 
 		threads_number = 8; //obv. must be >=1
 		max_pics_number = 100;
-		gnuplot_presits = false; //TODO: ->gnuplot_persist
+		gnuplot_persist = false;
 		quiet_mode = true;
-
+		//The functions below can be chained (e.g. no necessary used only one by one).
 		//Init190404_tests(gManifest);
 		//Init190404(gManifest);
 		//Init180705_tests(gManifest);
@@ -256,7 +256,10 @@ namespace ParameterPile
 		//Init221215(gManifest);
 		//Init231012_tests(gManifest);
 		//Init231012(gManifest);
-		Init231012_Q(gManifest);
+		//Init231012_Q(gManifest);
+		//Init231109_1ph_tests(gManifest);
+		Init231109_1ph(gManifest);
+		//Init231109_Q(gManifest);
 	}
 
 };
