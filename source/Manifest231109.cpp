@@ -384,9 +384,9 @@ namespace ParameterPile
 
 		//ALL PARAMETERS (THRESHOLDS) ARE THE SAME FOR ALL FOLDERS FOR 231109 single-phase DATA!
 		std::vector<std::string> folder_list = {
-			"231109_1ph_LArN2_X-ray_14mm_coll_filt3_20kV_850V_46V",
-			"231109_1ph_LArN2_X-ray_14mm_coll_filt3_18kV_850V_46V",
-			"231109_1ph_LArN2_X-ray_14mm_coll_filt3_16kV_850V_46V",
+			//"231109_1ph_LArN2_X-ray_14mm_coll_filt3_20kV_850V_46V",
+			//"231109_1ph_LArN2_X-ray_14mm_coll_filt3_18kV_850V_46V",
+			//"231109_1ph_LArN2_X-ray_14mm_coll_filt3_16kV_850V_46V",
 			"231109_1ph_LArN2_X-ray_14mm_coll_filt3_14kV_850V_46V",
 			"231109_1ph_LArN2_X-ray_14mm_coll_filt3_12kV_850V_46V",
 			"231109_1ph_LArN2_X-ray_14mm_coll_filt3_10kV_850V_46V",

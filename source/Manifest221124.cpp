@@ -16,8 +16,8 @@ namespace ParameterPile
 		default_exp_manifest.data_voltage_channels = 4095;
 		default_exp_manifest.data_voltage_amplitude = 2.0;
 		default_exp_manifest.data_voltage_of_zero_channel = -1.0;
-		default_exp_manifest.in_folder = "../Data/221124/";
-		default_exp_manifest.out_folder = "../Data/221124/results_vt/";
+		default_exp_manifest.in_folder = "../hdda/Data/221124/";
+		default_exp_manifest.out_folder = "../hdda/Data/221124/results_vt/";
 		default_exp_manifest.write_event_indices = false;
 		default_exp_manifest.accepted_events_fname = "";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
@@ -29,7 +29,7 @@ namespace ParameterPile
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Data/221124/results_vt/gnuplot/";
+		default_exp_manifest.out_gnuplot_folder = "../hdda/Data/221124/results_vt/gnuplot/";
 		default_exp_manifest.out_picture_folder = "";
 		default_exp_manifest.draw_only = true; //if set to true, no data is written to output
 		//default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
@@ -112,6 +112,7 @@ namespace ParameterPile
 
 		ch_manifest.peaks.threshold = 0.038;
 		ch_manifest.peaks.threshold_cutoff = 0.012;
+		ch_manifest.baseline.do_find_curved = true;
 		default_exp_manifest.channels.push(0, ch_manifest);
 
 		ch_manifest.peaks.threshold = 0.022;
@@ -129,6 +130,7 @@ namespace ParameterPile
 		ch_manifest.peaks.threshold = 0.019;
 		ch_manifest.peaks.threshold_cutoff = 0.005;
 		default_exp_manifest.channels.push(4, ch_manifest);
+		ch_manifest.baseline.do_find_curved = false;
 
 		ch_manifest.filter.n_iterations = 0;
 
@@ -178,87 +180,35 @@ namespace ParameterPile
 		}
 
 		//ALL PARAMETERS (THRESHOLDS) ARE THE SAME FOR ALL FOLDERS FOR 221124 DATA!
-		//default_exp_manifest.channels.info(3)->baseline.do_find_curved = false;
-		experiment_manifest new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3_2") + "/");
-		//this is a place to tweak individual channel for specific fields
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_831V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_739V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_693V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_646V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_600V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_554V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_508V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_462V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_416V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_369V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_323V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_277V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_231V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_185V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_139V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_92V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_46V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_0V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
+		std::vector<std::string> folder_list = {
+			"221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3_2",
+			"221124_X-ray_S2_LAr_20kV_831V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_739V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_693V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_646V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_600V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_554V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_508V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_462V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_416V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_369V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_323V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_277V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_231V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_185V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_139V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_92V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_46V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_0V_850V_46V_14mm_coll_filt3",
+		};
+		for (auto const &f : folder_list) {
+			experiment_manifest new_manifest = default_exp_manifest;
+			new_manifest.append_folder((new_manifest.name = f) + "/");
+			//this is a place to tweak individual channel for specific fields
+			//default_exp_manifest.channels.info(3)->baseline.do_find_curved = false;
+			manifest.manifests.push_back(new_manifest);
+		}
 #undef PAIR
 		for (std::size_t m = 0, m_end_ = manifest.manifests.size(); m != m_end_; ++m)
 			manifest.manifests[m].channels.sort();
@@ -279,8 +229,8 @@ namespace ParameterPile
 		default_exp_manifest.data_voltage_channels = 4095;
 		default_exp_manifest.data_voltage_amplitude = 2.0;
 		default_exp_manifest.data_voltage_of_zero_channel = -1.0;
-		default_exp_manifest.in_folder = "../Data/221124/";
-		default_exp_manifest.out_folder = "../Data/221124/results_v1/";
+		default_exp_manifest.in_folder = "../hdda/Data/221124/";
+		default_exp_manifest.out_folder = "../hdda/Data/221124/results_v1/";
 		default_exp_manifest.write_event_indices = false;
 		default_exp_manifest.accepted_events_fname = "";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
@@ -350,6 +300,7 @@ namespace ParameterPile
 
 		ch_manifest.peaks.threshold = 0.038;
 		ch_manifest.peaks.threshold_cutoff = 0.012;
+		ch_manifest.baseline.do_find_curved = true;
 		default_exp_manifest.channels.push(0, ch_manifest);
 
 		ch_manifest.peaks.threshold = 0.022;
@@ -367,6 +318,7 @@ namespace ParameterPile
 		ch_manifest.peaks.threshold = 0.019;
 		ch_manifest.peaks.threshold_cutoff = 0.005;
 		default_exp_manifest.channels.push(4, ch_manifest);
+		ch_manifest.baseline.do_find_curved = false;
 
 		ch_manifest.filter.n_iterations = 0;
 
@@ -416,87 +368,35 @@ namespace ParameterPile
 		}
 
 		//ALL PARAMETERS (THRESHOLDS) ARE THE SAME FOR ALL FOLDERS FOR 221124 DATA!
-		//default_exp_manifest.channels.info(3)->baseline.do_find_curved = false;
-		experiment_manifest new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3_2") + "/");
-		//this is a place to tweak individual channel for specific fields
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_831V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_739V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_693V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_646V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_600V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_554V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_508V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_462V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_416V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_369V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_323V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_277V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_231V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_185V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_139V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_92V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_46V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_S2_LAr_20kV_0V_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
+		std::vector<std::string> folder_list = {
+			"221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3_2",
+			"221124_X-ray_S2_LAr_20kV_831V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_785V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_739V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_693V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_646V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_600V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_554V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_508V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_462V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_416V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_369V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_323V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_277V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_231V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_185V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_139V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_92V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_46V_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_S2_LAr_20kV_0V_850V_46V_14mm_coll_filt3",
+		};
+		for (auto const &f : folder_list) {
+			experiment_manifest new_manifest = default_exp_manifest;
+			new_manifest.append_folder((new_manifest.name = f) + "/");
+			//this is a place to tweak individual channel for specific fields
+			//default_exp_manifest.channels.info(3)->baseline.do_find_curved = false;
+			manifest.manifests.push_back(new_manifest);
+		}
 #undef PAIR
 		for (std::size_t m = 0, m_end_ = manifest.manifests.size(); m != m_end_; ++m)
 			manifest.manifests[m].channels.sort();
@@ -515,8 +415,8 @@ namespace ParameterPile
 		default_exp_manifest.data_voltage_channels = 4095;
 		default_exp_manifest.data_voltage_amplitude = 2.0;
 		default_exp_manifest.data_voltage_of_zero_channel = -1.0;
-		default_exp_manifest.in_folder = "../Data/221124/";
-		default_exp_manifest.out_folder = "../Data/221124/results_v1/";
+		default_exp_manifest.in_folder = "../hdda/Data/221124/";
+		default_exp_manifest.out_folder = "../hdda/Data/221124/results_v1/";
 		default_exp_manifest.write_event_indices = false;
 		default_exp_manifest.accepted_events_fname = "";
 		if (!read_accepted_events(default_exp_manifest.accepted_events_fname, default_exp_manifest.accepted_events_data)) {
@@ -528,7 +428,7 @@ namespace ParameterPile
 		default_exp_manifest.sub_runs_to_draw.push(0, default_exp_manifest.subruns_per_file - 1); //DRAW all
 
 		//MODIFY ONLY THIS BLOCK AND DISPLAY-RELATED VALUES FOR CHANNELS
-		default_exp_manifest.out_gnuplot_folder = "../Data/221124/results_v1/gnuplot/";
+		default_exp_manifest.out_gnuplot_folder = "../hdda/Data/221124/results_v1/gnuplot/";
 		default_exp_manifest.out_picture_folder = "";
 		default_exp_manifest.draw_only = false; //if set to true, no data is written to output
 		default_exp_manifest.runs.push(0, 9999); //Use only when all invalid files are deleted from folders.
@@ -567,34 +467,22 @@ namespace ParameterPile
 
 
 		//ALL PARAMETERS (THRESHOLDS) ARE THE SAME FOR ALL FOLDERS FOR 221124 DATA!
-		experiment_manifest new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_20kV_850V_46V_14mm_coll_filt3") + "/");
-		//this is a place to tweak individual channel for specific fields
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_18kV_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_16kV_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_14kV_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_12kV_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_10kV_850V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
-
-		new_manifest = default_exp_manifest;
-		new_manifest.append_folder((new_manifest.name = "221124_X-ray_Q_8kV_800V_46V_14mm_coll_filt3") + "/");
-		manifest.manifests.push_back(new_manifest);
+		std::vector<std::string> folder_list = {
+			"221124_X-ray_Q_20kV_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_Q_18kV_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_Q_16kV_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_Q_14kV_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_Q_12kV_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_Q_10kV_850V_46V_14mm_coll_filt3",
+			"221124_X-ray_Q_8kV_800V_46V_14mm_coll_filt3"
+		};
+		for (auto const &f : folder_list) {
+			experiment_manifest new_manifest = default_exp_manifest;
+			new_manifest.append_folder((new_manifest.name = f) + "/");
+			//this is a place to tweak individual channel for specific fields
+			//default_exp_manifest.channels.info(3)->baseline.do_find_curved = false;
+			manifest.manifests.push_back(new_manifest);
+		}
 #undef PAIR
 		for (std::size_t m = 0, m_end_ = manifest.manifests.size(); m != m_end_; ++m)
 			manifest.manifests[m].channels.sort();

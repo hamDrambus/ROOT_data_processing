@@ -250,7 +250,7 @@ namespace ParameterPile
 		//Init221020_tests(gManifest);
 		//Init221020(gManifest);
 		//Init221124_tests(gManifest);
-		//Init221124(gManifest);
+		Init221124(gManifest);
 		//Init221124_Q(gManifest);
 		//Init221215_tests(gManifest);
 		//Init221215(gManifest);
@@ -258,7 +258,7 @@ namespace ParameterPile
 		//Init231012(gManifest);
 		//Init231012_Q(gManifest);
 		//Init231109_1ph_tests(gManifest);
-		Init231109_1ph(gManifest);
+		//Init231109_1ph(gManifest);
 		//Init231109_Q(gManifest);
 	}
 

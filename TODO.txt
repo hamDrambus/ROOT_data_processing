@@ -1,2 +1,2 @@
-1. Dependency on CERn Root can be removed ald replaced with Boost
+1. Dependency on CERN Root can be removed and replaced with Boost
 2. Create custom CMake package with common utility functions (PolynomialFit, etc.)
